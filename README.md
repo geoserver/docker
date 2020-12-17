@@ -11,7 +11,6 @@ Work is still in progress!
 1. The [Dockerfile](Dockerfile)
     1. installs dependencies
     1. installs the GeoServer by downloading and extracting the war file
-    1. installs the marlin renderer
     1. defines defaults for environment variables
 1. The [entrypoint.sh](scripts/entrypoint.sh) startup script (in a running container)
     1. executes [install-extensions.sh](scripts/install-extensions.sh) to download and install GeoServer extensions based on the `STABLE_EXTENSIONS` environment variable.
