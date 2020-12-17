@@ -12,6 +12,7 @@ ENV GS_VERSION=${GS_VERSION} \
     INITIAL_MEMORY="2G" \
     MAXIMUM_MEMORY="4G" \
     JAIEXT_ENABLED=true \
+    DOWNLOAD_EXTENSIONS=false \
     STABLE_EXTENSIONS='' \
     DEBIAN_FRONTEND=noninteractive \
     EXTENSION_DOWNLOAD_DIR=/opt/geoserver_extension_downloads \

@@ -43,6 +43,7 @@ Pass as environment variables. If not passed, the default values will be used.
 * `INITIAL_MEMORY` (default: 2G)
 * `MAXIMUM_MEMORY` (default: 4G)
 * `JAIEXT_ENABLED` (default: true)
+* `DOWNLOAD_EXTENSIONS` (default: false)
 * `STABLE_EXTENSIONS` as comma separated list, will be downloaded and installed on startup (default: "")
 
 ## TODOs

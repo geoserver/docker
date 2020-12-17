@@ -14,8 +14,12 @@ function download_extension() {
   fi
 }
 
-# Install stable plugins
-for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
-  URL="${STABLE_PLUGIN_URL}/geoserver-${GS_VERSION}-${EXTENSION}-plugin.zip"
-  download_extension ${URL} ${EXTENSION}
-done
+# Install stable plugins only if DOWNLOAD_EXTENSIONS is true
+if [ "$DOWNLOAD_EXTENSIONS" = "true" ]; then
+  echo "Starting installation of extensions"
+  for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
+    URL="${STABLE_PLUGIN_URL}/geoserver-${GS_VERSION}-${EXTENSION}-plugin.zip"
+    download_extension ${URL} ${EXTENSION}
+  done
+  echo "Finished installation of extensions"
+fi

@@ -3,9 +3,7 @@
 set -e
 
 ## install GeoServer extensions before starting the tomcat
-echo "Starting installation of extensions"
 /scripts/install-extensions.sh
-echo "\nFinished installation of extensions"
 
 export GEOSERVER_OPTS="-Djava.awt.headless=true -server \
        -Dfile.encoding=UTF8 \
