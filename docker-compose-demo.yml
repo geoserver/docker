@@ -1,0 +1,13 @@
+version: '3'
+services:
+  geoserver:
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      - STABLE_EXTENSIONS=wps
+      - INITIAL_MEMORY=1G
+      - MAXIMUM_MEMORY=2G
+    volumes:
+      - ./demo_data/geoserver_data:/opt/geoserver_data/:Z

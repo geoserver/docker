@@ -17,6 +17,14 @@ Work is still in progress!
     1. handles the `GEOSERVER_OPTS`
     1. starts the tomcat
 
+## Quickstart
+
+You can quickstart by using the docker-compose demo
+
+`docker-compose -f docker-compose-demo.yml up --build`
+
+(use `sudo` if you get problems with mounted geoserver data dir)
+
 ## Building
 
 `docker build -t geoserver:test .`
