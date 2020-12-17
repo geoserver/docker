@@ -31,7 +31,7 @@ You can quickstart by using the docker-compose demo
 
 ## Running
 
-`docker run -it -e STABLE_EXTENSIONS='wps,csw' -p 8080:8080 geoserver:test`
+`docker run -it -e DOWNLOAD_EXTENSIONS='true' -e STABLE_EXTENSIONS='wps,csw' -p 8080:8080 geoserver:test`
 
 The extensions will be downloaded on startup of the image (before starting the tomcat).
 
@@ -44,16 +44,13 @@ Pass as environment variables. If not passed, the default values will be used.
 * `MAXIMUM_MEMORY` (default: 4G)
 * `JAIEXT_ENABLED` (default: true)
 * `DOWNLOAD_EXTENSIONS` (default: false)
-* `STABLE_EXTENSIONS` as comma separated list, will be downloaded and installed on startup (default: "")
+  * `STABLE_EXTENSIONS` applies only if `DOWNLOAD_EXTENSIONS` is true: provide a comma separated list of extension identifiers and they will be downloaded and installed on startup (default: "")
 
 ## TODOs
 
 * CORS
 * configuration of JNDI connections in the tomcat/custom tomcat configuration in general
 * default data for gs datadir?
-* possibility to add custom java dependencies (for example the oracle jdbc driver)
-  * in this context: mount `EXTENSION_DOWNLOAD_DIR` and implement checks to cache extensions that have already been downloaded before?
 * log4j properties
 * add possibility to add custom fonts
-* starting from which version we want to provide geoserver images (maybe 2.15.x?)/backwards compatability
-* add a docker-compose demo environment?
+* starting from which version we want to provide geoserver images/backwards compatability?

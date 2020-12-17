@@ -15,11 +15,11 @@ ENV GS_VERSION=${GS_VERSION} \
     DOWNLOAD_EXTENSIONS=false \
     STABLE_EXTENSIONS='' \
     DEBIAN_FRONTEND=noninteractive \
-    EXTENSION_DOWNLOAD_DIR=/opt/geoserver_extension_downloads \
-    GEOSERVER_DATA_DIR=/opt/geoserver_data \
-    GEOWEBCACHE_CACHE_DIR=/opt/geowebcache_data
+    ADDITIONAL_LIBS_DIR=/opt/additional_libs/ \
+    GEOSERVER_DATA_DIR=/opt/geoserver_data/ \
+    GEOWEBCACHE_CACHE_DIR=/opt/geowebcache_data/
 
-RUN mkdir ${EXTENSION_DOWNLOAD_DIR} ${GEOSERVER_DATA_DIR} ${GEOWEBCACHE_CACHE_DIR}
+RUN mkdir ${ADDITIONAL_LIBS_DIR} ${GEOSERVER_DATA_DIR} ${GEOWEBCACHE_CACHE_DIR}
 
 # install required dependencies
 # also clear the initial webapps
