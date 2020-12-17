@@ -48,7 +48,6 @@ Pass as environment variables. If not passed, the default values will be used.
 
 ## TODOs
 
-* CORS
 * configuration of JNDI connections in the tomcat/custom tomcat configuration in general
 * default data for gs datadir?
 * log4j properties
