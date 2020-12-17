@@ -4,7 +4,7 @@
 function download_extension() {
   URL=$1
   EXTENSION=$2
-  DOWNLOAD_FILE="${ADDITIONAL_LIBS_DIR}geoserver-${GS_VERSION}-${EXTENSION}-plugin.zip"
+  DOWNLOAD_FILE="${ADDITIONAL_LIBS_DIR}geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
 
   if [ -e "$DOWNLOAD_FILE" ]; then
       echo "$DOWNLOAD_FILE already exists. Skipping download."
@@ -22,7 +22,7 @@ function download_extension() {
 if [ "$DOWNLOAD_EXTENSIONS" = "true" ]; then
   echo "Starting download of extensions"
   for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
-    URL="${STABLE_PLUGIN_URL}/geoserver-${GS_VERSION}-${EXTENSION}-plugin.zip"
+    URL="${STABLE_PLUGIN_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
     download_extension ${URL} ${EXTENSION}
   done
   echo "Finished download of extensions"

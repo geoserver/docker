@@ -1,9 +1,9 @@
 FROM tomcat:jdk11-openjdk-slim
 
-ARG GS_VERSION=2.18.1
+ARG GEOSERVER_VERSION=2.18.1
 
-ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
-ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GS_VERSION}/extensions
+ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GEOSERVER_VERSION}/geoserver-${GEOSERVER_VERSION}-war.zip
+ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GEOSERVER_VERSION}/extensions
 
 ARG CORS_ENABLED=false
 ARG CORS_ALLOWED_ORIGINS=*
@@ -11,7 +11,7 @@ ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ARG CORS_ALLOWED_HEADERS=*
 
 # environment variables
-ENV GS_VERSION=${GS_VERSION} \
+ENV GEOSERVER_VERSION=${GEOSERVER_VERSION} \
     GEOSERVER_DIR=${CATALINA_HOME}/webapps/geoserver \
     STABLE_PLUGIN_URL=${STABLE_PLUGIN_URL} \
     INITIAL_MEMORY=2G \
