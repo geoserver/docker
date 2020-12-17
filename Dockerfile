@@ -5,12 +5,17 @@ ARG GS_VERSION=2.18.1
 ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GS_VERSION}/extensions
 
+ARG CORS_ENABLED=false
+ARG CORS_ALLOWED_ORIGINS=*
+ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
+ARG CORS_ALLOWED_HEADERS=*
+
 # environment variables
 ENV GS_VERSION=${GS_VERSION} \
-    WAR_URL=${WAR_URL} \
+    GEOSERVER_DIR=${CATALINA_HOME}/webapps/geoserver \
     STABLE_PLUGIN_URL=${STABLE_PLUGIN_URL} \
-    INITIAL_MEMORY="2G" \
-    MAXIMUM_MEMORY="4G" \
+    INITIAL_MEMORY=2G \
+    MAXIMUM_MEMORY=4G \
     JAIEXT_ENABLED=true \
     DOWNLOAD_EXTENSIONS=false \
     STABLE_EXTENSIONS='' \
@@ -30,9 +35,34 @@ RUN apt update && \
 # install geoserver
 RUN wget --progress=bar:force:noscroll -c --no-check-certificate "${WAR_URL}" -O /tmp/geoserver.zip && \
     unzip /tmp/geoserver.zip geoserver.war -d ${CATALINA_HOME}/webapps && \
-    mkdir -p ${CATALINA_HOME}/webapps/geoserver && \
-    unzip -q ${CATALINA_HOME}/webapps/geoserver.war -d ${CATALINA_HOME}/webapps/geoserver && \
+    mkdir -p ${GEOSERVER_DIR} && \
+    unzip -q ${CATALINA_HOME}/webapps/geoserver.war -d ${GEOSERVER_DIR} && \
     rm ${CATALINA_HOME}/webapps/geoserver.war
+
+# configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
+RUN if [ "$CORS_ENABLED" = "true" ]; then \
+      sed -i "\:</web-app>:i\ \
+      <filter>\n\ \
+        <filter-name>CorsFilter</filter-name>\n\ \
+        <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>\n\ \
+        <init-param>\n\ \
+            <param-name>cors.allowed.origins</param-name>\n\ \
+            <param-value>${CORS_ALLOWED_ORIGINS}</param-value>\n\ \
+        </init-param>\n\ \
+        <init-param>\n\ \
+            <param-name>cors.allowed.methods</param-name>\n\ \
+            <param-value>${CORS_ALLOWED_METHODS}</param-value>\n\ \
+        </init-param>\n\ \
+        <init-param>\n\ \
+          <param-name>cors.allowed.headers</param-name>\n\ \
+          <param-value>${CORS_ALLOWED_HEADERS}</param-value>\n\ \
+        </init-param>\n\ \
+      </filter>\n\ \
+      <filter-mapping>\n\ \
+        <filter-name>CorsFilter</filter-name>\n\ \
+        <url-pattern>/*</url-pattern>\n\ \
+      </filter-mapping>" "${GEOSERVER_DIR}/WEB-INF/web.xml"; \
+    fi
 
 # copy scripts
 COPY scripts /scripts

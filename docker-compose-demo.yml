@@ -3,11 +3,14 @@ services:
   geoserver:
     build:
       context: .
+      args:
+        - CORS_ENABLED=true
+        - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
       - 8080:8080
     environment:
       - DOWNLOAD_EXTENSIONS=true
-      - STABLE_EXTENSIONS=wps
+      - STABLE_EXTENSIONS=wps,csw
       - INITIAL_MEMORY=1G
       - MAXIMUM_MEMORY=2G
     volumes:
