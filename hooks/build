@@ -1,0 +1,55 @@
+#!/bin/bash -x
+
+PLUG_IN_LIST="monitor control-flow libjpeg-turbo"
+NIGHTLY_MASTER_PLUG_IN_VERSION="2.$(expr $MIDDLE_STABLE + 1)-SNAPSHOT"
+NIGHTLY_STABLE_PLUG_IN_VERSION="2.$MIDDLE_STABLE-SNAPSHOT"
+NIGHTLY_MAINT_PLUG_IN_VERSION="2.$(expr $MIDDLE_STABLE - 1)-SNAPSHOT"
+echo $NIGHTLY_MASTER_PLUG_IN_VERSION
+echo $NIGHTLY_STABLE_PLUG_IN_VERSION
+echo $NIGHTLY_MAINT_PLUG_IN_VERSION
+for NIGHTLY_VERSION in $NIGHTLY_MASTER_VERSION $NIGHTLY_STABLE_VERSION $NIGHTLY_MAINT_VERSION; do
+  NIGHTLY_URL="https://build.geoserver.org/geoserver/$NIGHTLY_VERSION/geoserver-$NIGHTLY_VERSION-latest-war.zip"
+  [[ "$NIGHTLY_MASTER_VERSION" == *"$NIGHTLY_VERSION"* ]] && PLUG_IN_VERSION="$NIGHTLY_MASTER_PLUG_IN_VERSION"
+  [[ "$NIGHTLY_STABLE_VERSION" == *"$NIGHTLY_VERSION"* ]] && PLUG_IN_VERSION="$NIGHTLY_STABLE_PLUG_IN_VERSION"
+  [[ "$NIGHTLY_MAINT_VERSION" == *"$NIGHTLY_VERSION"* ]] && PLUG_IN_VERSION="$NIGHTLY_MAINT_PLUG_IN_VERSION"
+  echo $PLUG_IN_VERSION
+  #PLUG_IN_URLS=()
+  mkdir -p ./resources/geoserver-plugins
+  for PLUG_IN_NAME in $PLUG_IN_LIST; do
+    echo $PLUG_IN_NAME
+    echo $PLUG_IN_VERSION
+    URL="https://build.geoserver.org/geoserver/$NIGHTLY_VERSION/ext-latest/geoserver-$PLUG_IN_VERSION-$PLUG_IN_NAME-plugin.zip"
+    wget $URL -O ./resources/geoserver-plugins/geoserver-$PLUG_IN_VERSION-$PLUG_IN_NAME-plugin.zip
+    #echo "Plugin $PLUG_IN_NAME URL for version $PLUG_IN_VERSION: $URL"
+    #PLUG_IN_URLS+=($URL)
+  done
+  var=$(IFS=$'  '; echo "${PLUG_IN_URLS[*]}" )
+  docker build \
+    --build-arg GEOSERVER_WEBAPP_SRC="$NIGHTLY_URL" \
+    --build-arg PLUG_IN_URLS="./resources/geoserver-plugins" \
+    -f "$DOCKERFILE_PATH" \
+    -t "${DOCKER_REPO}:$NIGHTLY_VERSION" .
+  rm -rf ./resources/geoserver-plugins/*
+done
+
+for VERSION in $STABLE_VERSION $MAINT_VERSION; do
+  GEOSERVER_URL="https://netcologne.dl.sourceforge.net/project/geoserver/GeoServer/$VERSION/geoserver-$VERSION-war.zip"
+  #PLUG_IN_URLS=()
+  mkdir -p ./resources/geoserver-plugins
+  for PLUG_IN_NAME in $PLUG_IN_LIST; do
+    echo $PLUG_IN_NAME
+    echo $VERSION
+    mkdir -p ./resources/geoserver-plugins
+    URL="https://netcologne.dl.sourceforge.net/project/geoserver/GeoServer/$VERSION/extensions/geoserver-$VERSION-$PLUG_IN_NAME-plugin.zip"
+    wget $URL -O ./resources/geoserver-plugins/geoserver-$PLUG_IN_VERSION-$PLUG_IN_NAME-plugin.zip
+    #echo "Plugin $PLUG_IN_NAME URL for version $PLUG_IN_VERSION: $URL"
+    #PLUG_IN_URLS+=($URL)
+  done
+  var=$(IFS=$'\ '; echo "${PLUG_IN_URLS[*]}" )
+  docker build \
+    --build-arg GEOSERVER_WEBAPP_SRC="$GEOSERVER_URL" \
+    --build-arg PLUG_IN_URLS="./resources/geoserver-plugins" \
+    -f "$DOCKERFILE_PATH" \
+    -t "${DOCKER_REPO}:$VERSION" .
+  rm -rf ./resources/geoserver-plugins/*
+done
