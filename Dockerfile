@@ -1,8 +1,8 @@
-FROM tomcat:jdk11-openjdk-slim
+FROM tomcat:9.0.41-jdk11-openjdk-slim AS base
 
-ARG GEOSERVER_VERSION=2.18.1
+ARG GEOSERVER_VERSION=2.18.2
 
-ARG WAR_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GEOSERVER_VERSION}/geoserver-${GEOSERVER_VERSION}-war.zip
+ARG GEOSERVER_WAR_SRC=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GEOSERVER_VERSION}/geoserver-${GEOSERVER_VERSION}-war.zip
 ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GEOSERVER_VERSION}/extensions
 
 ARG CORS_ENABLED=false
@@ -32,15 +32,15 @@ RUN apt update && \
     apt install -y curl wget openssl zip fontconfig libfreetype6 && \
     rm -rf ${CATALINA_HOME}/webapps/*
 
+ADD "${GEOSERVER_WAR_SRC}" "/tmp/"
+
 # install geoserver
-RUN wget --progress=bar:force:noscroll -c --no-check-certificate "${WAR_URL}" -O /tmp/geoserver.zip && \
-    unzip /tmp/geoserver.zip geoserver.war -d ${CATALINA_HOME}/webapps && \
-    mkdir -p ${GEOSERVER_DIR} && \
-    unzip -q ${CATALINA_HOME}/webapps/geoserver.war -d ${GEOSERVER_DIR} && \
+RUN unzip /tmp/geoserver*.zip geoserver.war -d ${CATALINA_HOME}/webapps && \
+    mkdir -p ${GEOSERVER_DIR} && \unzip -q ${CATALINA_HOME}/webapps/geoserver.war -d ${GEOSERVER_DIR} && \
     rm ${CATALINA_HOME}/webapps/geoserver.war
 
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
-RUN if [ "$CORS_ENABLED" = "true" ]; then \
+RUN if [ "${CORS_ENABLED}" = "true" ]; then \
       sed -i "\:</web-app>:i\ \
       <filter>\n\ \
         <filter-name>CorsFilter</filter-name>\n\ \

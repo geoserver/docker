@@ -10,7 +10,10 @@ Work is still in progress!
 
 1. The [Dockerfile](Dockerfile)
     1. installs dependencies
-    1. installs the GeoServer by downloading and extracting the war file
+    1. installs the GeoServer by adding a ZIP and extracting the WAR from it
+       1. the expected file name of the war in the zip is `geoserver.war`
+       1. by default, the GeoServer URL from sourceforge is used, but you could also provide a custom URL with a zip in the `GEOSERVER_WAR_SRC` build argument.
+       1. you can also use the `GEOSERVER_WAR_SRC` build argument to burn your custom WAR file from your local machine to the docker image, e.g. with something like `docker build -t geoserver:test --build-arg GEOSERVER_WAR_SRC="./resources/geoserver.zip" .`
     1. defines defaults for environment variables
 1. The [entrypoint.sh](scripts/entrypoint.sh) startup script (in a running container)
     1. executes [install-extensions.sh](scripts/install-extensions.sh) to download and install GeoServer extensions based on the `STABLE_EXTENSIONS` environment variable.
