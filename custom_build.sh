@@ -156,9 +156,6 @@ function main {
     help ${ALL_PARAMETERS}
     download_geoserver "${GEOSERVER_VERSION}"
     clean_up_directory ${PLUGIN_ARTIFACT_DIRECTORY}
-    download_plugin ext monitor
-    download_plugin ext control-flow
-    download_plugin community sec-oauth2-geonode
 
   	if  [[ ${GEOSERVER_DATA_DIR_RELEASE} = "nodatadir" ]]; then
    	    build_without_data_dir "${TAG}" "${PULL}"

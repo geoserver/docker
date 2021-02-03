@@ -1,6 +1,7 @@
 #!/bin/bash -x
 
-PLUG_IN_LIST="monitor control-flow libjpeg-turbo"
+#PLUG_IN_LIST="monitor control-flow"
+PLUG_IN_LIST=""
 NIGHTLY_MASTER_PLUG_IN_VERSION="2.$(expr $MIDDLE_STABLE + 1)-SNAPSHOT"
 NIGHTLY_STABLE_PLUG_IN_VERSION="2.$MIDDLE_STABLE-SNAPSHOT"
 NIGHTLY_MAINT_PLUG_IN_VERSION="2.$(expr $MIDDLE_STABLE - 1)-SNAPSHOT"
@@ -51,5 +52,28 @@ for VERSION in $STABLE_VERSION $MAINT_VERSION; do
     --build-arg PLUG_IN_URLS="./resources/geoserver-plugins" \
     -f "$DOCKERFILE_PATH" \
     -t "${DOCKER_REPO}:$VERSION" .
+  if [ "$VERSION" == "$LATEST_VERSION" ]; then
+    docker tag "${DOCKER_REPO}:$VERSION" "${DOCKER_REPO}:latest"
+  fi
   rm -rf ./resources/geoserver-plugins/*
 done
+
+for VERSION in RC_VERSION; do
+  GEOSERVER_URL="https://netcologne.dl.sourceforge.net/project/geoserver/GeoServer/$VERSION/geoserver-$VERSION-war.zip"
+  mkdir -p ./resources/geoserver-plugins
+  for PLUG_IN_NAME in $PLUG_IN_LIST; do
+    echo $PLUG_IN_NAME
+    echo $VERSION
+    mkdir -p ./resources/geoserver-plugins
+    URL="https://netcologne.dl.sourceforge.net/project/geoserver/GeoServer/$VERSION/extensions/geoserver-$VERSION-$PLUG_IN_NAME-plugin.zip"
+    wget $URL -O ./resources/geoserver-plugins/geoserver-$PLUG_IN_VERSION-$PLUG_IN_NAME-plugin.zip
+  done
+  var=$(IFS=$'\ '; echo "${PLUG_IN_URLS[*]}" )
+  docker build \
+    --build-arg GEOSERVER_WEBAPP_SRC="$GEOSERVER_URL" \
+    --build-arg PLUG_IN_URLS="./resources/geoserver-plugins" \
+    -f "$DOCKERFILE_PATH" \
+    -t "${DOCKER_REPO}:$VERSION" .
+  rm -rf ./resources/geoserver-plugins/*
+done
+
