@@ -56,7 +56,6 @@ ENV GRIB_CACHE_DIR="${GEOSERVER_HOME}/grib_cache_dir"
 # override at run time as needed JAVA_OPTS
 ENV INITIAL_MEMORY="2G"
 ENV MAXIMUM_MEMORY="4G"
-ENV LD_LIBRARY_PATH="/opt/libjpeg-turbo/lib64"
 ENV JAIEXT_ENABLED="true"
 
 ENV GEOSERVER_OPTS=" \
@@ -99,7 +98,6 @@ RUN apt-get update \
 
 # copy from mother
 
-COPY --from=mother "/opt/libjpeg-turbo" "/opt/libjpeg-turbo"
 COPY --from=mother "/output/datadir" "${GEOSERVER_DATA_DIR}"
 COPY --from=mother "/output/webapp/geoserver" "${CATALINA_BASE}/webapps/geoserver"
 COPY --from=mother "/output/plugins" "${CATALINA_BASE}/webapps/geoserver/WEB-INF/lib"
