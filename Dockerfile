@@ -34,10 +34,17 @@ RUN apt update && \
 
 ADD "${GEOSERVER_WAR_SRC}" "/tmp/"
 
+# extract war from zip if necessary
+RUN if [ "${GEOSERVER_WAR_SRC##*.}" = "zip" ]; then \
+        unzip "/tmp/*zip" -d /tmp/; \
+        ls -lah; \
+        rm /tmp/*zip; \
+    fi
+
 # install geoserver
-RUN unzip /tmp/geoserver*.zip geoserver.war -d ${CATALINA_HOME}/webapps && \
-    mkdir -p ${GEOSERVER_DIR} && \unzip -q ${CATALINA_HOME}/webapps/geoserver.war -d ${GEOSERVER_DIR} && \
-    rm ${CATALINA_HOME}/webapps/geoserver.war
+RUN mkdir -p ${GEOSERVER_DIR} && \
+    unzip -q /tmp/*war -d ${GEOSERVER_DIR} && \
+    rm /tmp/*war
 
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
 RUN if [ "${CORS_ENABLED}" = "true" ]; then \
