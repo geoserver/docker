@@ -1,5 +1,3 @@
-![alt text](./docker_hub_deployment.png?raw=true)
-
 # docker-geoserver
 
 ## How to run it
@@ -12,6 +10,25 @@ And run it
 
 `docker run --name gs -p 8080:8080 geosolutionsit/geoserver`
 
+Or for data persistence starting with default geoserver datadir (in this example GEOSERVER_DATA_DIR is pointing to `/var/geoserver/datadir`):
+
+```bash
+docker run --rm --name gs -p 8080:8080 geosolutionsit/geoserver
+```
+
+Save datadir locally to have a starting datadir:
+
+```bash
+docker cp gs:/var/geoserver/datadir ./datadir
+docker stop gs
+```
+
+start GeoServer with data persistence on saved datadir:
+
+```bash
+docker run -v ./datadir:/var/geoserver/datadir --name gs -p 8080:8080 geosolutionsit/geoserver`
+```
+
 Open your browser and point it to `http://localhost:8080/geoserver` .
 GeoServer web interface will show up, you can now log in with user admin and password `geoserver`.
 
@@ -23,6 +40,39 @@ There are some [**environment variables**](https://docs.docker.com/engine/refere
 - `GEOWEBCACHE_CACHE_DIR` to put your GeoServer cache elsewhere
 - `NETCDF_DATA_DIR` to put your GeoServer NETCDF data dir elsewhere
 - `GRIB_CACHE_DIR`o put your GeoServer GRIB cache dir elsewhere
+
+Each of these variables can be associated to an external volume to persist data for example in a docker compose
+configuration it can be done like this:
+
+add an .env file:
+
+```bash
+GEOSERVER_LOG_DIR=/var/geoserver/logs
+GEOSERVER_DATA_DIR=/var/geoserver/datadir
+GEOWEBCACHE_CONFIG_DIR=/var/geoserver/gwc_config
+GEOWEBCACHE_CACHE_DIR=/var/geoserver/gwc
+NETCDF_DATA_DIR=/var/geoserver/netcfd
+GRIB_CACHE_DIR=/var/geoserver/grib_cache
+```
+
+and a docker-compose.yml like this
+
+```yml
+version: "3.8"
+services:
+  geoserver:
+    image: geosolutionsit/geoserver:2.19RC
+    env-file: .env
+    ports:
+     - 8080:8080
+    volumes:
+      - ./logs:${GEOSERVER_LOG_DIR}
+      - ./datadir:${GEOSERVER_DATA_DIR}
+      - ./gwc_config:${GEOWEBCACHE_CONFIG_DIR}
+      - ./gwc:${GEOWEBCACHE_CACHE_DIR}
+      - ./netcfd:${NETCDF_DATA_DIR}
+      - ./grib_cache:${GRIB_CACHE_DIR}
+```
 
 ## How to build the Dockerfile with no helper scrips
 
@@ -81,5 +131,5 @@ It can burn a custom datadir inside the docker image (it will expect data dir in
 ### Example
 
 ```
-./custom_build.sh my-docker-tag 2.18.x 2.18.x dev "no pull"
+./custom_build.sh my-docker-tag 2.18.x 2.18.x nodatadir no_pull
 ```
