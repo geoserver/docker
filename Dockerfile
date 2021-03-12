@@ -102,7 +102,7 @@ COPY --from=mother "/output/datadir" "${GEOSERVER_DATA_DIR}"
 COPY --from=mother "/output/webapp/geoserver" "${CATALINA_BASE}/webapps/geoserver"
 COPY --from=mother "/output/plugins" "${CATALINA_BASE}/webapps/geoserver/WEB-INF/lib"
 
-
+RUN if [ ! -f "${GEOSERVER_DATA_DIR}/logging.xml" ]; then cp -a ${CATALINA_BASE}/webapps/geoserver/data/* ${GEOSERVER_DATA_DIR};fi
 
 WORKDIR "$CATALINA_BASE"
 
