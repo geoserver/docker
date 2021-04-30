@@ -11,15 +11,6 @@ done
 for VERSION in $STABLE_VERSION $MAINT_VERSION; do 
   if [ "$(grep $VERSION /tmp/failed_versions)" == "" ]; then
     docker push "${DOCKER_REPO}:$VERSION"
-    if [ "$VERSION" == "$LATEST_VERSION" ]; then
-      docker push "${DOCKER_REPO}:latest"
-    fi
-  fi
-done
-
-for VERSION in $RC_VERSION; do
-  if [ "$(grep $VERSION /tmp/failed_versions)" == "" ]; then
-    docker push "${DOCKER_REPO}:$VERSION"
   fi
 done
 

@@ -26,7 +26,7 @@ docker stop gs
 start GeoServer with data persistence on saved datadir:
 
 ```bash
-docker run -v ./datadir:/var/geoserver/datadir --name gs -p 8080:8080 geosolutionsit/geoserver`
+docker run -v ./datadir:/var/geoserver/datadir --name gs -p 8080:8080 geosolutionsit/geoserver
 ```
 
 Open your browser and point it to `http://localhost:8080/geoserver` .
