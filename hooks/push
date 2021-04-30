@@ -1,0 +1,17 @@
+#!/bin/bash
+
+touch /tmp/failed_versions
+
+for NIGHTLY_VERSION in $NIGHTLY_MASTER_VERSION $NIGHTLY_STABLE_VERSION $NIGHTLY_MAINT_VERSION; do
+  if [ "$(grep $NIGHTLY_VERSION /tmp/failed_versions)" == "" ]; then
+    docker push "${DOCKER_REPO}:$NIGHTLY_VERSION"
+  fi
+done
+
+for VERSION in $STABLE_VERSION $MAINT_VERSION; do 
+  if [ "$(grep $VERSION /tmp/failed_versions)" == "" ]; then
+    docker push "${DOCKER_REPO}:$VERSION"
+  fi
+done
+
+echo "List of versions with problems not uploaded: \n $(cat /tmp/failed_versions)"

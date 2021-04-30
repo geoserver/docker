@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  sut:
+    image: ${DOCKER_REPO}:$VERSION
+    command: /docker/tests/run_tests.sh
+    environment:
+     - SOURCE_BRANCH
+    ports:
+     - 8080:8080
