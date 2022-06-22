@@ -1,83 +1,87 @@
-FROM tomcat:9.0.41-jdk11-openjdk-slim AS base
+FROM ubuntu:22.04
 
-ARG GEOSERVER_VERSION=2.18.2
-
-ARG GEOSERVER_WAR_SRC=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GEOSERVER_VERSION}/geoserver-${GEOSERVER_VERSION}-war.zip
-ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GEOSERVER_VERSION}/extensions
-
+# The GS_VERSION argument could be used like this to overwrite the default:
+# docker build --build-arg GS_VERSION=2.11.3 -t geoserver:2.11.3 .
+ARG TOMCAT_VERSION=9.0.64
+ARG GS_VERSION=2.21.0
+ARG GS_DATA_PATH=./geoserver_data/
+ARG ADDITIONAL_LIBS_PATH=./additional_libs/
+ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
 ARG CORS_ENABLED=false
 ARG CORS_ALLOWED_ORIGINS=*
 ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ARG CORS_ALLOWED_HEADERS=*
+ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GS_VERSION}/extensions
 
-# environment variables
-ENV GEOSERVER_VERSION=${GEOSERVER_VERSION} \
-    GEOSERVER_DIR=${CATALINA_HOME}/webapps/geoserver \
-    STABLE_PLUGIN_URL=${STABLE_PLUGIN_URL} \
-    INITIAL_MEMORY=2G \
-    MAXIMUM_MEMORY=4G \
-    JAIEXT_ENABLED=true \
-    DOWNLOAD_EXTENSIONS=false \
-    STABLE_EXTENSIONS='' \
-    DEBIAN_FRONTEND=noninteractive \
-    ADDITIONAL_LIBS_DIR=/opt/additional_libs/ \
-    GEOSERVER_DATA_DIR=/opt/geoserver_data/ \
-    GEOWEBCACHE_CACHE_DIR=/opt/geowebcache_data/
+# Environment variables
+ENV CATALINA_HOME=/opt/apache-tomcat-${TOMCAT_VERSION}
+ENV GEOSERVER_VERSION=$GS_VERSION
+ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
+ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
+ENV EXTRA_JAVA_OPTS="-Xms256m -Xmx1g"
+ENV CORS_ENABLED=$CORS_ENABLED
+ENV CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+ENV CORS_ALLOWED_METHODS=$CORS_ALLOWED_METHODS
+ENV CORS_ALLOWED_HEADERS=$CORS_ALLOWED_HEADERS
+ENV DEBIAN_FRONTEND=noninteractive
+ENV INSTALL_EXTENSIONS=false
+ENV STABLE_EXTENSIONS=''
+ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
+ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
+ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 
-RUN mkdir ${ADDITIONAL_LIBS_DIR} ${GEOSERVER_DATA_DIR} ${GEOWEBCACHE_CACHE_DIR}
+# see http://docs.geoserver.org/stable/en/user/production/container.html
+ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
+    -Djava.awt.headless=true -server \
+    -Dfile.encoding=UTF-8 \
+    -Djavax.servlet.request.encoding=UTF-8 \
+    -Djavax.servlet.response.encoding=UTF-8 \
+    -D-XX:SoftRefLRUPolicyMSPerMB=36000 \
+    -Xbootclasspath/a:$CATALINA_HOME/lib/marlin.jar \
+    -Xbootclasspath/a:$CATALINA_HOME/lib/marlin-sun-java2d.jar \
+    -Dsun.java2d.renderer=org.marlin.pisces.PiscesRenderingEngine \
+    -Dorg.geotools.coverage.jaiext.enabled=true"
 
-# install required dependencies
-# also clear the initial webapps
+# init
 RUN apt update && \
-    apt install -y curl wget openssl zip fontconfig libfreetype6 && \
-    rm -rf ${CATALINA_HOME}/webapps/*
+    apt -y upgrade && \
+    apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk && \
+    rm -rf $CATALINA_HOME/webapps/* && \
+    apt clean && \
+    rm -rf /var/cache/apt/* && \
+    rm -rf /var/lib/apt/lists/*
 
-ADD "${GEOSERVER_WAR_SRC}" "/tmp/"
+WORKDIR /opt/
+RUN wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+    tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+    rm apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+    rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT && \
+    rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/docs && \
+    rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/examples
 
-# extract war from zip if necessary
-RUN if [ "${GEOSERVER_WAR_SRC##*.}" = "zip" ]; then \
-        unzip "/tmp/*zip" -d /tmp/; \
-        ls -lah; \
-        rm /tmp/*zip; \
-    fi
+WORKDIR /tmp
 
 # install geoserver
-RUN mkdir -p ${GEOSERVER_DIR} && \
-    unzip -q /tmp/*war -d ${GEOSERVER_DIR} && \
-    rm /tmp/*war
+RUN wget -q -O /tmp/geoserver.zip http://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/geoserver-$GEOSERVER_VERSION-war.zip && \
+    unzip geoserver.zip geoserver.war -d $CATALINA_HOME/webapps && \
+    mkdir -p $CATALINA_HOME/webapps/geoserver && \
+    unzip -q $CATALINA_HOME/webapps/geoserver.war -d $CATALINA_HOME/webapps/geoserver && \
+    rm $CATALINA_HOME/webapps/geoserver.war && \
+    mkdir -p $GEOSERVER_DATA_DIR
 
-# configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
-RUN if [ "${CORS_ENABLED}" = "true" ]; then \
-      sed -i "\:</web-app>:i\ \
-      <filter>\n\ \
-        <filter-name>CorsFilter</filter-name>\n\ \
-        <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>\n\ \
-        <init-param>\n\ \
-            <param-name>cors.allowed.origins</param-name>\n\ \
-            <param-value>${CORS_ALLOWED_ORIGINS}</param-value>\n\ \
-        </init-param>\n\ \
-        <init-param>\n\ \
-            <param-name>cors.allowed.methods</param-name>\n\ \
-            <param-value>${CORS_ALLOWED_METHODS}</param-value>\n\ \
-        </init-param>\n\ \
-        <init-param>\n\ \
-          <param-name>cors.allowed.headers</param-name>\n\ \
-          <param-value>${CORS_ALLOWED_HEADERS}</param-value>\n\ \
-        </init-param>\n\ \
-      </filter>\n\ \
-      <filter-mapping>\n\ \
-        <filter-name>CorsFilter</filter-name>\n\ \
-        <url-pattern>/*</url-pattern>\n\ \
-      </filter-mapping>" "${GEOSERVER_DIR}/WEB-INF/web.xml"; \
-    fi
-
-# copy scripts
-COPY scripts /scripts
-RUN chmod +x /scripts/*.sh
+COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
+COPY $ADDITIONAL_LIBS_PATH $GEOSERVER_LIB_DIR
+COPY $ADDITIONAL_FONTS_PATH /usr/share/fonts/truetype/
 
 # cleanup
-RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt purge -y && \
+    apt autoremove --purge -y && \
+    rm -rf /tmp/*
 
-WORKDIR ${CATALINA_HOME}
+# copy scripts
+COPY *.sh /opt/
+RUN chmod +x /opt/*.sh
 
-CMD ["/bin/sh", "/scripts/entrypoint.sh"]
+ENTRYPOINT /opt/startup.sh
+
+WORKDIR /opt

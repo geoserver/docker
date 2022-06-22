@@ -4,13 +4,13 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.18.2
+        - GEOSERVER_VERSION=2.21.0
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
       - 8080:8080
     environment:
-      - DOWNLOAD_EXTENSIONS=true
+      - INSTALL_EXTENSIONS=true
       - STABLE_EXTENSIONS=wps,csw
       - INITIAL_MEMORY=1G
       - MAXIMUM_MEMORY=2G
