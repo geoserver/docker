@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 # The GS_VERSION argument could be used like this to overwrite the default:
-# docker build --build-arg GS_VERSION=2.11.3 -t geoserver:2.11.3 .
+# docker build --build-arg GS_VERSION=2.21.2 -t geoserver:2.21.2 .
 ARG TOMCAT_VERSION=9.0.65
 ARG GS_VERSION=2.21.1
 ARG GS_DATA_PATH=./geoserver_data/
@@ -11,12 +11,13 @@ ARG CORS_ENABLED=false
 ARG CORS_ALLOWED_ORIGINS=*
 ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ARG CORS_ALLOWED_HEADERS=*
-ARG STABLE_PLUGIN_URL=https://sourceforge.net/projects/geoserver/files/GeoServer/${GS_VERSION}/extensions
+ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 
 # Environment variables
 ENV CATALINA_HOME=/opt/apache-tomcat-${TOMCAT_VERSION}
 ENV GEOSERVER_VERSION=$GS_VERSION
 ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
+ENV GEOSERVER_REQUIRE_FILE=$GEOSERVER_DATA_DIR/global.xml
 ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
 ENV EXTRA_JAVA_OPTS="-Xms256m -Xmx1g"
 ENV CORS_ENABLED=$CORS_ENABLED
@@ -30,7 +31,7 @@ ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 
-# see http://docs.geoserver.org/stable/en/user/production/container.html
+# see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     -Djava.awt.headless=true -server \
     -Dfile.encoding=UTF-8 \
@@ -38,7 +39,6 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     -Djavax.servlet.response.encoding=UTF-8 \
     -D-XX:SoftRefLRUPolicyMSPerMB=36000 \
     -Xbootclasspath/a:$CATALINA_HOME/lib/marlin.jar \
-    -Xbootclasspath/a:$CATALINA_HOME/lib/marlin-sun-java2d.jar \
     -Dsun.java2d.renderer=org.marlin.pisces.PiscesRenderingEngine \
     -Dorg.geotools.coverage.jaiext.enabled=true"
 
@@ -62,11 +62,12 @@ RUN wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apac
 WORKDIR /tmp
 
 # install geoserver
-RUN wget -q -O /tmp/geoserver.zip http://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/geoserver-$GEOSERVER_VERSION-war.zip && \
+RUN wget -q -O /tmp/geoserver.zip https://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/geoserver-$GEOSERVER_VERSION-war.zip && \
     unzip geoserver.zip geoserver.war -d $CATALINA_HOME/webapps && \
     mkdir -p $CATALINA_HOME/webapps/geoserver && \
     unzip -q $CATALINA_HOME/webapps/geoserver.war -d $CATALINA_HOME/webapps/geoserver && \
     rm $CATALINA_HOME/webapps/geoserver.war && \
+    mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-0.9.3.jar $CATALINA_HOME/lib/marlin.jar && \
     mkdir -p $GEOSERVER_DATA_DIR
 
 COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
