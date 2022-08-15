@@ -35,7 +35,7 @@ and login with geoserver default `admin:geoserver` credentials.
 
 For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker).
 
-## How to download and install additional extensions on startup?
+### How to download and install additional extensions on startup?
 
 The ``startup.sh`` script allows some customization on startup:
 
@@ -49,6 +49,21 @@ Example installing wps and ysld extensions:
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
   docker.osgeo.org/geoserver:2.21.1 
+```
+
+The list of extensions (taken from SourceForge download page):
+
+```
+app-schema   gdal            jp2k          ogr-wps          web-resource
+authkey      geofence        libjpeg-turbo oracle           wmts-multi-dimensional
+cas          geofence-server mapml         params-extractor wps-cluster-hazelcast
+charts       geopkg-output   mbstyle       printing         wps-cluster-hazelcast
+control-flow grib            mongodb       pyramid          wps-download
+css          gwc-s3          monitor       querylayer       wps-jdbc
+csw          h2              mysql         sldservice       wps
+db2          imagemap        netcdf-out    sqlserver        xslt
+dxf          importer        netcdf        vectortiles      ysld
+excel        inspire         ogr-wfs       wcs2_0-eo
 ```
 
 ### How to install additional extensions from local folder?
