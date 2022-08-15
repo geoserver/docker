@@ -35,6 +35,20 @@ and login with geoserver default `admin:geoserver` credentials.
 
 For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker).
 
+### How to mount an external folder for use as a data directory
+
+To use an external folder as your geoserver data directory.
+
+
+```
+docker run -it -p 80:8080 \
+  --mount src="/absolute/path/on/host",target=/opt/geoserver_data/,type=bind \
+  docker.osgeo.org/geoserver:2.21.1 
+```
+
+An empty data directory will be populated on first use. You can easily update GeoServer while
+using the same data directory.
+
 ### How to download and install additional extensions on startup?
 
 The ``startup.sh`` script allows some customization on startup:
@@ -166,4 +180,25 @@ Put your `*.jar` files (e.g. the WPS extension) in the `additional_libs` folder 
 docker build \
   --build-arg ADDITIONAL_LIBS_PATH={RELATIVE_PATH_TO_YOUR_LIBS}
   -t {YOUR_TAG} .
+```
+
+## How to release? 
+
+### How to publish official release?
+
+OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The results are combined into docker.osgeo.org repository alongside other software such as PostGIS.
+
+Build locally:
+```
+docker build -t geoserver-docker.osgeo.org/geoserver:2.21.1 .
+```
+
+Login using with osgeo user id:
+```
+docker login geoserver-docker.osgeo.org 
+```
+
+Push to osgeo repository:
+```
+docker push geoserver-docker.osgeo.org/geoserver:2.21.1
 ```
