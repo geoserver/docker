@@ -10,7 +10,7 @@ function download_extension() {
       echo "$DOWNLOAD_FILE already exists. Skipping download."
   else
     if curl --output /dev/null --silent --head --fail "${URL}"; then
-        echo -e "\nDownloading ${EXTENSION}-extension from ${URL} to ${DOWNLOAD_FILE}"
+        echo -e "\nDownloading ${EXTENSION} extension from ${URL} to ${DOWNLOAD_FILE}"
         wget --progress=bar:force:noscroll -c --no-check-certificate "${URL}" -O ${DOWNLOAD_FILE}
       else
         echo "URL does not exist: ${URL}"
@@ -21,6 +21,9 @@ function download_extension() {
 # Download stable plugins only if INSTALL_EXTENSIONS is true
 if [ "$INSTALL_EXTENSIONS" = "true" ]; then
   echo "Starting download of extensions"
+  if [ ! -d "$ADDITIONAL_LIBS_DIR" ]; then
+    mkdir -p $ADDITIONAL_LIBS_DIR
+  fi
   for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
     URL="${STABLE_PLUGIN_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
     download_extension ${URL} ${EXTENSION}

@@ -4,18 +4,15 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.21.0
+        - GEOSERVER_VERSION=2.21.1
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
-      - 8080:8080
+      - 80:8080
     environment:
       - INSTALL_EXTENSIONS=true
       - STABLE_EXTENSIONS=wps,csw
-      - INITIAL_MEMORY=1G
-      - MAXIMUM_MEMORY=2G
-      - JAIEXT_ENABLED=true
-      - GEOSERVER_DATA_DIR=/opt/geoserver_data/
+      - EXTRA_JAVA_OPTS=-Xms1G -Xmx2G
     volumes:
-      - ./demo_data/geoserver_data:/opt/geoserver_data/:Z
-      - ./demo_data/additional_libs:/opt/additional_libs:Z # by mounting this we can install libs from host on startup
+      - ./geoserver_data:/opt/geoserver_data/:Z
+      - ./additional_libs:/opt/additional_libs:Z # by mounting this we can install libs from host on startup

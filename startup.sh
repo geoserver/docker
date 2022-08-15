@@ -1,4 +1,11 @@
 #!/bin/sh
+echo "Welcome to GeoServer $GEOSERVER_VERSION"
+
+## install release data directory if needed before starting tomcat
+if [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
+    echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
+    cp -r $CATALINA_HOME/webapps/geoserver/data/* $GEOSERVER_DATA_DIR
+fi
 
 ## install GeoServer extensions before starting the tomcat
 /opt/install-extensions.sh
@@ -11,7 +18,7 @@ if [ -d "$ADDITIONAL_LIBS_DIR" ] && [ $count != 0 ]; then
 fi
 
 # copy additional fonts before starting the tomcat
-# we also count whether at least one file with the extensions exists
+# we also count whether at least one file with the fonts exists
 count=`ls -1 *.ttf 2>/dev/null | wc -l`
 if [ -d "$ADDITIONAL_FONTS_DIR" ] && [ $count != 0 ]; then
     cp $ADDITIONAL_FONTS_DIR/*.ttf /usr/share/fonts/truetype/
@@ -23,6 +30,7 @@ fi
 # (this will only happen if our filter has not yet been added before)
 if [ "${CORS_ENABLED}" = "true" ]; then
   if ! grep -q DockerGeoServerCorsFilter "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
+    echo "Enable CORS for $CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
     sed -i "\:</web-app>:i\\
     <filter>\n\
       <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
