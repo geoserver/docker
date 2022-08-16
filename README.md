@@ -15,14 +15,19 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
 
 ### How to run official release?
 
-Pull an official image use ``docker.osgeo.org/{{VERSION}}``:
+To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
 ```
 docker pull docker.osgeo.org/geoserver:2.21.1
+```
+
+Afterwards you can run the pulled image locally with: 
+
+```
 docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.21.1
 ```
 
-or if you want to start the container daemonized:
+Or if you want to start the container daemonized, use e.g.:
 
 ```
 docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.21.1
