@@ -57,7 +57,7 @@ using the same data directory.
 ### How to start a GeoServer without sample data?
 
 This image populates GeoServer with demo data by default. For production scenarios this is typically not desired.
-Setting the environment varibale `SKIP_DEMO_DATA` can be set to `true` to create an empty GeoServer.
+Setting the environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empty GeoServer.
 
 ### How to download and install additional extensions on startup?
 
