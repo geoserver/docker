@@ -38,7 +38,7 @@ and login with geoserver default `admin:geoserver` credentials.
 
 **IMPORTANT NOTE:** Please change the default ``geoserver`` and ``master`` passwords.
 
-For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker).
+For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker.html).
 
 ### How to mount an external folder for use as a data directory
 
