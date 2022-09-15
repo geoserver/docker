@@ -21,7 +21,7 @@ To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 docker pull docker.osgeo.org/geoserver:2.21.1
 ```
 
-Afterwards you can run the pulled image locally with: 
+Afterwards you can run the pulled image locally with:
 
 ```
 docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.21.1
@@ -48,11 +48,16 @@ To use an external folder as your geoserver data directory.
 ```
 docker run -it -p 80:8080 \
   --mount src="/absolute/path/on/host",target=/opt/geoserver_data/,type=bind \
-  docker.osgeo.org/geoserver:2.21.1 
+  docker.osgeo.org/geoserver:2.21.1
 ```
 
 An empty data directory will be populated on first use. You can easily update GeoServer while
 using the same data directory.
+
+### How to start a GeoServer without sample data?
+
+This image populates GeoServer with demo data by default. For production scenarios this is typically not desired.
+The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empty GeoServer.
 
 ### How to download and install additional extensions on startup?
 
@@ -60,14 +65,14 @@ The ``startup.sh`` script allows some customization on startup:
 
 * ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
 * ``STABLE_EXTENSIONS`` list of extensions to download and install
-* ``CORS_ENABLED`` 
+* ``CORS_ENABLED``
 
 Example installing wps and ysld extensions:
 
 ```
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
-  docker.osgeo.org/geoserver:2.21.1 
+  docker.osgeo.org/geoserver:2.21.1
 ```
 
 The list of extensions (taken from SourceForge download page):
@@ -92,7 +97,7 @@ If you want to add geoserver extensions/libs by using a mount, you can add somet
 ```
 docker run -it -p 80:8080 \
   --mount src="/dir/with/libs/on/host",target=/opt/additional_libs,type=bind \
-  docker.osgeo.org/geoserver:2.21.1 
+  docker.osgeo.org/geoserver:2.21.1
 ```
 
 ### How to add additional fonts to the docker image (e.g. for SLD styling)?
@@ -187,7 +192,7 @@ docker build \
   -t {YOUR_TAG} .
 ```
 
-## How to release? 
+## How to release?
 
 ### How to publish official release?
 
@@ -200,7 +205,7 @@ docker build -t geoserver-docker.osgeo.org/geoserver:2.21.1 .
 
 Login using with osgeo user id:
 ```
-docker login geoserver-docker.osgeo.org 
+docker login geoserver-docker.osgeo.org
 ```
 
 Push to osgeo repository:

@@ -1,10 +1,15 @@
 #!/bin/sh
 echo "Welcome to GeoServer $GEOSERVER_VERSION"
 
+## Skip demo data
+if [ "${SKIP_DEMO_DATA}" = "true" ]; then
+  unset GEOSERVER_REQUIRE_FILE
+fi
+
 ## install release data directory if needed before starting tomcat
-if [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
-    echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
-    cp -r $CATALINA_HOME/webapps/geoserver/data/* $GEOSERVER_DATA_DIR
+if [ ! -z "$GEOSERVER_REQUIRE_FILE" ] && [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
+  echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
+  cp -r $CATALINA_HOME/webapps/geoserver/data/* $GEOSERVER_DATA_DIR
 fi
 
 ## install GeoServer extensions before starting the tomcat
