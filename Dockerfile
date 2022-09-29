@@ -31,6 +31,7 @@ ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 ENV SKIP_DEMO_DATA=false
+ENV TOMCAT_HTTP_PORT=8080
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \

@@ -60,5 +60,11 @@ if [ "${CORS_ENABLED}" = "true" ]; then
   fi
 fi
 
+# replace the default port with the one provided by the environment variable
+if [ ! -z "$TOMCAT_HTTP_PORT" ]; then
+  echo "Tomcat HTTP port set to $TOMCAT_HTTP_PORT"
+  sed -i "s/port=\"[0-9]\+\" protocol=\"HTTP\/1.1\"/port=\"$TOMCAT_HTTP_PORT\" protocol=\"HTTP\/1.1\"/" $CATALINA_HOME/conf/server.xml
+fi
+
 # start the tomcat
 $CATALINA_HOME/bin/catalina.sh run
