@@ -2,20 +2,20 @@
 
 This Dockerfile can be used to create images for all geoserver versions since 2.5.
 
-* Debian based Linux
-* OpenJDK 11
-* Tomcat 9
-* GeoServer
-  * Support of custom fonts (e.g. for SLD styling)
-  * CORS support
-  * Support extensions
-  * Support additional libraries
+- Debian based Linux
+- OpenJDK 11
+- Tomcat 9
+- GeoServer
+  - Support of custom fonts (e.g. for SLD styling)
+  - CORS support
+  - Support extensions
+  - Support additional libraries
 
 ## How to Use
 
 ### How to run official release?
 
-To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
+To pull an official image use `docker.osgeo.org/geoserver:{{VERSION}}`, e.g.:
 
 ```
 docker pull docker.osgeo.org/geoserver:2.21.1
@@ -36,14 +36,13 @@ docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.21.1
 Check http://localhost/geoserver to see the geoserver page,
 and login with geoserver default `admin:geoserver` credentials.
 
-**IMPORTANT NOTE:** Please change the default ``geoserver`` and ``master`` passwords.
+**IMPORTANT NOTE:** Please change the default `geoserver` and `master` passwords.
 
 For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker.html).
 
 ### How to mount an external folder for use as a data directory
 
 To use an external folder as your geoserver data directory.
-
 
 ```
 docker run -it -p 80:8080 \
@@ -61,11 +60,11 @@ The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empt
 
 ### How to download and install additional extensions on startup?
 
-The ``startup.sh`` script allows some customization on startup:
+The `startup.sh` script allows some customization on startup:
 
-* ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
-* ``STABLE_EXTENSIONS`` list of extensions to download and install
-* ``CORS_ENABLED``
+- `INSTALL_EXTENSIONS` to `true` to download and install extensions
+- `STABLE_EXTENSIONS` list of extensions to download and install
+- `CORS_ENABLED`
 
 Example installing wps and ysld extensions:
 
@@ -112,11 +111,21 @@ docker run -it -p 80:8080 \
 
 **Note:** Do not change the target value!
 
+### How to change Tomcat default port?
+
+If you want to change the default Tomcat port (8080) to e.g. 80, you can use:
+
+```
+docker run -it -p 80:80 \
+  --env TOMCAT_HTTP_PORT=80 \
+  docker.osgeo.org/geoserver:2.21.1
+```
+
 ## Troubleshooting
 
 ### How to watch geoserver.log from host?
 
-To watch ``geoserver.log`` of a running container:
+To watch `geoserver.log` of a running container:
 
 ```
 docker exec -it {CONTAINER_ID} tail -f /opt/geoserver_data/logs/geoserver.log
@@ -124,18 +133,17 @@ docker exec -it {CONTAINER_ID} tail -f /opt/geoserver_data/logs/geoserver.log
 
 ### How to use the docker-compose demo?
 
-The ``docker-compose-demo.yml`` to build with your own data directory and extensions.
+The `docker-compose-demo.yml` to build with your own data directory and extensions.
 
-Stage geoserver data directory contents into ``geoserver_data``, and any extensions into ``additional_libs`` folder.
+Stage geoserver data directory contents into `geoserver_data`, and any extensions into `additional_libs` folder.
 
-Run ``docker-compose``:
+Run `docker-compose`:
 
 ```
 docker-compose -f docker-compose-demo.yml up --build
 ```
 
 ## How to Build?
-
 
 ### How to build a local image?
 
@@ -199,16 +207,19 @@ docker build \
 OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The results are combined into docker.osgeo.org repository alongside other software such as PostGIS.
 
 Build locally:
+
 ```
 docker build -t geoserver-docker.osgeo.org/geoserver:2.21.1 .
 ```
 
 Login using with osgeo user id:
+
 ```
 docker login geoserver-docker.osgeo.org
 ```
 
 Push to osgeo repository:
+
 ```
 docker push geoserver-docker.osgeo.org/geoserver:2.21.1
 ```
