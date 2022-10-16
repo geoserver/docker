@@ -53,7 +53,7 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/
-RUN wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     rm apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT && \
