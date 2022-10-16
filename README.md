@@ -59,6 +59,11 @@ using the same data directory.
 This image populates GeoServer with demo data by default. For production scenarios this is typically not desired.
 The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empty GeoServer.
 
+### How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
+
+By default, the ROOT webapp is not available which makes requests to the root endpoint "/" return a 404 error.
+The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a permanent redirect to the web interface.
+
 ### How to download and install additional extensions on startup?
 
 The ``startup.sh`` script allows some customization on startup:
