@@ -99,7 +99,7 @@ excel        inspire         ogr-wfs       wcs2_0-eo
 
 ### How to install additional extensions from local folder?
 
-If you want to add geoserver extensions/libs by using a mount, you can add something like
+If you want to add geoserver extensions/libs, place the respective jar files in a directory and mount it like
 
 ```
 docker run -it -p 80:8080 \
