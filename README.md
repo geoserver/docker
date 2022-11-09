@@ -56,8 +56,15 @@ using the same data directory.
 
 ### How to start a GeoServer without sample data?
 
-This image populates GeoServer with demo data by default. For production scenarios this is typically not desired.
-The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empty GeoServer.
+This image populates ``/opt/geoserver_data/`` with demo data by default. For production scenarios this is typically not desired.
+
+The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empty data directory.
+
+```
+docker run -it -p 80:8080 \
+  --env SKIP_DEMO_DATA=true \
+  docker.osgeo.org/geoserver:2.21.1
+```
 
 ### How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
 
@@ -97,7 +104,7 @@ excel        inspire         ogr-wfs       wcs2_0-eo
 
 ### How to install additional extensions from local folder?
 
-If you want to add geoserver extensions/libs by using a mount, you can add something like
+If you want to add geoserver extensions/libs, place the respective jar files in a directory and mount it like
 
 ```
 docker run -it -p 80:8080 \
