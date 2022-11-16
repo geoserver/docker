@@ -66,6 +66,11 @@ docker run -it -p 80:8080 \
   docker.osgeo.org/geoserver:2.21.1
 ```
 
+### How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
+
+By default, the ROOT webapp is not available which makes requests to the root endpoint "/" return a 404 error.
+The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a permanent redirect to the web interface.
+
 ### How to download and install additional extensions on startup?
 
 The ``startup.sh`` script allows some customization on startup:

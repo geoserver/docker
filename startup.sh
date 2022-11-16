@@ -6,6 +6,22 @@ if [ "${SKIP_DEMO_DATA}" = "true" ]; then
   unset GEOSERVER_REQUIRE_FILE
 fi
 
+## Add a permanent redirect (HTTP 301) from the root webapp ("/") to geoserver web interface ("/geoserver/web")
+if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ]; then
+  if [ ! -d $CATALINA_HOME/webapps/ROOT ]; then
+      mkdir $CATALINA_HOME/webapps/ROOT
+  fi
+
+  cat > $CATALINA_HOME/webapps/ROOT/index.jsp << EOF
+<%
+  final String redirectURL = "/geoserver/web/";
+  response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+  response.setHeader("Location", redirectURL);
+%>
+EOF
+fi
+
+
 ## install release data directory if needed before starting tomcat
 if [ ! -z "$GEOSERVER_REQUIRE_FILE" ] && [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
   echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
