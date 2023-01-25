@@ -18,19 +18,19 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
 To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
 ```shell
-docker pull docker.osgeo.org/geoserver:2.21.1
+docker pull docker.osgeo.org/geoserver:2.22.0
 ```
 
 Afterwards you can run the pulled image locally with:
 
 ```shell
-docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.21.1
+docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.22.0
 ```
 
 Or if you want to start the container daemonized, use e.g.:
 
 ```shell
-docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.21.1
+docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.22.0
 ```
 
 Check <http://localhost/geoserver> to see the geoserver page,
@@ -47,7 +47,7 @@ To use an external folder as your geoserver data directory.
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/absolute/path/on/host",target=/opt/geoserver_data/,type=bind \
-  docker.osgeo.org/geoserver:2.21.1
+  docker.osgeo.org/geoserver:2.22.0
 ```
 
 An empty data directory will be populated on first use. You can easily update GeoServer while
@@ -62,7 +62,7 @@ The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empt
 ```shell
 docker run -it -p 80:8080 \
   --env SKIP_DEMO_DATA=true \
-  docker.osgeo.org/geoserver:2.21.1
+  docker.osgeo.org/geoserver:2.22.0
 ```
 
 ### How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
@@ -83,7 +83,7 @@ Example installing wps and ysld extensions:
 ```shell
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
-  docker.osgeo.org/geoserver:2.21.1
+  docker.osgeo.org/geoserver:2.22.0
 ```
 
 The list of extensions (taken from SourceForge download page):
@@ -108,7 +108,7 @@ If you want to add geoserver extensions/libs, place the respective jar files in 
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/libs/on/host",target=/opt/additional_libs,type=bind \
-  docker.osgeo.org/geoserver:2.21.1
+  docker.osgeo.org/geoserver:2.22.0
 ```
 
 ### How to add additional fonts to the docker image (e.g. for SLD styling)?
@@ -118,7 +118,7 @@ If you want to add custom fonts (the base image only contains 26 fonts) by using
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/fonts/on/host",target=/opt/additional_fonts,type=bind \
-  docker.osgeo.org/geoserver:2.21.1
+  docker.osgeo.org/geoserver:2.22.0
 ```
 
 **Note:** Do not change the target value!
@@ -211,7 +211,7 @@ OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The result
 Build locally:
 
 ```shell
-docker build -t geoserver-docker.osgeo.org/geoserver:2.21.1 .
+docker build -t geoserver-docker.osgeo.org/geoserver:2.22.0 .
 ```
 
 Login using with osgeo user id:
@@ -223,5 +223,5 @@ docker login geoserver-docker.osgeo.org
 Push to osgeo repository:
 
 ```shell
-docker push geoserver-docker.osgeo.org/geoserver:2.21.1
+docker push geoserver-docker.osgeo.org/geoserver:2.22.0
 ```
