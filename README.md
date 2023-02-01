@@ -225,3 +225,19 @@ Push to osgeo repository:
 ```shell
 docker push geoserver-docker.osgeo.org/geoserver:2.21.1
 ```
+
+### How to automate release?
+
+For CI purposes, the script in the `build` folder is used to simplify those steps.
+
+The variables `DOCKERUSER` and `DOCKERPASSWORD` have to be set with valid credentials before this script can push the image to the osgeo repo.
+
+You need to pass the version as first and the type as second argument, where type has to be one of `build`, `publish` or `buildandpublish`.
+
+Examples:
+
+`./release.sh 2.22.1 build`
+
+`./release.sh 2.22.0 publish`
+
+`./release.sh 2.22.1 buildandpublish`
