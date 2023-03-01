@@ -36,6 +36,7 @@ fi
 count=`ls -1 $ADDITIONAL_LIBS_DIR/*.jar 2>/dev/null | wc -l`
 if [ -d "$ADDITIONAL_LIBS_DIR" ] && [ $count != 0 ]; then
     cp $ADDITIONAL_LIBS_DIR/*.jar $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
+    echo "Installed $count JAR extension file(s) from the additional libs folder"
 fi
 
 # copy additional fonts before starting the tomcat
@@ -43,6 +44,7 @@ fi
 count=`ls -1 *.ttf 2>/dev/null | wc -l`
 if [ -d "$ADDITIONAL_FONTS_DIR" ] && [ $count != 0 ]; then
     cp $ADDITIONAL_FONTS_DIR/*.ttf /usr/share/fonts/truetype/
+    echo "Installed $count TTF font file(s) from the additional fonts folder"
 fi
 
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
