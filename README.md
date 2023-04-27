@@ -11,9 +11,9 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * Support extensions
   * Support additional libraries
 
-## How to Use
+This README.md file covers use of official docker image, additional [build](BULD.md) and [release](RELEASE.md) instructions are available.
 
-### How to run official release?
+## How to run official release?
 
 To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
@@ -40,7 +40,7 @@ and login with geoserver default `admin:geoserver` credentials.
 
 For more information see the user-guide [docker installation instructions](https://docs.geoserver.org/latest/en/user/installation/docker.html).
 
-### How to mount an external folder for use as a data directory
+## How to mount an external folder for use as a data directory
 
 To use an external folder as your geoserver data directory.
 
@@ -53,7 +53,7 @@ docker run -it -p 80:8080 \
 An empty data directory will be populated on first use. You can easily update GeoServer while
 using the same data directory.
 
-### How to start a GeoServer without sample data?
+## How to start a GeoServer without sample data?
 
 This image populates ``/opt/geoserver_data/`` with demo data by default. For production scenarios this is typically not desired.
 
@@ -65,12 +65,12 @@ docker run -it -p 80:8080 \
   docker.osgeo.org/geoserver:2.22.0
 ```
 
-### How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
+## How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
 
 By default, the ROOT webapp is not available which makes requests to the root endpoint "/" return a 404 error.
 The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a permanent redirect to the web interface.
 
-### How to download and install additional extensions on startup?
+## How to download and install additional extensions on startup?
 
 The ``startup.sh`` script allows some customization on startup:
 
@@ -101,7 +101,7 @@ dxf          importer        netcdf        vectortiles      ysld
 excel        inspire         ogr-wfs       wcs2_0-eo
 ```
 
-### How to install additional extensions from local folder?
+## How to install additional extensions from local folder?
 
 If you want to add geoserver extensions/libs, place the respective jar files in a directory and mount it like
 
@@ -111,7 +111,7 @@ docker run -it -p 80:8080 \
   docker.osgeo.org/geoserver:2.22.0
 ```
 
-### How to add additional fonts to the docker image (e.g. for SLD styling)?
+## How to add additional fonts to the docker image (e.g. for SLD styling)?
 
 If you want to add custom fonts (the base image only contains 26 fonts) by using a mount:
 
@@ -123,17 +123,7 @@ docker run -it -p 80:8080 \
 
 **Note:** Do not change the target value!
 
-## Troubleshooting
-
-### How to watch geoserver.log from host?
-
-To watch ``geoserver.log`` of a running container:
-
-```shell
-docker exec -it {CONTAINER_ID} tail -f /opt/geoserver_data/logs/geoserver.log
-```
-
-### How to use the docker-compose demo?
+## How to use the docker-compose demo?
 
 The ``docker-compose-demo.yml`` to build with your own data directory and extensions.
 
@@ -145,99 +135,12 @@ Run ``docker-compose``:
 docker-compose -f docker-compose-demo.yml up --build
 ```
 
-## How to Build?
+## Troubleshooting
 
-### How to build a local image?
+### How to watch geoserver.log from host?
 
-```shell
-docker build -t {YOUR_TAG} .
-```
-
-### How to run local build?
-
-After building run using local tag:
+To watch ``geoserver.log`` of a running container:
 
 ```shell
-docker run -it -p 80:8080 {YOUR_TAG}
+docker exec -it {CONTAINER_ID} tail -f /opt/geoserver_data/logs/geoserver.log
 ```
-
-### How to build a specific GeoServer version?
-
-```shell
-docker build \
-  --build-arg GS_VERSION={YOUR_VERSION} \
-  -t {YOUR_TAG} .
-```
-
-### How to build with custom geoserver data directory?
-
-```shell
-docker build \
-  --build-arg GS_DATA_PATH={RELATIVE_PATH_TO_YOUR_GS_DATA} \
-  -t {YOUR_TAG} .
-```
-
-**Note:** The passed path **must not** be absolute! Instead, the path should be within the build context (e.g. next to the Dockerfile) and should be passed as a relative path, e.g. `GS_DATA_PATH=./my_data/`
-
-### Can a build use a specific GeoServer version AND custom data?
-
-Yes! Just pass the `--build-arg` param twice, e.g.
-
-```shell
-docker build \
-  --build-arg GS_VERSION={VERSION} \
-  --build-arg GS_DATA_PATH={PATH} \
-  -t {YOUR_TAG} .
-```
-
-### How to build with additional libs/extensions/plugins?
-
-Put your `*.jar` files (e.g. the WPS extension) in the `additional_libs` folder and build with one of the commands from above! (They will be copied to the GeoServer `WEB-INF/lib` folder during the build.)
-
-**Note:** Similar to the GeoServer data path from above, you can also configure the path to the additional libraries by passing the `ADDITIONAL_LIBS_PATH` argument when building:
-
-```shell
-docker build \
-  --build-arg ADDITIONAL_LIBS_PATH={RELATIVE_PATH_TO_YOUR_LIBS}
-  -t {YOUR_TAG} .
-```
-
-## How to release?
-
-### How to publish official release?
-
-OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The results are combined into docker.osgeo.org repository alongside other software such as PostGIS.
-
-Build locally:
-
-```shell
-docker build -t geoserver-docker.osgeo.org/geoserver:2.22.0 .
-```
-
-Login using with osgeo user id:
-
-```shell
-docker login geoserver-docker.osgeo.org
-```
-
-Push to osgeo repository:
-
-```shell
-docker push geoserver-docker.osgeo.org/geoserver:2.22.0
-```
-
-### How to automate release?
-
-For CI purposes, the script in the `build` folder is used to simplify those steps.
-
-The variables `DOCKERUSER` and `DOCKERPASSWORD` have to be set with valid credentials before this script can push the image to the osgeo repo.
-
-You need to pass the version as first and the type as second argument, where type has to be one of `build`, `publish` or `buildandpublish`.
-
-Examples:
-
-`./release.sh 2.22.1 build`
-
-`./release.sh 2.22.0 publish`
-
-`./release.sh 2.22.1 buildandpublish`
