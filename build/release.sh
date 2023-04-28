@@ -36,7 +36,7 @@ echo "Release from branch $BRANCH GeoServer $VERSION as $TAG"
 # Go up one level to the Dockerfile
 cd ".."
 
-if [ $2 == *"build"* ]; then
+if [[ $2 == *build* ]]; then
   echo "Building GeoServer Docker Image..."
   if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
@@ -64,7 +64,7 @@ if [ $2 == *"build"* ]; then
   fi
 fi
 
-if [ $2 == *"publish"* ]; then
+if [[ $2 == *"publish"* ]]; then
   echo "Publishing GeoServer Docker Image..."
   echo $DOCKERPASSWORD | docker login -u $DOCKERUSER --password-stdin geoserver-docker.osgeo.org
   echo "docker push $TAG"
