@@ -37,3 +37,5 @@ Examples:
 `./release.sh 2.22.0 publish`
 
 `./release.sh 2.22.1 buildandpublish`
+
+`./release.sh 2.24-SNAPSHOT buildandpublish`
