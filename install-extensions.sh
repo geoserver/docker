@@ -28,12 +28,16 @@ if [ "$INSTALL_EXTENSIONS" = "true" ]; then
     URL="${STABLE_PLUGIN_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
     download_extension ${URL} ${EXTENSION}
   done
+  for EXTENSION in $(echo "${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
+    URL="${COMMUNITY_PLUGIN_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
+    download_extension ${URL} ${EXTENSION}
+  done
   echo "Finished download of extensions"
 fi
 
 # Install the extensions
 echo "Starting installation of extensions"
-for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
+for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
   ADDITIONAL_LIB=${ADDITIONAL_LIBS_DIR}geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip
   [ -e "$ADDITIONAL_LIB" ] || continue
 

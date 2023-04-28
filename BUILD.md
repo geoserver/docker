@@ -54,3 +54,67 @@ docker build \
   --build-arg ADDITIONAL_LIBS_PATH={RELATIVE_PATH_TO_YOUR_LIBS}
   -t {YOUR_TAG} .
 ```
+
+## How to build from nightly snapshot releases?
+
+By default ``WAR_ZIP_URL``, ``STABLE_PLUGIN_URL`` make use of sourceforge downloads to obtain official releases.
+
+Override these arguments to make use of build.geoserver.org nightly releases:
+
+* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/geoserver-${GS_VERSION}-latest-war.zip`` 
+* ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/ext-latest/``
+* ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/community-latest/``
+
+
+Here is a working example for building 2.23.x nightly build::
+```
+docker build \
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.23.x/geoserver-2.23.x-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.23.x/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.23.x/community-latest/ \
+  --build-arg GS_VERSION=2.23-SNAPSHOT \
+  -t 2.23.x .
+```
+
+When running both stable extensions and community modules can be included:
+
+```
+docker run -it -p 80:8080 \
+  --env INSTALL_EXTENSIONS=true \
+  --env STABLE_EXTENSIONS="ysld" \
+  --env COMMUNITY_EXTENSIONS="ogcapi" \
+  -t 2.23.x
+```
+
+Community modules are only available for nightly builds as they have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
+
+## How to build from main snapshot releases?
+
+The build.geoserver.org output for the ``main`` branch requires the following:
+
+* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip`` 
+* ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/``
+* ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/``
+
+
+Here is a working example for building main branch as 2.24.x build:
+
+```
+docker build \
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
+  --build-arg GS_VERSION=2.24-SNAPSHOT \
+  -t 2.24.x .
+```
+
+When running both [stable extensions](https://build.geoserver.org/geoserver/main/ext-latest/) and [community modules](https://build.geoserver.org/geoserver/main/community-latest/) can be included:
+
+```
+docker run -it -p 80:8080 \
+  --env INSTALL_EXTENSIONS=true \
+  --env STABLE_EXTENSIONS="wps,css" \
+  --env COMMUNITY_EXTENSIONS="ogcapi-coverages,ogcapi-dggs,ogcapi-features,ogcapi-images,ogcapi-maps,ogcapi-styles,ogcapi-tiled-features,ogcapi-tiles" \
+  -t 2.24.x
+```
+

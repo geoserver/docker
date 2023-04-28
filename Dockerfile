@@ -1,9 +1,9 @@
 FROM ubuntu:22.04
 
 # The GS_VERSION argument could be used like this to overwrite the default:
-# docker build --build-arg GS_VERSION=2.21.2 -t geoserver:2.21.2 .
-ARG TOMCAT_VERSION=9.0.68
-ARG GS_VERSION=2.22.0
+# docker build --build-arg GS_VERSION=2.23.0 -t geoserver:2.23.0 .
+ARG TOMCAT_VERSION=9.0.74
+ARG GS_VERSION=2.23.0
 ARG GS_DATA_PATH=./geoserver_data/
 ARG ADDITIONAL_LIBS_PATH=./additional_libs/
 ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
@@ -11,7 +11,9 @@ ARG CORS_ENABLED=false
 ARG CORS_ALLOWED_ORIGINS=*
 ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ARG CORS_ALLOWED_HEADERS=*
+ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
+ARG COMMUNITY_PLUGIN_URL=''
 
 # Environment variables
 ENV CATALINA_HOME=/opt/apache-tomcat-${TOMCAT_VERSION}
@@ -26,8 +28,11 @@ ENV CORS_ALLOWED_METHODS=$CORS_ALLOWED_METHODS
 ENV CORS_ALLOWED_HEADERS=$CORS_ALLOWED_HEADERS
 ENV DEBIAN_FRONTEND=noninteractive
 ENV INSTALL_EXTENSIONS=false
+ENV WAR_ZIP_URL=$WAR_ZIP_URL
 ENV STABLE_EXTENSIONS=''
 ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
+ENV COMMUNITY_EXTENSIONS=''
+ENV COMMUNITY_PLUGIN_URL=$COMMUNITY_PLUGIN_URL
 ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 ENV SKIP_DEMO_DATA=false
@@ -63,7 +68,7 @@ RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/b
 WORKDIR /tmp
 
 # install geoserver
-RUN wget -q -O /tmp/geoserver.zip https://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/geoserver-$GEOSERVER_VERSION-war.zip && \
+RUN wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL && \
     unzip geoserver.zip geoserver.war -d $CATALINA_HOME/webapps && \
     mkdir -p $CATALINA_HOME/webapps/geoserver && \
     unzip -q $CATALINA_HOME/webapps/geoserver.war -d $CATALINA_HOME/webapps/geoserver && \
