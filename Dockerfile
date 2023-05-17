@@ -125,6 +125,6 @@ RUN rm -rf /tmp/*
 COPY *.sh /opt/
 RUN chmod +x /opt/*.sh
 
-ENTRYPOINT /opt/startup.sh
+ENTRYPOINT ["/opt/startup.sh"]
 
 WORKDIR /opt

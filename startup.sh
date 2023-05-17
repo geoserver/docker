@@ -79,4 +79,4 @@ if [ "${CORS_ENABLED}" = "true" ]; then
 fi
 
 # start the tomcat
-$CATALINA_HOME/bin/catalina.sh run
+exec $CATALINA_HOME/bin/catalina.sh run
