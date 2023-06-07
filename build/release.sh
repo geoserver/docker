@@ -3,19 +3,28 @@
 # error out if any statements fail
 set -e
 
+MAIN="2.24"
+
 function usage() {
-  echo "$0 [options] <version>"
-  echo " version : The released version to build an docker image for (eg: 2.23.1, 2.24-SNAPSHOT)"
+  echo "$0 <mode> <version> [<build>]"
+  echo ""
   echo " mode : The mode. Choose one of 'build', 'publish' or 'buildandpublish'"
+  echo " version : The released version to build an docker image for (eg: 2.23.1, ${MAIN}-SNAPSHOT)"
+  echo " build : Build number (optional)"
 }
 
-if [ -z $1 ] || [ -z $2 ] || [[ $2 != "build" && $2 != "publish" && $2 != "buildandpublish" ]]; then
+if [ -z $1 ] || [ -z $2 ] || [[ $1 != "build" && $1 != "publish" && $1 != "buildandpublish" ]]; then
   usage
   exit
 fi
 
-VERSION=$1
-MAIN="2.24"
+VERSION=$2
+if [ -z $3 ]; then
+  BUILD=$3
+else
+  BUILD=''
+fi
+
 if [[ "${VERSION:0:4}" == "$MAIN" ]]; then
   # main branch snapshot release
   BRANCH=main
@@ -36,35 +45,40 @@ echo "Release from branch $BRANCH GeoServer $VERSION as $TAG"
 # Go up one level to the Dockerfile
 cd ".."
 
-if [[ $2 == *build* ]]; then
+if [[ $1 == *build* ]]; then
   echo "Building GeoServer Docker Image..."
   if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
     echo
     if [[ "$BRANCH" == "main" ]]; then
       echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
-      docker build \
+      docker build --no-cache-filter download,install \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
         --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
         --build-arg GS_VERSION=$VERSION \
+        --build-arg GS_BUILD=$BUILD \
         -t $TAG .
     else
       echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
-      docker build \
+      docker build --no-cache-filter download,install \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip \
         --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/ext-latest/ \
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/community-latest/ \
         --build-arg GS_VERSION=$VERSION \
+        --build-arg GS_BUILD=$BUILD \
         -t $TAG .
     fi
   else
     echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
-    docker build --build-arg GS_VERSION=$VERSION -t $TAG .
+    docker build \
+      --build-arg GS_VERSION=$VERSION \
+      --build-arg GS_BUILD=$BUILD \
+      -t $TAG .
   fi
 fi
 
-if [[ $2 == *"publish"* ]]; then
+if [[ $1 == *"publish"* ]]; then
   echo "Publishing GeoServer Docker Image..."
   echo $DOCKERPASSWORD | docker login -u $DOCKERUSER --password-stdin geoserver-docker.osgeo.org
   echo "docker push $TAG"
