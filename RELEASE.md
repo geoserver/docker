@@ -7,7 +7,7 @@ OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The result
 Build locally:
 
 ```shell
-docker build -t geoserver-docker.osgeo.org/geoserver:2.22.0 .
+docker build -t geoserver-docker.osgeo.org/geoserver:2.23.1 .
 ```
 
 Login using with osgeo user id:
@@ -19,7 +19,7 @@ docker login geoserver-docker.osgeo.org
 Push to osgeo repository:
 
 ```shell
-docker push geoserver-docker.osgeo.org/geoserver:2.22.0
+docker push geoserver-docker.osgeo.org/geoserver:2.23.1
 ```
 
 ## How to automate release?
@@ -34,7 +34,7 @@ Examples:
 
 `./release.sh 2.22.1 build`
 
-`./release.sh 2.22.0 publish`
+`./release.sh 2.23.1 publish`
 
 `./release.sh 2.22.1 buildandpublish`
 
