@@ -60,7 +60,7 @@ EOF
 FROM tomcat as download
 
 ARG GS_VERSION=2.23.1
-ARG GS_BUILD=''
+ARG GS_BUILD=release
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ENV GEOSERVER_VERSION=$GS_VERSION
 ENV GEOSERVER_BUILD=$GS_BUILD
@@ -69,7 +69,7 @@ WORKDIR /tmp
 
 RUN <<EOF
 set -e
-echo "Downloading GeoServer ${GEOSERVER_VERSION} ${GEOSERVER_BUILD}"
+echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}"
 wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL
 unzip geoserver.zip geoserver.war -d /tmp/
 unzip -q /tmp/geoserver.war -d /tmp/geoserver
@@ -79,7 +79,7 @@ EOF
 FROM tomcat as install
 
 ARG GS_VERSION=2.23.1
-ARG GS_BUILD=''
+ARG GS_BUILD=release
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG COMMUNITY_PLUGIN_URL=''
 
@@ -105,6 +105,7 @@ ENV ROOT_WEBAPP_REDIRECT=false
 
 WORKDIR /tmp
 
+RUN echo "Installing GeoServer $GS_VERSION $GS_BUILD"
 # install geoserver
 COPY --from=download /tmp/geoserver $CATALINA_HOME/webapps/geoserver
 

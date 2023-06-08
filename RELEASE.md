@@ -28,14 +28,16 @@ For CI purposes, the script in the `build` folder is used to simplify those step
 
 The variables `DOCKERUSER` and `DOCKERPASSWORD` have to be set with valid credentials before this script can push the image to the osgeo repo.
 
-You need to pass the version as first and the type as second argument, where type has to be one of `build`, `publish` or `buildandpublish`.
+You need to pass the action as the first argument (one of `build`, `publish` or `buildandpublish`), and the version as a second argument.
+
+The third, optional, is used to supply the jenkins build number - triggering a new war download. This is used when a release is re-published (such as with a nightly build).
 
 Examples:
 
-`./release.sh 2.22.1 build`
+`./release.sh build 2.22.1`
 
-`./release.sh 2.23.1 publish`
+`./release.sh publish 2.23.1`
 
-`./release.sh 2.22.1 buildandpublish`
+`./release.sh buildandpublish 2.22.1`
 
-`./release.sh 2.24-SNAPSHOT buildandpublish`
+`./release.sh buildandpublish 2.24-SNAPSHOT 1234`

@@ -19,10 +19,11 @@ if [ -z $1 ] || [ -z $2 ] || [[ $1 != "build" && $1 != "publish" && $1 != "build
 fi
 
 VERSION=$2
+echo "build: $3"
 if [ -z $3 ]; then
-  BUILD=$3
+  BUILD='local'
 else
-  BUILD=''
+  BUILD=$3
 fi
 
 if [[ "${VERSION:0:4}" == "$MAIN" ]]; then
@@ -51,8 +52,9 @@ if [[ $1 == *build* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
     echo
     if [[ "$BRANCH" == "main" ]]; then
-      echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
-      docker build --no-cache-filter download,install \
+      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+      # todo: --no-cache-filter download,install
+      docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
         --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
@@ -60,8 +62,8 @@ if [[ $1 == *build* ]]; then
         --build-arg GS_BUILD=$BUILD \
         -t $TAG .
     else
-      echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
-      docker build --no-cache-filter download,install \
+      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+      docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip \
         --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/ext-latest/ \
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/community-latest/ \
@@ -70,7 +72,7 @@ if [[ $1 == *build* ]]; then
         -t $TAG .
     fi
   else
-    echo "docker build --build-arg GS_VERSION=$VERSION -t $TAG ."
+    echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
     docker build \
       --build-arg GS_VERSION=$VERSION \
       --build-arg GS_BUILD=$BUILD \
