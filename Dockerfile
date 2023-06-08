@@ -27,35 +27,26 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     -Dorg.geotools.coverage.jaiext.enabled=true"
 
 # init
-RUN <<EOF
-set -e
-apt update
-apt -y upgrade
-apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk
-apt clean
-rm -rf /var/cache/apt/*
-rm -rf /var/lib/apt/lists/*
-EOF
+RUN apt update \
+&& apt -y upgrade \
+&& apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk \
+&& apt clean \
+&& rm -rf /var/cache/apt/* \
+&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/
 
-RUN <<EOF
-set -e
-wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
-tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz
-rm apache-tomcat-${TOMCAT_VERSION}.tar.gz
-rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT
-rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/docs
-rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/examples
-EOF
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+&& tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+&& rm apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT \
+&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/docs \
+&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/examples
 
 # cleanup
-RUN <<EOF
-set -e
-apt purge -y && \
-apt autoremove --purge -y && \
-rm -rf /tmp/*
-EOF
+RUN apt purge -y  \
+&& apt autoremove --purge -y \
+&& rm -rf /tmp/*
 
 FROM tomcat as download
 
@@ -67,14 +58,11 @@ ENV GEOSERVER_BUILD=$GS_BUILD
 
 WORKDIR /tmp
 
-RUN <<EOF
-set -e
-echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}"
-wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL
-unzip geoserver.zip geoserver.war -d /tmp/
-unzip -q /tmp/geoserver.war -d /tmp/geoserver
-rm /tmp/geoserver.war
-EOF
+RUN echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
+&& wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
+&& unzip geoserver.zip geoserver.war -d /tmp/ \
+&& unzip -q /tmp/geoserver.war -d /tmp/geoserver \
+&& rm /tmp/geoserver.war
 
 FROM tomcat as install
 
@@ -106,14 +94,11 @@ ENV ROOT_WEBAPP_REDIRECT=false
 WORKDIR /tmp
 
 RUN echo "Installing GeoServer $GS_VERSION $GS_BUILD"
-# install geoserver
+
 COPY --from=download /tmp/geoserver $CATALINA_HOME/webapps/geoserver
 
-RUN <<EOF
-set -e
-mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar
-mkdir -p $GEOSERVER_DATA_DIR
-EOF
+RUN mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
+&& mkdir -p $GEOSERVER_DATA_DIR
 
 COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
 COPY $ADDITIONAL_LIBS_PATH $GEOSERVER_LIB_DIR
