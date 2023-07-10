@@ -11,7 +11,7 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * Support extensions
   * Support additional libraries
 
-This README.md file covers use of official docker image, additional [build](BULD.md) and [release](RELEASE.md) instructions are available.
+This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
 ## How to run official release?
 
