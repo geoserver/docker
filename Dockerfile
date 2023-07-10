@@ -23,7 +23,7 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     -Djavax.servlet.response.encoding=UTF-8 \
     -D-XX:SoftRefLRUPolicyMSPerMB=36000 \
     -Xbootclasspath/a:$CATALINA_HOME/lib/marlin.jar \
-    -Dsun.java2d.renderer=org.marlin.pisces.PiscesRenderingEngine \
+    -Dsun.java2d.renderer=sun.java2d.marlin.DMarlinRenderingEngine \
     -Dorg.geotools.coverage.jaiext.enabled=true"
 
 # init
