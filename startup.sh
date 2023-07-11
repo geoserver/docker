@@ -1,6 +1,8 @@
 #!/bin/sh
 echo "Welcome to GeoServer $GEOSERVER_VERSION"
 
+GEOSERVER_WEB_XML="$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+
 ## Skip demo data
 if [ "${SKIP_DEMO_DATA}" = "true" ]; then
   unset GEOSERVER_REQUIRE_FILE
@@ -52,8 +54,8 @@ fi
 # to the end of the web.xml
 # (this will only happen if our filter has not yet been added before)
 if [ "${CORS_ENABLED}" = "true" ]; then
-  if ! grep -q DockerGeoServerCorsFilter "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
-    echo "Enable CORS for $CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+  if ! grep -q DockerGeoServerCorsFilter "${GEOSERVER_WEB_XML}"; then
+    echo "Enable CORS for ${GEOSERVER_WEB_XML}"
     sed -i "\:</web-app>:i\\
     <filter>\n\
       <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
@@ -74,7 +76,19 @@ if [ "${CORS_ENABLED}" = "true" ]; then
     <filter-mapping>\n\
       <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
       <url-pattern>/*</url-pattern>\n\
-    </filter-mapping>" "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml";
+    </filter-mapping>" "${GEOSERVER_WEB_XML}"
+  fi
+fi
+
+if [ -n "${PROXY_BASE_URL}" ]; then
+  if ! grep -q StartupProxyBaseUrl "${GEOSERVER_WEB_XML}"; then
+    echo "Set proxy URL for ${GEOSERVER_WEB_XML}"
+    sed -i "\:</web-app>:i\\
+    <!-- StartupProxyBaseUrl -->\n\
+    <context-param>\n\
+      <param-name>PROXY_BASE_URL</param-name>\n\
+      <param-value>${PROXY_BASE_URL}</param-value>\n\
+    </context-param>" "${GEOSERVER_WEB_XML}"
   fi
 fi
 

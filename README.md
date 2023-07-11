@@ -74,9 +74,13 @@ The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a 
 
 The ``startup.sh`` script allows some customization on startup:
 
-* ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
-* ``STABLE_EXTENSIONS`` list of extensions to download and install
-* ``CORS_ENABLED``
+* ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions.
+* ``STABLE_EXTENSIONS`` list of extensions to download and install.
+* ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
+  * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
+  * ``CORS_ALLOWED_METHODS`` (default ``GET,POST,PUT,DELETE,HEAD,OPTIONS``)
+  * ``CORS_ALLOWED_HEADERS`` (default ``*``)
+* ``PROXY_BASE_URL`` to the base URL of the GeoServer web app if GeoServer is behind a proxy. Example: ``https://example.com/geoserver``.
 
 Example installing wps and ysld extensions:
 
