@@ -55,8 +55,8 @@ if [ "${CORS_ENABLED}" = "true" ]; then
   if ! grep -q DockerGeoServerCorsFilter "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
     echo "Enable CORS for $CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
 
-    # Add support for access-control-allow-credentials when the origin is not a wildcard
-    if [ "${CORS_ALLOWED_ORIGINS}" != "*" ]; then
+    # Add support for access-control-allow-credentials when the origin is not a wildcard when specified via env var
+    if [ "${CORS_ALLOWED_ORIGINS}" != "*" ] && [ "${CORS_ALLOW_CREDENTIALS}" = "true" ]; then
       CORS_ALLOW_CREDENTIALS="true"
     else
       CORS_ALLOW_CREDENTIALS="false"
