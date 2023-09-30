@@ -4,11 +4,11 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.22.0
+        - GEOSERVER_VERSION=${GS_VERSION}
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
-      - 80:8080
+      - "80:8080"
     environment:
       - INSTALL_EXTENSIONS=true
       - STABLE_EXTENSIONS=wps,csw
