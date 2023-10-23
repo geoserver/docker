@@ -3,7 +3,7 @@
 # error out if any statements fail
 set -e
 
-MAIN="2.24"
+MAIN="2.25"
 
 function usage() {
   echo "$0 <mode> <version> [<build>]"
