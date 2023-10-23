@@ -27,9 +27,9 @@ else
 fi
 
 if [[ "$VERSION" == *"-RC"* ]]; then
-  	# release candidate branch release
-  	BRANCH="${VERSION:0:4}-RC"
-  	TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
+    # release candidate branch release
+    BRANCH="${VERSION:0:4}-RC"
+    TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
 else
   if [[ "${VERSION:0:4}" == "$MAIN" ]]; then
     # main branch snapshot release
@@ -37,12 +37,12 @@ else
     TAG=geoserver-docker.osgeo.org/geoserver:$MAIN.x
   else
     if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
-  	# stable or maintenance branch snapshot release
-  	BRANCH="${VERSION:0:4}.x"
-  	TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
+    # stable or maintenance branch snapshot release
+    BRANCH="${VERSION:0:4}.x"
+    TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
     else
-  	BRANCH="${VERSION:0:4}.x"
-  	TAG=geoserver-docker.osgeo.org/geoserver:$VERSION
+    BRANCH="${VERSION:0:4}.x"
+    TAG=geoserver-docker.osgeo.org/geoserver:$VERSION
     fi
   fi
 fi
@@ -62,8 +62,8 @@ if [[ $1 == *build* ]]; then
       # todo: --no-cache-filter download,install
       docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
-        --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
-        --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
+        --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest \
+        --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest \
         --build-arg GS_VERSION=$VERSION \
         --build-arg GS_BUILD=$BUILD \
         -t $TAG .
@@ -71,8 +71,8 @@ if [[ $1 == *build* ]]; then
       echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
       docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip \
-        --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/ext-latest/ \
-        --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/community-latest/ \
+        --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/ext-latest \
+        --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/community-latest \
         --build-arg GS_VERSION=$VERSION \
         --build-arg GS_BUILD=$BUILD \
         -t $TAG .
