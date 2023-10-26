@@ -6,7 +6,7 @@
               url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
               username="${POSTGRES_USERNAME}"
               password="${POSTGRES_PASSWORD}"
-              maxTotal="8"
+              maxTotal="25"
               initialSize="0"
               minIdle="0"
               maxIdle="8"
