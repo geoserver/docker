@@ -31,7 +31,7 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
 # init
 RUN apt update \
 && apt -y upgrade \
-&& apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk \
+&& apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk gettext \
 && apt clean \
 && rm -rf /var/cache/apt/* \
 && rm -rf /var/lib/apt/lists/*
@@ -92,6 +92,9 @@ ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 ENV SKIP_DEMO_DATA=false
 ENV ROOT_WEBAPP_REDIRECT=false
+ENV POSTGRES_JNDI_ENABLED=false
+ENV CONFIG_DIR=/opt/config
+ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
 
 EXPOSE 8080
 
@@ -104,12 +107,17 @@ COPY --from=download /tmp/geoserver $CATALINA_HOME/webapps/geoserver
 RUN mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
 && mkdir -p $GEOSERVER_DATA_DIR
 
+RUN mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/
+
 COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
 COPY $ADDITIONAL_LIBS_PATH $GEOSERVER_LIB_DIR
 COPY $ADDITIONAL_FONTS_PATH /usr/share/fonts/truetype/
 
 # cleanup
 RUN rm -rf /tmp/*
+
+# Add default configs
+ADD config $CONFIG_DIR
 
 # copy scripts
 COPY *.sh /opt/

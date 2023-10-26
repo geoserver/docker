@@ -90,5 +90,26 @@ if [ "${CORS_ENABLED}" = "true" ]; then
   fi
 fi
 
+if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
+
+  # Set up some default values
+  if [ -z "${POSTGRES_JNDI_RESOURCE_NAME}" ]; then
+    export POSTGRES_JNDI_RESOURCE_NAME="java:comp/env/jdbc/postgres"
+  fi
+  if [ -z "${POSTGRES_PORT}" ]; then
+    export POSTGRES_PORT="5432"
+  fi
+
+  # Use a custom "context.xml" if the user mounted one into the container
+  if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/context.xml" ]; then
+    echo "Installing configuration override for context.xml with substituted environment variables"
+    envsubst < "${CONFIG_OVERRIDES_DIR}"/context.xml > "${CATALINA_HOME}/conf/context.xml"
+  else
+    # Otherwise use the default
+    echo "Installing default context.xml with substituted environment variables"
+    envsubst < "${CONFIG_DIR}"/context.xml > "${CATALINA_HOME}/conf/context.xml"
+  fi
+fi
+
 # start the tomcat
 exec $CATALINA_HOME/bin/catalina.sh run
