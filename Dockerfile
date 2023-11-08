@@ -91,6 +91,8 @@ ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 ENV SKIP_DEMO_DATA=false
 ENV ROOT_WEBAPP_REDIRECT=false
 
+EXPOSE 8080
+
 WORKDIR /tmp
 
 RUN echo "Installing GeoServer $GS_VERSION $GS_BUILD"
