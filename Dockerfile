@@ -52,7 +52,7 @@ RUN apt purge -y  \
 
 FROM tomcat as download
 
-ARG GS_VERSION=2.23.1
+ARG GS_VERSION=2.24.0
 ARG GS_BUILD=release
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ENV GEOSERVER_VERSION=$GS_VERSION
