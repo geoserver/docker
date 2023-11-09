@@ -139,7 +139,9 @@ To enable a PostgreSQL JNDI resource, provide the following environment variable
 * ``POSTGRES_DB``
 * ``POSTGRES_USERNAME``
 * ``POSTGRES_PASSWORD``
-* ``POSTGRES_JNDI_RESOURCE_NAME`` (optional; defaults to ``java:comp/env/jdbc/postgres``)
+* ``POSTGRES_JNDI_RESOURCE_NAME`` (optional; defaults to ``jdbc/postgres``)
+
+In geoserver, you can then reference this JNDI resource using the name `java:comp/env/jdbc/postgres` (if using default).
 
 For advanced customization of the connection pool, you can provide your own customized "context.xml"
 file to Apache Tomcat by mounting it to the container at ``/opt/config_overrides/context.xml``.
