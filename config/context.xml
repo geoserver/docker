@@ -1,0 +1,20 @@
+<Context antiResourceLocking="false" privileged="true" >
+    <Resource name="${POSTGRES_JNDI_RESOURCE_NAME}"
+              auth="Container"
+              type="javax.sql.DataSource"
+              driverClassName="org.postgresql.Driver"
+              url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+              username="${POSTGRES_USERNAME}"
+              password="${POSTGRES_PASSWORD}"
+              maxTotal="25"
+              initialSize="0"
+              minIdle="0"
+              maxIdle="8"
+              maxWaitMillis="-1"
+              timeBetweenEvictionRunsMillis="30000"
+              minEvictableIdleTimeMillis="60000"
+              testWhileIdle="true"
+              validationQuery="SELECT 1"
+              rollbackOnReturn="true"
+    />
+</Context>

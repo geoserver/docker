@@ -128,6 +128,24 @@ docker run -it -p 80:8080 \
 
 **Note:** Do not change the target value!
 
+
+## How to enable a PostgreSQL JNDI resource?
+
+To enable a PostgreSQL JNDI resource, provide the following environment variables:
+
+* ``POSTGRES_JNDI_ENABLED`` to ``true``
+* ``POSTGRES_HOST``
+* ``POSTGRES_PORT`` (optional; defaults to 5432)
+* ``POSTGRES_DB``
+* ``POSTGRES_USERNAME``
+* ``POSTGRES_PASSWORD``
+* ``POSTGRES_JNDI_RESOURCE_NAME`` (optional; defaults to ``jdbc/postgres``)
+
+In geoserver, you can then reference this JNDI resource using the name `java:comp/env/jdbc/postgres` (if using default).
+
+For advanced customization of the connection pool, you can provide your own customized "context.xml"
+file to Apache Tomcat by mounting it to the container at ``/opt/config_overrides/context.xml``.
+
 ## How to use the docker-compose demo?
 
 The ``docker-compose-demo.yml`` to build with your own data directory and extensions.
