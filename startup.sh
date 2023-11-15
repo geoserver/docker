@@ -144,6 +144,15 @@ if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ];
   envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "${CATALINA_HOME}/webapps/geoserver/WEB-INF/web.xml"
 fi
 
+if [ "${HTTPS_ENABLED}" = "true" ]; then
+  if [ ! -f "${HTTPS_KEYSTORE_FILE}" ]; then
+    echo "ERROR: HTTPS was enabled but keystore file was not mounted to container [${HTTPS_KEYSTORE_FILE}]"
+    exit 1
+  fi
+  echo "Installing [${CATALINA_HOME}/conf/server.xml] with HTTPS support using substituted environment variables"
+  envsubst < "${CONFIG_DIR}"/server-https.xml > "${CATALINA_HOME}/conf/server.xml"
+fi
+
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
 # * Turn off session facade recycling

@@ -10,6 +10,8 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * CORS support
   * Support extensions
   * Support additional libraries
+  * Support for PostgreSQL JNDI 
+  * Support for HTTPS
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
@@ -185,6 +187,16 @@ docker run -it -p 80:8080 \
   --mount src="/path/to/my/server.xml",target=/opt/config_overrides/server.xml,type=bind \
   docker.osgeo.org/geoserver:2.25.1
 ```
+
+## How to enable HTTPS?
+
+To enable HTTPS, mount a JKS file to the container (ex. `/opt/keystore.jks`) and provide the following environment 
+variables:
+
+* ``HTTPS_ENABLED`` to `true`
+* ``HTTPS_KEYSTORE_FILE`` (defaults to `/opt/keystore.jks`)
+* ``HTTPS_KEYSTORE_PASSWORD`` (defaults to `changeit`)
+* ``HTTPS_KEY_ALIAS`` (defaults to `server`)
 
 ## How to use the docker-compose demo?
 
