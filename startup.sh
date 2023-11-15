@@ -111,5 +111,14 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   fi
 fi
 
+if [ "${HTTPS_ENABLED}" = "true" ]; then
+  if [ ! -f "${HTTPS_KEYSTORE_FILE}" ]; then
+    echo "ERROR: HTTPS was enabled but keystore file was not mounted to container [${HTTPS_KEYSTORE_FILE}]"
+    exit 1
+  fi
+  echo "Installing [${CATALINA_HOME}/conf/server.xml] with HTTPS support using substituted environment variables"
+  envsubst < "${CONFIG_DIR}"/server-https.xml > "${CATALINA_HOME}/conf/server.xml"
+fi
+
 # start the tomcat
 exec $CATALINA_HOME/bin/catalina.sh run
