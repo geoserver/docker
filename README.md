@@ -159,7 +159,7 @@ docker-compose -f docker-compose-demo.yml up --build
 ```
 ## Environment Variables
 
-Following is the list of the all the environment variables that can be passed down to the geoserver docker image, you can check the defaul values for an image using `docker inspect [IMAGE_NAME]`
+Following is the list of the all the environment variables that can be passed down to the geoserver docker image, you can check the default values for an image using `docker inspect [IMAGE_NAME]`
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
@@ -171,11 +171,8 @@ Following is the list of the all the environment variables that can be passed do
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options | `-Djava.awt.headless=true` |
-| GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
-| GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
 | GEOSERVER_DATA_DIR | Geosever data directory location | `/opt/geoserver_data/` |
 | GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
-| GEOSERVER_LIB_DIR | Sets the directory containing GeoServer's library files | `/opt/apache-tomcat-9.0.75/webapps/geoserver/WEB-INF/lib/` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
@@ -186,6 +183,12 @@ Following is the list of the all the environment variables that can be passed do
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
 | ROOT_WEBAPP_REDIRECT | Indicates whether to issue a permanent redirect to the web interface | `false` |
+
+The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
+| VAR NAME | DESCRIPTION | SAMPLE VALUE |
+|--------------|-----------|------------|
+| GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
+| GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
 
 
 ## Troubleshooting
