@@ -20,6 +20,7 @@ To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 ```shell
 docker pull docker.osgeo.org/geoserver:2.23.1
 ```
+All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org)
 
 Afterwards you can run the pulled image locally with:
 
@@ -164,13 +165,13 @@ Following is the list of the all the environment variables that can be passed do
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
 | CATALINA_HOME | CATALINA home path | `/opt/apache-tomcat-9.0.75` |
-| EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment | `-Xms256m -Xmx1g` |
+| EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
 | CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST` |
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
-| CATALINA_OPTS | Catalina options | `-Djava.awt.headless=true` |
+| CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
 | GEOSERVER_DATA_DIR | Geosever data directory location | `/opt/geoserver_data/` |
 | GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
