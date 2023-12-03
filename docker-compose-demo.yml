@@ -15,7 +15,7 @@ services:
       - EXTRA_JAVA_OPTS=-Xms1G -Xmx2G
       - POSTGRES_JNDI_ENABLED=true
       - POSTGRES_HOST=postgis
-      - POSTGRES_PORT=5432
+      - POSTGRES_PORT=5555
       - POSTGRES_DB=geoserver
       - POSTGRES_USERNAME=geoserver
       - POSTGRES_PASSWORD=geoserver
