@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.24.0
+        - GEOSERVER_VERSION=2.24.1
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
@@ -26,7 +26,7 @@ services:
   postgis:
     image: postgis/postgis:16-3.4-alpine
     ports:
-      - 5555:5432
+      - "5555:5432"
     environment:
       POSTGRES_USER: geoserver
       POSTGRES_PASSWORD: geoserver
