@@ -8,7 +8,7 @@ services:
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
-      - 80:8080
+      - "80:8080"
     environment:
       - INSTALL_EXTENSIONS=true
       - STABLE_EXTENSIONS=wps,csw
@@ -32,3 +32,8 @@ services:
       POSTGRES_PASSWORD: geoserver
     volumes:
       - ./postgis/postgresql_data:/var/lib/postgresql/data:Z
+    healthcheck:
+      test: pg_isready -U geoserver -h localhost -t 5 || exit 1
+      interval: 10s
+      retries: 5
+      timeout: 10s
