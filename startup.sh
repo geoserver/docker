@@ -112,4 +112,13 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
 fi
 
 # start the tomcat
-exec $CATALINA_HOME/bin/catalina.sh run
+# CIS - Tomcat Benchmark recommendations:
+# * Turn off session facade recycling
+# * Set a nondeterministic Shutdown command value
+if [ ! "${ENABLE_DEFAULT_SHUTDOWN}" = "true" ]; then
+  REPLACEMENT="$(echo $RANDOM | md5sum | head -c 10)"
+  sed -i 's/SHUTDOWN/'"$REPLACEMENT"'/g' "$CATALINA_HOME/conf/server.xml"
+  REPLACEMENT=
+fi
+
+exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
