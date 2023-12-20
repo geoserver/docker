@@ -23,6 +23,11 @@ services:
     volumes:
       - ./geoserver_data:/opt/geoserver_data/:Z
       - ./additional_libs:/opt/additional_libs:Z # by mounting this we can install libs from host on startup
+    healthcheck:
+      test: curl --fail "http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png" || exit 1
+      interval: 1m
+      retries: 3
+      timeout: 20s
   postgis:
     image: postgis/postgis:16-3.4-alpine
     ports:
