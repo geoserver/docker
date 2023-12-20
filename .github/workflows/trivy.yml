@@ -6,10 +6,10 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build image
         run: docker build -t geoserver-docker.osgeo.org/geoserver:${{ github.sha }} .
       - name: Run trivy

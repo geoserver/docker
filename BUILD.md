@@ -61,18 +61,18 @@ By default ``WAR_ZIP_URL``, ``STABLE_PLUGIN_URL`` make use of sourceforge downlo
 
 Override these arguments to make use of build.geoserver.org nightly releases:
 
-* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/geoserver-${GS_VERSION}-latest-war.zip`` 
+* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/geoserver-${GS_VERSION}-latest-war.zip``
 * ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/ext-latest/``
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/community-latest/``
 
-Here is a working example for building 2.23.x nightly build::
+Here is a working example for building 2.24.x nightly build::
 ```
 docker build --no-cache-filter download,install \
-  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.23.x/geoserver-2.23.x-latest-war.zip \
-  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.23.x/ext-latest/ \
-  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.23.x/community-latest/ \
-  --build-arg GS_VERSION=2.23-SNAPSHOT \
-  -t 2.23.x .
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.24.x/geoserver-2.24.x-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.24.x/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.24.x/community-latest/ \
+  --build-arg GS_VERSION=2.24-SNAPSHOT \
+  -t 2.24.x .
 ```
 
 When running both stable extensions and community modules can be included:
@@ -82,7 +82,7 @@ docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="ysld" \
   --env COMMUNITY_EXTENSIONS="ogcapi" \
-  -t 2.23.x
+  -t 2.24.x
 ```
 
 Community modules are only available for nightly builds as they have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
@@ -91,7 +91,7 @@ Community modules are only available for nightly builds as they have not yet met
 
 The build.geoserver.org output for the ``main`` branch requires the following:
 
-* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip`` 
+* ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip``
 * ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/``
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/``
 
