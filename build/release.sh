@@ -9,7 +9,7 @@ function usage() {
   echo "$0 <mode> <version> [<build>]"
   echo ""
   echo " mode : The mode. Choose one of 'build', 'publish' or 'buildandpublish'"
-  echo " version : The released version to build an docker image for (eg: 2.23.1, ${MAIN}-SNAPSHOT, ${MAIN}-RC)"
+  echo " version : The released version to build an docker image for (eg: 2.24.1, ${MAIN}-SNAPSHOT, ${MAIN}-RC)"
   echo " build : Build number (optional)"
 }
 
@@ -47,7 +47,7 @@ else
   fi
 fi
 
-echo "Release from branch $BRANCH GeoServer $VERSION as $TAG" 
+echo "Release from branch $BRANCH GeoServer $VERSION as $TAG"
 
 # Go up one level to the Dockerfile
 cd ".."
