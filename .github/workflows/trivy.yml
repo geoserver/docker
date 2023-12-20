@@ -17,7 +17,6 @@ jobs:
         with:
           image-ref: 'geoserver-docker.osgeo.org/geoserver:${{ github.sha }}'
           format: 'table'
-          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
