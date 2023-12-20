@@ -184,6 +184,7 @@ Following is the list of the all the environment variables that can be passed do
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
 | ROOT_WEBAPP_REDIRECT | Indicates whether to issue a permanent redirect to the web interface | `false` |
+| HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
