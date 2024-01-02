@@ -15,8 +15,13 @@ jobs:
       - name: Run trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'geoserver-docker.osgeo.org/geoserver:${{ github.sha }}'
           format: 'table'
           ignore-unfixed: true
-          vuln-type: 'os,library'
+          image-ref: 'geoserver-docker.osgeo.org/geoserver:${{ github.sha }}'
+          output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
+          vuln-type: 'os,library'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
