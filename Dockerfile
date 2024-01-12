@@ -16,6 +16,7 @@ ENV CORS_ALLOWED_METHODS=$CORS_ALLOWED_METHODS
 ENV CORS_ALLOWED_HEADERS=$CORS_ALLOWED_HEADERS
 ENV CORS_ALLOW_CREDENTIALS=$CORS_ALLOW_CREDENTIALS
 ENV DEBIAN_FRONTEND=noninteractive
+ENV WEBAPP_CONTEXT=geoserver
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
@@ -81,7 +82,7 @@ ENV GEOSERVER_VERSION=$GS_VERSION
 ENV GEOSERVER_BUILD=$GS_BUILD
 ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
 ENV GEOSERVER_REQUIRE_FILE=$GEOSERVER_DATA_DIR/global.xml
-ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
+ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/$WEBAPP_CONTEXT/WEB-INF/lib/
 ENV INSTALL_EXTENSIONS=false
 ENV WAR_ZIP_URL=$WAR_ZIP_URL
 ENV STABLE_EXTENSIONS=''
@@ -95,20 +96,20 @@ ENV ROOT_WEBAPP_REDIRECT=false
 ENV POSTGRES_JNDI_ENABLED=false
 ENV CONFIG_DIR=/opt/config
 ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
-ENV HEALTHCHECK_URL=http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
-
+ENV HEALTHCHECK_URL=http://localhost:8080/$WEBAPP_CONTEXT/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
+ENV ROOT_HEALTHCHECK_URL=http://localhost:8080/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
 EXPOSE 8080
 
 WORKDIR /tmp
 
 RUN echo "Installing GeoServer $GS_VERSION $GS_BUILD"
 
-COPY --from=download /tmp/geoserver $CATALINA_HOME/webapps/geoserver
+COPY --from=download /tmp/geoserver $CATALINA_HOME/webapps/$WEBAPP_CONTEXT
 
-RUN mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
+RUN mv $CATALINA_HOME/webapps/$WEBAPP_CONTEXT/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
 && mkdir -p $GEOSERVER_DATA_DIR
 
-RUN mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/
+RUN mv $CATALINA_HOME/webapps/$WEBAPP_CONTEXT/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/
 
 COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
 COPY $ADDITIONAL_LIBS_PATH $GEOSERVER_LIB_DIR
@@ -129,4 +130,4 @@ ENTRYPOINT ["/opt/startup.sh"]
 WORKDIR /opt
 
 HEALTHCHECK --interval=1m --timeout=20s --retries=3 \
-  CMD curl --fail $HEALTHCHECK_URL || exit 1
+  CMD if [ $WEBAPP_CONTEXT == "ROOT" ];then (curl --fail ROOT_HEALTHCHECK_URL || exit 1); else (curl --fail HEALTHCHECK_URL || exit 1);fi
