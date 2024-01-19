@@ -121,7 +121,10 @@ RUN rm -rf /tmp/*
 ADD config $CONFIG_DIR
 
 # copy scripts
-COPY *.sh /opt/
+COPY install-extensions.sh /opt/
+COPY startup.sh /opt/
+
+#COPY *.sh /opt/
 RUN chmod +x /opt/*.sh
 
 ENTRYPOINT ["/opt/startup.sh"]
