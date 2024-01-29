@@ -113,7 +113,7 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   # Use a custom "web.xml" if the user mounted one into the container
   if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then
     echo "Installing configuration override for web.xml with substituted environment variables"
-    envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+    envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "${CATALINA_HOME}/webapps/geoserver/WEB-INF/web.xml"
   fi
 fi
 
