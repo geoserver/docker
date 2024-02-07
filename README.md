@@ -191,6 +191,14 @@ The following values cannot really be safely changed (as they are used to downlo
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
 | GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
 
+## Custom `server.xml`
+The `server.xml` file in GeoServer docker image (originally located in `config/`) contains some specific configurations regarding security hardening.
+In order to include custom configurations you can either overwrite this in build phase or mount a custom server xml to `$CATALINA_HOME/conf/server.xml` e.g. by using
+```shell
+docker run -it -p 80:8080 \
+  --mount src="/path/to/my/server.xml",target=/opt/apache-tomcat-9.0.83/conf/server.xml,type=bind \
+  docker.osgeo.org/geoserver:2.24.1
+```
 
 ## Troubleshooting
 
