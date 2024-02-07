@@ -144,7 +144,7 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 # See also CIS Docker benchmark and docker best practices
 RUN chmod +x /opt/*.sh \
     && groupadd geoserver  \
-    && useradd --no-log-init -r -g geoserver geoserver \
+    && useradd --no-log-init -u 2000 -r -g geoserver geoserver \
     && chown -R geoserver:geoserver $CATALINA_HOME \
     && chmod g-w,o-rwx $CATALINA_HOME \
     && chown -R geoserver:geoserver $GEOSERVER_DATA_DIR \
