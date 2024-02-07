@@ -186,7 +186,7 @@ Following is the list of the all the environment variables that can be passed do
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
-| GEOSERVER_DATA_DIR | Geosever data directory location | `/opt/geoserver_data/` |
+| GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
 | GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
@@ -204,7 +204,7 @@ The following values cannot really be safely changed (as they are used to downlo
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
-| GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
+| GEOSERVER_BUILD | Geoserver build (used internally) | `1628` |
 
 ## Troubleshooting
 
