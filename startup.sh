@@ -1,5 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 echo "Welcome to GeoServer $GEOSERVER_VERSION"
+
+# function that can be used to copy a custom config file to the catalina conf dir
+function copy_custom_config() {
+  CONFIG_FILE=$1
+  # Use a custom "${CONFIG_FILE}" if the user mounted one into the container
+  if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/${CONFIG_FILE}" ]; then
+    echo "Installing configuration override for ${CONFIG_FILE} with substituted environment variables"
+    envsubst < "${CONFIG_OVERRIDES_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
+  else
+    # Otherwise use the default
+    echo "Installing default ${CONFIG_FILE} with substituted environment variables"
+    envsubst < "${CONFIG_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
+  fi
+}
 
 ## Skip demo data
 if [ "${SKIP_DEMO_DATA}" = "true" ]; then
@@ -101,25 +115,11 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   fi
 
   # Use a custom "context.xml" if the user mounted one into the container
-  if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/context.xml" ]; then
-    echo "Installing configuration override for context.xml with substituted environment variables"
-    envsubst < "${CONFIG_OVERRIDES_DIR}"/context.xml > "${CATALINA_HOME}/conf/context.xml"
-  else
-    # Otherwise use the default
-    echo "Installing default context.xml with substituted environment variables"
-    envsubst < "${CONFIG_DIR}"/context.xml > "${CATALINA_HOME}/conf/context.xml"
-  fi
+  copy_custom_config context.xml
 fi
 
 # Use a custom "server.xml" if the user mounted one into the container
-if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/server.xml" ]; then
-  echo "Installing configuration override for server.xml with substituted environment variables"
-  envsubst < "${CONFIG_OVERRIDES_DIR}"/server.xml > "${CATALINA_HOME}/conf/server.xml"
-else
-  # Otherwise use the default
-  echo "Installing default server.xml with substituted environment variables"
-  envsubst < "${CONFIG_DIR}"/server.xml > "${CATALINA_HOME}/conf/server.xml"
-fi
+copy_custom_config server.xml
 
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
