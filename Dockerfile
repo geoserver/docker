@@ -127,7 +127,6 @@ COPY startup.sh /opt/
 #COPY *.sh /opt/
 RUN chmod +x /opt/*.sh
 RUN chmod +x /opt/startup.sh
-nano
 ENTRYPOINT ["/opt/startup.sh"]
 
 WORKDIR /opt
