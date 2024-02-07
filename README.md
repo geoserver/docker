@@ -1,15 +1,16 @@
-# A geoserver docker image
+# A GeoServer docker image
 
 This Dockerfile can be used to create images for all geoserver versions since 2.5.
 
-* Debian based Linux
-* OpenJDK 11
-* Tomcat 9
-* GeoServer
-  * Support of custom fonts (e.g. for SLD styling)
-  * CORS support
-  * Support extensions
-  * Support additional libraries
+* Based on the official [`tomcat` docker image](https://hub.docker.com/_/tomcat), in particular:
+  * Tomcat 9
+  * JRE11 (eclipse temurin)
+  * Ubuntu Jammy (22.04 LTS)
+* GeoServer installation is configurable and supports
+  * dynamic installation of extensions
+  * custom fonts (e.g. for SLD styling)
+  * CORS
+  * additional libraries
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
