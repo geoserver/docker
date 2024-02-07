@@ -122,8 +122,6 @@ RUN rm -rf /tmp/*
 # Add default configs
 COPY config $CONFIG_DIR
 
-COPY config/server.xml $CATALINA_HOME/conf/server.xml
-
 # Apply CIS Apache tomcat recommendations regarding server information
 # * Alter the advertised server.info String (2.1 - 2.3)
 RUN cd $CATALINA_HOME/lib \

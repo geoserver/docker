@@ -111,6 +111,16 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   fi
 fi
 
+# Use a custom "server.xml" if the user mounted one into the container
+if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/server.xml" ]; then
+  echo "Installing configuration override for server.xml with substituted environment variables"
+  envsubst < "${CONFIG_OVERRIDES_DIR}"/server.xml > "${CATALINA_HOME}/conf/server.xml"
+else
+  # Otherwise use the default
+  echo "Installing default server.xml with substituted environment variables"
+  envsubst < "${CONFIG_DIR}"/server.xml > "${CATALINA_HOME}/conf/server.xml"
+fi
+
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
 # * Turn off session facade recycling
