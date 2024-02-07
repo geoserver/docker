@@ -179,7 +179,6 @@ Following is the list of the all the environment variables that can be passed do
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
-| CATALINA_HOME | CATALINA home path | `/opt/apache-tomcat-9.0.75` |
 | EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
