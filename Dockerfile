@@ -100,6 +100,18 @@ COPY *.sh /opt/
 # CIS Docker benchmark: Remove setuid and setgid permissions in the images to prevent privilege escalation attacks within containers.
 RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 
+
+# cleanup
+RUN apt purge -y  \
+  && apt autoremove --purge -y \
+  && rm -rf /tmp/ \
+  && rm -rf $CATALINA_HOME/webapps/ROOT \
+  && rm -rf $CATALINA_HOME/webapps/docs \
+  && rm -rf $CATALINA_HOME/webapps/examples \
+  && rm -rf $CATALINA_HOME/webapps/host-manager \
+  && rm -rf $CATALINA_HOME/webapps/manager
+
+
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
 RUN chmod +x /opt/*.sh \
@@ -111,16 +123,6 @@ RUN chmod +x /opt/*.sh \
     && chown -R geoserver:geoserver $GEOSERVER_LIB_DIR
 
 USER geoserver
-
-# cleanup
-RUN apt purge -y  \
-  && apt autoremove --purge -y \
-  && rm -rf /tmp/ \
-  && rm -rf $CATALINA_HOME/webapps/ROOT \
-  && rm -rf $CATALINA_HOME/webapps/docs \
-  && rm -rf $CATALINA_HOME/webapps/examples \
-  && rm -rf $CATALINA_HOME/webapps/host-manager \
-  && rm -rf $CATALINA_HOME/webapps/manager
 
 WORKDIR /opt
 
