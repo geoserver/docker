@@ -15,7 +15,7 @@ jobs:
       - name: Run trivy
         uses: aquasecurity/trivy-action@master
         with:
-          format: 'table'
+          format: 'sarif'
           ignore-unfixed: true
           image-ref: 'geoserver-docker.osgeo.org/geoserver:${{ github.sha }}'
           output: 'trivy-results.sarif'
