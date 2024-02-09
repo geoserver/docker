@@ -144,8 +144,23 @@ To enable a PostgreSQL JNDI resource, provide the following environment variable
 
 In geoserver, you can then reference this JNDI resource using the name `java:comp/env/jdbc/postgres` (if using default).
 
-For advanced customization of the connection pool, you can provide your own customized "context.xml"
-file to Apache Tomcat by mounting it to the container at ``/opt/config_overrides/context.xml``.
+## How to use custom (tomcat) configuration files
+
+This image provides default (tomcat) configurations that are located in the `./config/` subdir.
+
+* `context.xml` (see/compare JNDI feature from above)
+* `server.xml` (security hardened version by default)
+
+In case you want to fully overwrite such a config file, you can do so by mounting it to the `/opt/config_overrides/` directory of a container.
+The `startup.sh` script will then copy (and overwrite) these files to the catalina conf directory before starting tomcat.
+
+Example:
+
+```shell
+docker run -it -p 80:8080 \
+  --mount src="/path/to/my/server.xml",target=/opt/config_overrides/server.xml,type=bind \
+  docker.osgeo.org/geoserver:2.24.1
+```
 
 ## How to use the docker-compose demo?
 
@@ -191,7 +206,6 @@ The following values cannot really be safely changed (as they are used to downlo
 |--------------|-----------|------------|
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
 | GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
-
 
 ## Troubleshooting
 
