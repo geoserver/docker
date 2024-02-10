@@ -86,7 +86,7 @@ The ``startup.sh`` script allows some customization on startup:
 
 The CORS variables customize tomcat's `web.xml` file. If you need more customization, 
 you can provide your own customized `web.xml` file to tomcat by mounting it into the container 
-at `/opt/config_overrides/server.xml`.
+at `/opt/config_overrides/web.xml`.
 
 Example installing wps and ysld extensions:
 
