@@ -31,25 +31,28 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
 
 # init
 RUN apt update \
-&& apt -y upgrade \
-&& apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk gettext \
-&& apt clean \
-&& rm -rf /var/cache/apt/* \
-&& rm -rf /var/lib/apt/lists/*
+    && apt -y upgrade \
+    && apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk gettext \
+    && apt clean \
+    && rm -rf /var/cache/apt/* \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/
 
 RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
-&& tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz \
-&& rm apache-tomcat-${TOMCAT_VERSION}.tar.gz \
-&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT \
-&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/docs \
-&& rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/examples
+    && tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+    && rm apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+    && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT \
+    && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/docs \
+    && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/examples \
+    && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/host-manager \
+    && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/manager
 
 # cleanup
 RUN apt purge -y  \
-&& apt autoremove --purge -y \
-&& rm -rf /tmp/*
+    && apt autoremove --purge -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/*
 
 FROM tomcat as download
 
@@ -62,10 +65,10 @@ ENV GEOSERVER_BUILD=$GS_BUILD
 WORKDIR /tmp
 
 RUN echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
-&& wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
-&& unzip geoserver.zip geoserver.war -d /tmp/ \
-&& unzip -q /tmp/geoserver.war -d /tmp/geoserver \
-&& rm /tmp/geoserver.war
+    && wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
+    && unzip geoserver.zip geoserver.war -d /tmp/ \
+    && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
+    && rm /tmp/geoserver.war
 
 FROM tomcat as install
 
@@ -119,11 +122,35 @@ COPY $ADDITIONAL_FONTS_PATH /usr/share/fonts/truetype/
 RUN rm -rf /tmp/*
 
 # Add default configs
-ADD config $CONFIG_DIR
+COPY config $CONFIG_DIR
+
+# Apply CIS Apache tomcat recommendations regarding server information
+# * Alter the advertised server.info String (2.1 - 2.3)
+RUN cd $CATALINA_HOME/lib \
+    && jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties \
+    && sed -i 's/Apache Tomcat\/'"${TOMCAT_VERSION}"'/i_am_a_teapot/g' org/apache/catalina/util/ServerInfo.properties \
+    && sed -i 's/'"${TOMCAT_VERSION}"'/x.y.z/g' org/apache/catalina/util/ServerInfo.properties \
+    && sed -i 's/^server.built=.*/server.built=/g' org/apache/catalina/util/ServerInfo.properties \
+    && jar uf catalina.jar org/apache/catalina/util/ServerInfo.properties \
+    && rm -rf org/apache/catalina/util/ServerInfo.properties
 
 # copy scripts
 COPY *.sh /opt/
-RUN chmod +x /opt/*.sh
+
+# CIS Docker benchmark: Remove setuid and setgid permissions in the images to prevent privilege escalation attacks within containers.
+RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
+
+# GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
+# See also CIS Docker benchmark and docker best practices
+RUN chmod +x /opt/*.sh \
+    && groupadd geoserver  \
+    && useradd --no-log-init -u 2000 -r -g geoserver geoserver \
+    && chown -R geoserver:geoserver $CATALINA_HOME \
+    && chmod g-w,o-rwx $CATALINA_HOME \
+    && chown -R geoserver:geoserver $GEOSERVER_DATA_DIR \
+    && chown -R geoserver:geoserver $GEOSERVER_LIB_DIR
+
+USER geoserver
 
 ENTRYPOINT ["/opt/startup.sh"]
 
