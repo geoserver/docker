@@ -12,6 +12,12 @@ function copy_custom_config() {
     # Otherwise use the default
     echo "Installing default ${CONFIG_FILE} with substituted environment variables"
     envsubst < "${CONFIG_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
+    
+    # since autodeploy is disabled by default, we need to enable it if the user has not provided a custom server.xml
+    if [ "${CONFIG_FILE}" = "server.xml" ] && [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
+       echo "Deploying ROOT context to allow for redirect to ${WEBAPP_CONTEXT}"
+       sed -i '\:</Host>:i\<Context override="true" docBase="ROOT" path=""></Context>' $CATALINA_HOME/conf/server.xml
+    fi
   fi
 }
 
@@ -121,11 +127,11 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   fi
 
   # Use a custom "context.xml" if the user mounted one into the container
-  copy_custom_config context.xml
+  copy_custom_config "context.xml"
 fi
 
 # Use a custom "server.xml" if the user mounted one into the container
-copy_custom_config server.xml
+copy_custom_config "server.xml"
 
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
