@@ -121,6 +121,17 @@ fi
 # Use a custom "server.xml" if the user mounted one into the container
 copy_custom_config server.xml
 
+# Use a custom "web.xml" if the user mounted one into the container
+if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then
+  echo "Installing configuration override for web.xml with substituted environment variables"
+  
+  if [ "${CORS_ENABLED}" = "true" ]; then 
+    echo "Warning: the CORS_ENABLED's changes will be overwritten!"
+  fi
+  
+  envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "${CATALINA_HOME}/webapps/geoserver/WEB-INF/web.xml"
+fi
+
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
 # * Turn off session facade recycling
