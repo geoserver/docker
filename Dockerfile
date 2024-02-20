@@ -1,4 +1,4 @@
-FROM tomcat:9.0.86-jdk11-temurin-jammy
+FROM tomcat:9.0.85-jdk11-temurin-jammy
 LABEL vendor="osgeo.org"
 
 # Build arguments
@@ -100,7 +100,6 @@ COPY *.sh /opt/
 # CIS Docker benchmark: Remove setuid and setgid permissions in the images to prevent privilege escalation attacks within containers.
 RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 
-
 # cleanup
 RUN apt purge -y  \
   && apt autoremove --purge -y \
@@ -110,7 +109,6 @@ RUN apt purge -y  \
   && rm -rf $CATALINA_HOME/webapps/examples \
   && rm -rf $CATALINA_HOME/webapps/host-manager \
   && rm -rf $CATALINA_HOME/webapps/manager
-
 
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
