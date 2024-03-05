@@ -141,15 +141,7 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
-RUN chmod +x /opt/*.sh \
-    && groupadd geoserver  \
-    && useradd --no-log-init -u 2000 -r -g geoserver geoserver \
-    && chown -R geoserver:geoserver $CATALINA_HOME \
-    && chmod g-w,o-rwx $CATALINA_HOME \
-    && chown -R geoserver:geoserver $GEOSERVER_DATA_DIR \
-    && chown -R geoserver:geoserver $GEOSERVER_LIB_DIR
-
-USER geoserver
+RUN chmod +x /opt/*.sh
 
 ENV WEBAPP_CONTEXT=geoserver
 ENV HEALTHCHECK_URL=''
