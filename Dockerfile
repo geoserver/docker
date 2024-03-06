@@ -101,7 +101,13 @@ ENV CONFIG_DIR=/opt/config
 ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
 ENV HEALTHCHECK_URL=http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
 
+ENV HTTPS_ENABLED=false
+ENV HTTPS_KEYSTORE_FILE=/opt/keystore.jks
+ENV HTTPS_KEYSTORE_PASSWORD=changeit
+ENV HTTPS_KEY_ALIAS=server
+
 EXPOSE 8080
+EXPOSE 8443
 
 WORKDIR /tmp
 
