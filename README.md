@@ -20,7 +20,7 @@ To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 ```shell
 docker pull docker.osgeo.org/geoserver:2.24.1
 ```
-All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org)
+All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags) and the latest stable and maintenance version numbers can be obtained from [https://geoserver.org/download/](https://geoserver.org/download/)
 
 Afterwards you can run the pulled image locally with:
 
