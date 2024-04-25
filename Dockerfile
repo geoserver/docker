@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 as tomcat
 
-ARG TOMCAT_VERSION=9.0.86
+ARG TOMCAT_VERSION=8.5.43
 ARG CORS_ENABLED=false
 ARG CORS_ALLOWED_ORIGINS=*
 ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
@@ -39,7 +39,7 @@ RUN apt update \
 
 WORKDIR /opt/
 
-RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
+RUN wget -q https://archive.apache.org/dist/tomcat/tomcat-8/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
     && tar xf apache-tomcat-${TOMCAT_VERSION}.tar.gz \
     && rm apache-tomcat-${TOMCAT_VERSION}.tar.gz \
     && rm -rf /opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT \
