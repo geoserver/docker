@@ -21,7 +21,7 @@ To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 ```shell
 docker pull docker.osgeo.org/geoserver:2.24.2
 ```
-All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org)
+All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags) and the latest stable and maintenance version numbers can be obtained from [https://geoserver.org/download/](https://geoserver.org/download/)
 
 Afterwards you can run the pulled image locally with:
 
@@ -184,10 +184,11 @@ Following is the list of the all the environment variables that can be passed do
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
+| CATALINA_HOME | CATALINA home path | `/usr/local/tomcat` (see also [here](https://github.com/docker-library/tomcat/blob/master/9.0/jdk17/temurin-jammy/Dockerfile)) |
 | EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
-| CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST` |
+| CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST,PUT,DELETE,HEAD,OPTIONS` |
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
