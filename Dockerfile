@@ -32,7 +32,7 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
 # init
 RUN apt update \
     && apt -y upgrade \
-    && apt install -y --no-install-recommends openssl unzip gdal-bin wget curl openjdk-11-jdk gettext \
+    && apt install -y --no-install-recommends locales openssl unzip gdal-bin wget curl openjdk-11-jdk gettext \
     && apt clean \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*
@@ -104,6 +104,8 @@ ENV HEALTHCHECK_URL=http://localhost:8080/geoserver/web/wicket/resource/org.geos
 EXPOSE 8080
 
 WORKDIR /tmp
+
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen
 
 RUN echo "Installing GeoServer $GS_VERSION $GS_BUILD"
 
