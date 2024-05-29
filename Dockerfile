@@ -99,7 +99,6 @@ ENV ROOT_WEBAPP_REDIRECT=false
 ENV POSTGRES_JNDI_ENABLED=false
 ENV CONFIG_DIR=/opt/config
 ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
-ENV HEALTHCHECK_URL=http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
 
 ENV HTTPS_ENABLED=false
 ENV HTTPS_KEYSTORE_FILE=/opt/keystore.jks
@@ -152,9 +151,12 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 # See also CIS Docker benchmark and docker best practices
 RUN chmod +x /opt/*.sh
 
+ENV WEBAPP_CONTEXT=geoserver
+ENV HEALTHCHECK_URL=''
+
 ENTRYPOINT ["/opt/startup.sh"]
 
 WORKDIR /opt
 
 HEALTHCHECK --interval=1m --timeout=20s --retries=3 \
-  CMD curl --fail $HEALTHCHECK_URL || exit 1
+  CMD curl --fail --url "$(cat $CATALINA_HOME/conf/healthcheck_url.txt)" || exit 1
