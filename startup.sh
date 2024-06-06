@@ -151,4 +151,8 @@ if [ ! "${ENABLE_DEFAULT_SHUTDOWN}" = "true" ]; then
   REPLACEMENT=
 fi
 
+if [ -n "$GEOSERVER_ADMIN_PASSWORD" ] && [ -n "$GEOSERVER_ADMIN_USER" ]; then
+    /bin/sh /opt/update_credentials.sh
+fi
+
 exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
