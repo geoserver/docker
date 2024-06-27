@@ -1,4 +1,4 @@
-FROM tomcat:9.0.85-jdk11-temurin-jammy
+FROM tomcat:9.0.90-jdk11-temurin-jammy
 LABEL vendor="osgeo.org"
 
 # Build arguments
@@ -61,7 +61,7 @@ WORKDIR /tmp
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get install -y --no-install-recommends openssl unzip curl gettext \
+    && apt-get install -y --no-install-recommends openssl unzip curl locales gettext \
     && apt-get clean \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/* \
@@ -112,19 +112,11 @@ RUN apt purge -y  \
 
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
-RUN chmod +x /opt/*.sh \
-    && groupadd geoserver  \
-    && useradd --no-log-init -u 2000 -r -g geoserver geoserver \
-    && chown -R geoserver:geoserver $CATALINA_HOME \
-    && chmod g-w,o-rwx $CATALINA_HOME \
-    && chown -R geoserver:geoserver $GEOSERVER_DATA_DIR \
-    && chown -R geoserver:geoserver $GEOSERVER_LIB_DIR
+RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/startup.sh
 
-USER geoserver
+ENTRYPOINT ["bash", "/opt/startup.sh"]
 
 WORKDIR /opt
-
-ENTRYPOINT ["/opt/startup.sh"]
 
 EXPOSE 8080
 

@@ -7,10 +7,12 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * JRE11 (eclipse temurin)
   * Ubuntu Jammy (22.04 LTS)
 * GeoServer installation is configurable and supports
-  * dynamic installation of extensions
-  * custom fonts (e.g. for SLD styling)
+  * Dynamic installation of extensions
+  * Custom fonts (e.g. for SLD styling)
   * CORS
-  * additional libraries
+  * Additional libraries
+  * PostgreSQL JNDI
+  * HTTPS
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
@@ -19,20 +21,20 @@ This README.md file covers use of official docker image, additional [build](BUIL
 To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
 ```shell
-docker pull docker.osgeo.org/geoserver:2.24.2
+docker pull docker.osgeo.org/geoserver:2.25.2
 ```
-All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org)
+All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags) and the latest stable and maintenance version numbers can be obtained from [https://geoserver.org/download/](https://geoserver.org/download/)
 
 Afterwards you can run the pulled image locally with:
 
 ```shell
-docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.24.2
+docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.25.2
 ```
 
 Or if you want to start the container daemonized, use e.g.:
 
 ```shell
-docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.24.2
+docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.25.2
 ```
 
 Check <http://localhost/geoserver> to see the geoserver page,
@@ -49,7 +51,7 @@ To use an external folder as your geoserver data directory.
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/absolute/path/on/host",target=/opt/geoserver_data/,type=bind \
-  docker.osgeo.org/geoserver:2.24.2
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 An empty data directory will be populated on first use. You can easily update GeoServer while
@@ -64,7 +66,7 @@ The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empt
 ```shell
 docker run -it -p 80:8080 \
   --env SKIP_DEMO_DATA=true \
-  docker.osgeo.org/geoserver:2.24.2
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 ## How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
@@ -85,8 +87,8 @@ The ``startup.sh`` script allows some customization on startup:
   * ``CORS_ALLOW_CREDENTIALS`` (default ``false``) **Setting this to ``true`` will only have the desired effect if ``CORS_ALLOWED_ORIGINS`` defines explicit origins (not ``*``)**
 * ``PROXY_BASE_URL`` to the base URL of the GeoServer web app if GeoServer is behind a proxy. Example: ``https://example.com/geoserver``.
 
-The CORS variables customize tomcat's `web.xml` file. If you need more customization, 
-you can provide your own customized `web.xml` file to tomcat by mounting it into the container 
+The CORS variables customize tomcat's `web.xml` file. If you need more customization,
+you can provide your own customized `web.xml` file to tomcat by mounting it into the container
 at `/opt/config_overrides/web.xml`.
 
 Example installing wps and ysld extensions:
@@ -94,7 +96,7 @@ Example installing wps and ysld extensions:
 ```shell
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
-  docker.osgeo.org/geoserver:2.24.2
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 The list of extensions (taken from SourceForge download page):
@@ -119,7 +121,7 @@ If you want to add geoserver extensions/libs, place the respective jar files in 
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/libs/on/host",target=/opt/additional_libs,type=bind \
-  docker.osgeo.org/geoserver:2.24.2
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 ## How to add additional fonts to the docker image (e.g. for SLD styling)?
@@ -129,7 +131,7 @@ If you want to add custom fonts (the base image only contains 26 fonts) by using
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/fonts/on/host",target=/opt/additional_fonts,type=bind \
-  docker.osgeo.org/geoserver:2.24.2
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 **Note:** Do not change the target value!
@@ -164,8 +166,18 @@ Example:
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/path/to/my/server.xml",target=/opt/config_overrides/server.xml,type=bind \
-  docker.osgeo.org/geoserver:2.24.1
+  docker.osgeo.org/geoserver:2.25.1
 ```
+
+## How to enable HTTPS?
+
+To enable HTTPS, mount a JKS file to the container (ex. `/opt/keystore.jks`) and provide the following environment 
+variables:
+
+* ``HTTPS_ENABLED`` to `true`
+* ``HTTPS_KEYSTORE_FILE`` (defaults to `/opt/keystore.jks`)
+* ``HTTPS_KEYSTORE_PASSWORD`` (defaults to `changeit`)
+* ``HTTPS_KEY_ALIAS`` (defaults to `server`)
 
 ## How to use the docker-compose demo?
 
@@ -187,7 +199,7 @@ Following is the list of the all the environment variables that can be passed do
 | EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
-| CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST` |
+| CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST,PUT,DELETE,HEAD,OPTIONS` |
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
@@ -204,6 +216,8 @@ Following is the list of the all the environment variables that can be passed do
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
 | ROOT_WEBAPP_REDIRECT | Indicates whether to issue a permanent redirect to the web interface | `false` |
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
+| GEOSERVER_ADMIN_USER | Admin username |   |
+| GEOSERVER_ADMIN_PASSWORD | Admin password |  |
 
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
