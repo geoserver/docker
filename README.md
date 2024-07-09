@@ -77,14 +77,14 @@ The following will serve GeoServer from the root (<http://localhost/>):
 ```shell
 docker run -it -p 80:8080 \
   --env WEBAPP_CONTEXT="" \
-  docker.osgeo.org/geoserver:2.24.1
+  docker.osgeo.org/geoserver:2.25.1
 ```
 
 The following will serve GeoServer from <http://localhost/my_context_path>:
 ```shell
 docker run -it -p 80:8080 \
   --env WEBAPP_CONTEXT="my_context_path" \
-  docker.osgeo.org/geoserver:2.24.1
+  docker.osgeo.org/geoserver:2.25.1
 ```
 
 
