@@ -101,10 +101,6 @@ ENV CONFIG_DIR=/opt/config
 ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
 ENV WEBAPP_CONTEXT=geoserver
 ENV HEALTHCHECK_URL=''
-ENV HTTPS_ENABLED=false
-ENV HTTPS_KEYSTORE_FILE=/opt/keystore.jks
-ENV HTTPS_KEYSTORE_PASSWORD=changeit
-ENV HTTPS_KEY_ALIAS=server
 
 ENV HTTPS_ENABLED=false
 ENV HTTPS_KEYSTORE_FILE=/opt/keystore.jks
@@ -156,9 +152,6 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
 RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/startup.sh
-
-ENV WEBAPP_CONTEXT=geoserver
-ENV HEALTHCHECK_URL=''
 
 ENTRYPOINT ["bash", "/opt/startup.sh"]
 
