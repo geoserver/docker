@@ -1,4 +1,4 @@
-FROM tomcat:9.0.90-jdk11-temurin-jammy
+FROM tomcat:9.0.91-jdk11-temurin-jammy
 LABEL vendor="osgeo.org"
 
 # Build arguments

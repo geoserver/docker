@@ -196,7 +196,7 @@ Following is the list of the all the environment variables that can be passed do
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
-| CATALINA_HOME | CATALINA home path | `/usr/local/tomcat` (see also [here](https://github.com/docker-library/tomcat/blob/master/9.0/jdk17/temurin-jammy/Dockerfile)) |
+| CATALINA_HOME | CATALINA home path | `/usr/local/tomcat` (see also [here](https://github.com/docker-library/tomcat/blob/master/9.0/jdk11/temurin-jammy/Dockerfile)) |
 | EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
