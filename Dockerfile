@@ -12,7 +12,7 @@ ARG CORS_ALLOW_CREDENTIALS=false
 ARG CORS_ENABLED=false
 ARG GS_BUILD=release
 ARG GS_DATA_PATH=./geoserver_data/
-ARG GS_VERSION=2.24.2
+ARG GS_VERSION=2.25.2
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 
