@@ -12,7 +12,7 @@ function copy_custom_config() {
     # Otherwise use the default
     echo "Installing default ${CONFIG_FILE} with substituted environment variables"
     envsubst < "${CONFIG_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
-    
+
     # since autodeploy is disabled by default, we need to enable it if the user has not provided a custom server.xml
     if [ "${CONFIG_FILE}" = "server.xml" ] && [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
        echo "Deploying ROOT context to allow for redirect to ${WEBAPP_CONTEXT}"
@@ -20,11 +20,6 @@ function copy_custom_config() {
     fi
   fi
 }
-
-## Skip demo data
-if [ "${SKIP_DEMO_DATA}" = "true" ]; then
-  unset GEOSERVER_REQUIRE_FILE
-fi
 
 ## Add a permanent redirect (HTTP 301) from the root webapp ("/") to geoserver web interface ("/geoserver/web")
 if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
@@ -48,10 +43,35 @@ DEFAULT_HEALTHCHECK_URL="http://${DEFAULT_HEALTHCHECK_URL}"
 # write the healthcheck URL to a file that geoserver user has access to but is not served by tomcat
 echo "${HEALTHCHECK_URL:-$DEFAULT_HEALTHCHECK_URL}" > $CATALINA_HOME/conf/healthcheck_url.txt
 
-## install release data directory if needed before starting tomcat
-if [ ! -z "$GEOSERVER_REQUIRE_FILE" ] && [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
-  echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
-  cp -r $CATALINA_HOME/webapps/geoserver/data/* $GEOSERVER_DATA_DIR
+if [ "${SKIP_DEMO_DATA}" = "true" ]; then
+  # skipping demo data
+
+  if [ "$SET_GEOSERVER_REQUIRE_FILE" = true ]; then
+    echo "SET_GEOSERVER_REQUIRE_FILE will be ignored because SKIP_DEMO_DATA is set to true"
+  fi
+
+  # unset geoserver require file
+  if [ ! -z "$GEOSERVER_REQUIRE_FILE" ]; then
+    echo "GEOSERVER_REQUIRE_FILE will be ignored because SKIP_DEMO_DATA is set to true"
+    unset GEOSERVER_REQUIRE_FILE
+  fi
+else
+  # using demo data if data dir does not contain geoserver require file
+
+  # set geoserver require file to the correct value
+  if [ "$SET_GEOSERVER_REQUIRE_FILE" = true ]; then
+    if [ -z "$GEOSERVER_REQUIRE_FILE" ]; then
+      export GEOSERVER_REQUIRE_FILE="$GEOSERVER_DATA_DIR/global.xml"
+    else
+      echo "SET_GEOSERVER_REQUIRE_FILE is ignored because GEOSERVER_REQUIRE_FILE is set to a value"
+    fi
+  fi
+
+  ## install release data directory if needed before starting tomcat
+  if [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
+    echo "Initialize $GEOSERVER_DATA_DIR from data directory included in geoserver.war"
+    cp -r $CATALINA_HOME/webapps/geoserver/data/* $GEOSERVER_DATA_DIR
+  fi
 fi
 
 ## install GeoServer extensions before starting the tomcat
@@ -136,11 +156,11 @@ copy_custom_config "server.xml"
 # Use a custom "web.xml" if the user mounted one into the container
 if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then
   echo "Installing configuration override for web.xml with substituted environment variables"
-  
-  if [ "${CORS_ENABLED}" = "true" ]; then 
+
+  if [ "${CORS_ENABLED}" = "true" ]; then
     echo "Warning: the CORS_ENABLED's changes will be overwritten!"
   fi
-  
+
   envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "${CATALINA_HOME}/webapps/geoserver/WEB-INF/web.xml"
 fi
 
@@ -178,13 +198,13 @@ then
   echo "creating user tomcat (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
   addgroup --gid ${RUN_WITH_USER_GID} tomcat && \
     adduser --system -u ${RUN_WITH_USER_UID} --gid ${RUN_WITH_USER_GID} \
-            --no-create-home tomcat 
+            --no-create-home tomcat
 
   if [ -n "$CHANGE_OWNERSHIP_ON_FOLDERS" ]; then
     echo "Changing ownership accordingly ($CHANGE_OWNERSHIP_ON_FOLDERS)"
     chown -R tomcat:tomcat $CHANGE_OWNERSHIP_ON_FOLDERS
   fi
-  
+
   exec gosu tomcat $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 else
   exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true

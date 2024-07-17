@@ -234,7 +234,8 @@ Following is the list of the all the environment variables that can be passed do
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
 | GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
-| GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
+| GEOSERVER_REQUIRE_FILE | Path to a file that will be passed to GeoServer. If this file does not exist, GeoServer won't start. |  |
+| SET_GEOSERVER_REQUIRE_FILE | If set to true, the GEOSERVER_REQUIRE_FILE will be automatically set to `$GEOSERVER_DATA_DIR/global.xml` on startup. If GEOSERVER_REQUIRE_FILE is set it will take precedence. | `true` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
@@ -243,7 +244,7 @@ Following is the list of the all the environment variables that can be passed do
 | COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.26.x/community-latest` |
 | ADDITIONAL_LIBS_DIR | Sets the directory for additional libraries used by GeoServer | `/opt/additional_libs/` |
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
-| SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
+| SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer. GEOSERVER_REQUIRE_FILE will be ignored if set to true. | `false` |
 | ROOT_WEBAPP_REDIRECT | Indicates whether to issue a permanent redirect to the web interface | `false` |
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 | GEOSERVER_ADMIN_USER | Admin username |   |
