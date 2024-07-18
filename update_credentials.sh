@@ -11,16 +11,16 @@ fi;
 
 # copy over default security folder to data dir (if not existing)
 if [ ! -d "${GEOSERVER_DATA_DIR}/security" ]; then
-  cp -r ${CATALINA_HOME}"/webapps/"$APP_PATH_PREFIX"/geoserver/data/security" ${GEOSERVER_DATA_DIR}/
+  cp -r ${CATALINA_HOME}"/webapps/geoserver/data/security" ${GEOSERVER_DATA_DIR}/
 fi
 
 GEOSERVER_ADMIN_USER=${GEOSERVER_ADMIN_USER:-admin}
 GEOSERVER_ADMIN_PASSWORD=${GEOSERVER_ADMIN_PASSWORD:-geoserver}
 
 # templates to use as base for replacement
-USERS_XML_ORIG=${CATALINA_HOME}"/webapps/"$APP_PATH_PREFIX"/geoserver/data/security/usergroup/default/users.xml"
+USERS_XML_ORIG=${CATALINA_HOME}"/webapps/geoserver/data/security/usergroup/default/users.xml"
 echo "USING USERS XML ORIGINAL:" $USERS_XML_ORIG
-ROLES_XML_ORIG=${CATALINA_HOME}"/webapps/"$APP_PATH_PREFIX"/geoserver/data/security/role/default/roles.xml"
+ROLES_XML_ORIG=${CATALINA_HOME}"/webapps/geoserver/data/security/role/default/roles.xml"
 echo "USING ROLES XML ORIGINAL:" $ROLES_XML_ORIG
 
 # final users.xml file GeoServer data dir
@@ -30,7 +30,7 @@ echo "SETTING USERS XML:" $USERS_XML
 ROLES_XML=${ROLES_XML:-${GEOSERVER_DATA_DIR}/security/role/default/roles.xml}
 echo "SETTING ROLES XML:" . $ROLES_XML
 
-CLASSPATH=$CATALINA_HOME/webapps/$APP_PATH_PREFIX/geoserver/WEB-INF/lib/
+CLASSPATH=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
 
 # tmp files
 TMP_USERS=/tmp/users.xml
