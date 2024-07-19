@@ -15,11 +15,6 @@ function copy_custom_config() {
   fi
 }
 
-## Skip demo data
-if [ "${SKIP_DEMO_DATA}" = "true" ]; then
-  unset GEOSERVER_REQUIRE_FILE
-fi
-
 ## Add a permanent redirect (HTTP 301) from the root webapp ("/") to geoserver web interface ("/geoserver/web")
 if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ]; then
   if [ ! -d $CATALINA_HOME/webapps/ROOT ]; then
@@ -35,6 +30,12 @@ if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ]; then
 EOF
 fi
 
+## Skip demo data
+if [ "${SKIP_DEMO_DATA}" = "true" ]; then
+  unset GEOSERVER_REQUIRE_FILE
+elif [ -z "$GEOSERVER_REQUIRE_FILE" ]; then
+  export GEOSERVER_REQUIRE_FILE="$GEOSERVER_DATA_DIR/global.xml"
+fi
 
 ## install release data directory if needed before starting tomcat
 if [ ! -z "$GEOSERVER_REQUIRE_FILE" ] && [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
@@ -124,11 +125,11 @@ copy_custom_config server.xml
 # Use a custom "web.xml" if the user mounted one into the container
 if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then
   echo "Installing configuration override for web.xml with substituted environment variables"
-  
-  if [ "${CORS_ENABLED}" = "true" ]; then 
+
+  if [ "${CORS_ENABLED}" = "true" ]; then
     echo "Warning: the CORS_ENABLED's changes will be overwritten!"
   fi
-  
+
   envsubst < "${CONFIG_OVERRIDES_DIR}"/web.xml > "${CATALINA_HOME}/webapps/geoserver/WEB-INF/web.xml"
 fi
 
