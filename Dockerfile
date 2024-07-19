@@ -56,7 +56,7 @@ RUN apt purge -y  \
 
 FROM tomcat as download
 
-ARG GS_VERSION=2.25.1
+ARG GS_VERSION=2.25.2
 ARG GS_BUILD=release
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 ENV GEOSERVER_VERSION=$GS_VERSION
@@ -72,7 +72,7 @@ RUN echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
 
 FROM tomcat as install
 
-ARG GS_VERSION=2.25.1
+ARG GS_VERSION=2.25.2
 ARG GS_BUILD=release
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG COMMUNITY_PLUGIN_URL=''
