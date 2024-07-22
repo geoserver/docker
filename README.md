@@ -69,6 +69,26 @@ docker run -it -p 80:8080 \
   docker.osgeo.org/geoserver:2.25.2
 ```
 
+## How to set the application context path?
+
+By default, GeoServer is served from <http://localhost/geoserver>. Use the environment variable `WEBAPP_CONTEXT` to change the context path.
+
+examples:
+
+The following will serve GeoServer from the root (<http://localhost/>):
+```shell
+docker run -it -p 80:8080 \
+  --env WEBAPP_CONTEXT="" \
+  docker.osgeo.org/geoserver:2.25.1
+```
+
+The following will serve GeoServer from <http://localhost/my_context_path>:
+```shell
+docker run -it -p 80:8080 \
+  --env WEBAPP_CONTEXT="my_context_path" \
+  docker.osgeo.org/geoserver:2.25.1
+```
+
 ## How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
 
 By default, the ROOT webapp is not available which makes requests to the root endpoint "/" return a 404 error.
@@ -166,7 +186,7 @@ Example:
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/path/to/my/server.xml",target=/opt/config_overrides/server.xml,type=bind \
-  docker.osgeo.org/geoserver:2.25.1
+  docker.osgeo.org/geoserver:2.25.2
 ```
 
 ## How to enable HTTPS?

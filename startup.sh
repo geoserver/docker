@@ -12,6 +12,12 @@ function copy_custom_config() {
     # Otherwise use the default
     echo "Installing default ${CONFIG_FILE} with substituted environment variables"
     envsubst < "${CONFIG_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
+    
+    # since autodeploy is disabled by default, we need to enable it if the user has not provided a custom server.xml
+    if [ "${CONFIG_FILE}" = "server.xml" ] && [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
+       echo "Deploying ROOT context to allow for redirect to ${WEBAPP_CONTEXT}"
+       sed -i '\:</Host>:i\<Context override="true" docBase="ROOT" path=""></Context>' $CATALINA_HOME/conf/server.xml
+    fi
   fi
 }
 
@@ -21,20 +27,26 @@ if [ "${SKIP_DEMO_DATA}" = "true" ]; then
 fi
 
 ## Add a permanent redirect (HTTP 301) from the root webapp ("/") to geoserver web interface ("/geoserver/web")
-if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ]; then
+if [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
   if [ ! -d $CATALINA_HOME/webapps/ROOT ]; then
       mkdir $CATALINA_HOME/webapps/ROOT
   fi
 
   cat > $CATALINA_HOME/webapps/ROOT/index.jsp << EOF
 <%
-  final String redirectURL = "/geoserver/web/";
+  final String redirectURL = "/${WEBAPP_CONTEXT}/web/";
   response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
   response.setHeader("Location", redirectURL);
 %>
 EOF
 fi
 
+# Set the HEALTHCHECK URL depending on the webapp context
+# remove duplicate forward slashes
+DEFAULT_HEALTHCHECK_URL=$(echo "localhost:8080/${WEBAPP_CONTEXT}/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png" | tr -s /)
+DEFAULT_HEALTHCHECK_URL="http://${DEFAULT_HEALTHCHECK_URL}"
+# write the healthcheck URL to a file that geoserver user has access to but is not served by tomcat
+echo "${HEALTHCHECK_URL:-$DEFAULT_HEALTHCHECK_URL}" > $CATALINA_HOME/conf/healthcheck_url.txt
 
 ## install release data directory if needed before starting tomcat
 if [ ! -z "$GEOSERVER_REQUIRE_FILE" ] && [ ! -f "$GEOSERVER_REQUIRE_FILE" ]; then
@@ -115,11 +127,11 @@ if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   fi
 
   # Use a custom "context.xml" if the user mounted one into the container
-  copy_custom_config context.xml
+  copy_custom_config "context.xml"
 fi
 
 # Use a custom "server.xml" if the user mounted one into the container
-copy_custom_config server.xml
+copy_custom_config "server.xml"
 
 # Use a custom "web.xml" if the user mounted one into the container
 if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then

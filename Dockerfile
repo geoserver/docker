@@ -35,7 +35,7 @@ ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
 ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
 ENV GEOSERVER_REQUIRE_FILE=$GEOSERVER_DATA_DIR/global.xml
 ENV GEOSERVER_VERSION=$GS_VERSION
-ENV HEALTHCHECK_URL=http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png
+ENV HEALTHCHECK_URL=''
 ENV INSTALL_EXTENSIONS=false
 ENV POSTGRES_JNDI_ENABLED=false
 ENV ROOT_WEBAPP_REDIRECT=false
@@ -43,6 +43,7 @@ ENV SKIP_DEMO_DATA=false
 ENV STABLE_EXTENSIONS=''
 ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV WAR_ZIP_URL=$WAR_ZIP_URL
+ENV WEBAPP_CONTEXT=geoserver
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
@@ -122,4 +123,4 @@ WORKDIR /opt
 EXPOSE 8080
 
 HEALTHCHECK --interval=1m --timeout=20s --retries=3 \
-  CMD curl --fail $HEALTHCHECK_URL || exit 1
+  CMD curl --fail --url "$(cat $CATALINA_HOME/conf/healthcheck_url.txt)" || exit 1

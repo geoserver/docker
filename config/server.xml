@@ -166,7 +166,7 @@
             </Realm>
 
             <Host name="localhost"  appBase="webapps"
-                  unpackWARs="true" autoDeploy="true">
+                  unpackWARs="true" autoDeploy="false" deployOnStartup="false">
 
                 <!-- SingleSignOn valve, share authentication between web applications
                      Documentation at: /docs/config/valve.html -->
@@ -181,6 +181,26 @@
                        prefix="localhost_access_log" suffix=".txt"
                        pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
+                <Context antiResourceLocking="false" override="true" docBase="geoserver" privileged="true" path="${WEBAPP_CONTEXT}">
+                    <Resource name="${POSTGRES_JNDI_RESOURCE_NAME}"
+                            auth="Container"
+                            type="javax.sql.DataSource"
+                            driverClassName="org.postgresql.Driver"
+                            url="jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+                            username="${POSTGRES_USERNAME}"
+                            password="${POSTGRES_PASSWORD}"
+                            maxTotal="25"
+                            initialSize="0"
+                            minIdle="0"
+                            maxIdle="8"
+                            maxWaitMillis="-1"
+                            timeBetweenEvictionRunsMillis="30000"
+                            minEvictableIdleTimeMillis="60000"
+                            testWhileIdle="true"
+                            validationQuery="SELECT 1"
+                            rollbackOnReturn="true"
+                    />
+                </Context>
             </Host>
         </Engine>
     </Service>
