@@ -40,4 +40,4 @@ Examples:
 
 `./release.sh buildandpublish 2.25.2`
 
-`./release.sh buildandpublish 2.24-SNAPSHOT 1234`
+`./release.sh buildandpublish 2.25-SNAPSHOT 1234`

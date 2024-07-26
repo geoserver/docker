@@ -1,17 +1,18 @@
-# A geoserver docker image
+# A GeoServer docker image
 
 This Dockerfile can be used to create images for all geoserver versions since 2.5.
 
-* Debian based Linux
-* OpenJDK 11
-* Tomcat 9
-* GeoServer
-  * Support of custom fonts (e.g. for SLD styling)
-  * CORS support
-  * Support extensions
-  * Support additional libraries
-  * Support for PostgreSQL JNDI 
-  * Support for HTTPS
+* Based on the official [`tomcat` docker image](https://hub.docker.com/_/tomcat), in particular:
+  * Tomcat 9
+  * JDK11 (eclipse temurin)
+  * Ubuntu Jammy (22.04 LTS)
+* GeoServer installation is configurable and supports
+  * Dynamic installation of extensions
+  * Custom fonts (e.g. for SLD styling)
+  * CORS
+  * Additional libraries
+  * PostgreSQL JNDI
+  * HTTPS
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
@@ -67,6 +68,7 @@ docker run -it -p 80:8080 \
   --env SKIP_DEMO_DATA=true \
   docker.osgeo.org/geoserver:2.25.2
 ```
+
 ## How to set the application context path?
 
 By default, GeoServer is served from <http://localhost/geoserver>. Use the environment variable `WEBAPP_CONTEXT` to change the context path.
@@ -86,7 +88,6 @@ docker run -it -p 80:8080 \
   --env WEBAPP_CONTEXT="my_context_path" \
   docker.osgeo.org/geoserver:2.25.1
 ```
-
 
 ## How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
 
@@ -215,7 +216,7 @@ Following is the list of the all the environment variables that can be passed do
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | PATH | Used by geoserver internally to find all the libs | `/usr/local/sbin:/usr/local/bin:` |
-| CATALINA_HOME | CATALINA home path | `/opt/apache-tomcat-9.0.89` |
+| CATALINA_HOME | CATALINA home path | `/usr/local/tomcat` (see also [here](https://github.com/docker-library/tomcat/blob/master/9.0/jdk11/temurin-jammy/Dockerfile)) |
 | EXTRA_JAVA_OPTS | Used to pass params to the JAVA environment. Check [ref](https://docs.oracle.com/en/java/javase/11/tools/java.html) | `-Xms256m -Xmx1g` |
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
@@ -223,14 +224,14 @@ Following is the list of the all the environment variables that can be passed do
 | CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
-| GEOSERVER_DATA_DIR | Geosever data directory location | `/opt/geoserver_data/` |
+| GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
 | GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
-| STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.24.x/ext-latest` |
+| STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.25.x/ext-latest` |
 | COMMUNITY_EXTENSIONS | Specifies community-contributed GeoServer extensions | |
-| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.24.x/community-latest` |
+| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.25.x/community-latest` |
 | ADDITIONAL_LIBS_DIR | Sets the directory for additional libraries used by GeoServer | `/opt/additional_libs/` |
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
@@ -243,7 +244,7 @@ The following values cannot really be safely changed (as they are used to downlo
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
-| GEOSERVER_BUILD | Geosever build (used internally) | `1628` |
+| GEOSERVER_BUILD | Geoserver build (used internally) | `1628` |
 
 ## Troubleshooting
 
