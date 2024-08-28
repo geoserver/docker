@@ -26,24 +26,26 @@ else
   BUILD=$3
 fi
 
-if [[ "$VERSION" == *"-RC"* ]]; then
+if [[ "$VERSION" == *"-M"* ]]; then
     # release candidate branch release
-    BRANCH="${VERSION:0:4}-RC"
+    BRANCH="${VERSION}"
     TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
+elif [[ "$VERSION" == *"-RC"* ]]; then
+    # release candidate branch release
+    BRANCH="${VERSION}"
+    TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
+elif [[ "${VERSION:0:4}" == "$MAIN" ]]; then
+  # main branch snapshot release
+  BRANCH=main
+  TAG=geoserver-docker.osgeo.org/geoserver:$MAIN.x
 else
-  if [[ "${VERSION:0:4}" == "$MAIN" ]]; then
-    # main branch snapshot release
-    BRANCH=main
-    TAG=geoserver-docker.osgeo.org/geoserver:$MAIN.x
+  if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
+  # stable or maintenance branch snapshot release
+  BRANCH="${VERSION:0:4}.x"
+  TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
   else
-    if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
-    # stable or maintenance branch snapshot release
-    BRANCH="${VERSION:0:4}.x"
-    TAG=geoserver-docker.osgeo.org/geoserver:$BRANCH
-    else
-    BRANCH="${VERSION:0:4}.x"
-    TAG=geoserver-docker.osgeo.org/geoserver:$VERSION
-    fi
+  BRANCH="${VERSION:0:4}.x"
+  TAG=geoserver-docker.osgeo.org/geoserver:$VERSION
   fi
 fi
 
