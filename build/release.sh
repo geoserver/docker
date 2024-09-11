@@ -85,7 +85,7 @@ if [[ $1 == *build* ]]; then
         -t $TAG .
     fi
   else
-    echo "docker build ---platform linux/amd64,linux/arm64 -build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+    echo "docker build --platform linux/amd64,linux/arm64 --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
     docker build \
       --platform linux/amd64,linux/arm64 \
       --build-arg GS_VERSION=$VERSION \
