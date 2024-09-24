@@ -12,7 +12,7 @@ ARG CORS_ALLOW_CREDENTIALS=false
 ARG CORS_ENABLED=false
 ARG GS_BUILD=release
 ARG GS_DATA_PATH=./geoserver_data/
-ARG GS_VERSION=2.25.3
+ARG GS_VERSION=2.26.0
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 
@@ -58,19 +58,23 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
 
 WORKDIR /tmp
 
-# Install dependencies and download geoserver
+# Install dependencies
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get install -y --no-install-recommends openssl unzip curl locales gettext \
     && apt-get clean \
     && rm -rf /var/cache/apt/* \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download geoserver
+RUN set -eux \
     && echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
     && wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
     && unzip geoserver.zip geoserver.war -d /tmp/ \
     && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
     && rm /tmp/geoserver.war \
+    && rm geoserver.zip \
     && echo "Installing GeoServer $GS_VERSION $GS_BUILD" \
     && mv /tmp/geoserver $CATALINA_HOME/webapps/geoserver \
     && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
