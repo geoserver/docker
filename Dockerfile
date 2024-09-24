@@ -45,8 +45,27 @@ ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV WAR_ZIP_URL=$WAR_ZIP_URL
 ENV WEBAPP_CONTEXT=geoserver
 
+# ENV JDK_JAVA_OPTIONS=--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED \
+#    --add-opens=java.base/java.lang=ALL-UNNAMED \
+#    --add-opens=java.base/java.util=ALL-UNNAMED \
+#    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+#    --add-opens=java.base/java.text=ALL-UNNAMED \
+#    --add-opens=java.desktop/java.awt.font=ALL-UNNAMED \
+#    --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED \
+#    --add-opens=java.naming/com.sun.jndi.ldap=ALL-UNNAMED \
+#    --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED
+
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
+    --add-exports=java.desktop/sun.awt.image=ALL-UNNAMED \
+    --add-opens=java.base/java.lang=ALL-UNNAMED \
+    --add-opens=java.base/java.util=ALL-UNNAMED \
+    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+    --add-opens=java.base/java.text=ALL-UNNAMED \
+    --add-opens=java.desktop/java.awt.font=ALL-UNNAMED \
+    --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED \
+    --add-opens=java.naming/com.sun.jndi.ldap=ALL-UNNAMED \
+    --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED \
     -Djava.awt.headless=true -server \
     -Dfile.encoding=UTF-8 \
     -Djavax.servlet.request.encoding=UTF-8 \
