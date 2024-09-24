@@ -39,6 +39,10 @@ ENV HEALTHCHECK_URL=''
 ENV INSTALL_EXTENSIONS=false
 ENV POSTGRES_JNDI_ENABLED=false
 ENV ROOT_WEBAPP_REDIRECT=false
+ENV RUN_UNPRIVILEGED=false
+ENV RUN_WITH_USER_UID=
+ENV RUN_WITH_USER_GID=
+ENV CHANGE_OWNERSHIP_ON_FOLDERS="/opt $GEOSERVER_DATA_DIR"
 ENV SKIP_DEMO_DATA=false
 ENV STABLE_EXTENSIONS=''
 ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
@@ -62,7 +66,7 @@ WORKDIR /tmp
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get install -y --no-install-recommends openssl unzip curl locales gettext \
+    && apt-get install -y --no-install-recommends openssl unzip curl locales gettext gosu \
     && apt-get clean \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/* \
@@ -115,6 +119,14 @@ RUN apt purge -y  \
 # See also CIS Docker benchmark and docker best practices
 
 RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/startup.sh
+
+# # Create a non-privileged tomcat user
+# ARG USER_GID=999
+# ARG USER_UID=999
+# RUN addgroup --gid ${USER_GID} tomcat && \
+#     adduser --system  -u ${USER_UID} --gid ${USER_GID} --no-create-home tomcat && \
+#     chown -R tomcat:tomcat /opt && \
+#     chown tomcat:tomcat $GEOSERVER_DATA_DIR
 
 ENTRYPOINT ["bash", "/opt/startup.sh"]
 
