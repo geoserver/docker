@@ -168,7 +168,8 @@ if [ -n "$GEOSERVER_ADMIN_PASSWORD" ] && [ -n "$GEOSERVER_ADMIN_USER" ]; then
 fi
 
 # Run as non-privileged user
-if [ "${RUN_UNPRIVILEGED}" = "true" ]; then
+if [ "${RUN_UNPRIVILEGED}" = "true" ]
+then
   echo "The server will be run as non-privileged user 'tomcat'"
 
   RUN_WITH_USER_UID=${RUN_WITH_USER_UID:=999}
@@ -183,7 +184,9 @@ if [ "${RUN_UNPRIVILEGED}" = "true" ]; then
     echo "Changing ownership accordingly ($CHANGE_OWNERSHIP_ON_FOLDERS)"
     chown -R tomcat:tomcat $CHANGE_OWNERSHIP_ON_FOLDERS
   fi
-
+  
+  exec gosu tomcat $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
+else
+  exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 fi
 
-exec gosu tomcat $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
