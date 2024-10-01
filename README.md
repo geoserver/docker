@@ -98,7 +98,8 @@ The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a 
 
 The ``startup.sh`` script allows some customization on startup:
 
-* ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
+* ``DOWNLOAD_EXTENSIONS`` to ``true`` to download extensions from build server
+* ``INSTALL_EXTENSIONS`` to ``true`` to install extensions from the ``/opt/additional_libs`` directory
 * ``STABLE_EXTENSIONS`` list of extensions to download and install
 * ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
   * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
@@ -115,7 +116,7 @@ Example installing wps and ysld extensions:
 
 ```shell
 docker run -it -p 80:8080 \
-  --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
+  --env DOWNLOAD_EXTENSIONS=true --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
   docker.osgeo.org/geoserver:2.25.3
 ```
 
@@ -199,6 +200,19 @@ variables:
 * ``HTTPS_KEYSTORE_PASSWORD`` (defaults to `changeit`)
 * ``HTTPS_KEY_ALIAS`` (defaults to `server`)
 
+## How to add community extensions?
+
+To add community extensions, set the `COMMUNITY_EXTENSIONS` environment variable to a comma-separated list of extensions to install.
+
+If you add community extensions on an official release you will see the following warning:
+
+`WARNING: Installing community extensions on an official release version. Be sure to check compatibility.`
+
+Community modules have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
+You an add them on your own risk. Please make sure to check the compatibility of the community modules with the GeoServer version you are using.
+In case of an issue make sure to report the usage of community modules in the issue descriptions.
+
+
 ## How to use the docker-compose demo?
 
 The ``docker-compose-demo.yml`` to build with your own data directory and extensions.
@@ -226,12 +240,14 @@ Following is the list of the all the environment variables that can be passed do
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
 | GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
 | GEOSERVER_REQUIRE_FILE | Geoserver configuration used interally | `/opt/geoserver_data/global.xml` |
-| INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
+| DOWNLOAD_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
+| INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `true` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
 | STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.25.x/ext-latest` |
 | COMMUNITY_EXTENSIONS | Specifies community-contributed GeoServer extensions | |
-| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.25.x/community-latest` |
+| COMMUNITY_PLUGIN_BASE_URL | Specifies the **base** URL for downloading the latest community-contributed GeoServer plugins. | `https://build.geoserver.org/geoserver/` | |
+| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `${COMMUNITY_PLUGIN_BASE_URL}2.25.x/community-latest` |
 | ADDITIONAL_LIBS_DIR | Sets the directory for additional libraries used by GeoServer | `/opt/additional_libs/` |
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
@@ -239,12 +255,9 @@ Following is the list of the all the environment variables that can be passed do
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 | GEOSERVER_ADMIN_USER | Admin username |   |
 | GEOSERVER_ADMIN_PASSWORD | Admin password |  |
-
-The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
-| VAR NAME | DESCRIPTION | SAMPLE VALUE |
-|--------------|-----------|------------|
+| WGET_OPTS | Options for the `wget` command | `--no-check-certificate` |
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
-| GEOSERVER_BUILD | Geoserver build (used internally) | `1628` |
+| GEOSERVER_BUILD | Geoserver build (used internally) must not be changed| `1628` |
 
 ## Troubleshooting
 

@@ -65,27 +65,27 @@ Override these arguments to make use of build.geoserver.org nightly releases:
 * ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/ext-latest/``
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/community-latest/``
 
-Here is a working example for building 2.25.x nightly build::
+Here is a working example for building 2.27.x nightly build::
 ```
 docker build --no-cache-filter download,install \
-  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.25.x/geoserver-2.25.x-latest-war.zip \
-  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.25.x/ext-latest/ \
-  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.25.x/community-latest/ \
-  --build-arg GS_VERSION=2.24-SNAPSHOT \
-  -t 2.25.x .
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.27.x/geoserver-2.27.x-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.27.x/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.27.x/community-latest/ \
+  --build-arg GS_VERSION=2.27-SNAPSHOT \
+  -t 2.27.x .
 ```
 
 When running both stable extensions and community modules can be included:
 
 ```
 docker run -it -p 80:8080 \
+  --env DOWNLOAD_EXTENSIONS=true \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="ysld" \
   --env COMMUNITY_EXTENSIONS="ogcapi" \
-  -t 2.25.x
+  -t 2.27.x
 ```
 
-Community modules are only available for nightly builds as they have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
 
 ## How to build from main snapshot releases?
 
@@ -94,26 +94,29 @@ The build.geoserver.org output for the ``main`` branch requires the following:
 * ``--build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip``
 * ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/``
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/``
+* ``--build-arg GS_VERSION=2.27-SNAPSHOT``
 
+Since the artifacts include the version number, the ``GS_VERSION`` argument is needed to be set to the SNAPSHOT.
 
-Here is a working example for building main branch as 2.25.x build:
+Here is a working example for building main branch as 2.27.x build:
 
 ```
 docker build --no-cache-filter download,install \
   --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
   --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
   --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
-  --build-arg GS_VERSION=2.24-SNAPSHOT \
-  -t 2.25.x .
+  --build-arg GS_VERSION=2.27-SNAPSHOT \
+  -t 2.27.x .
 ```
 
 When running both [stable extensions](https://build.geoserver.org/geoserver/main/ext-latest/) and [community modules](https://build.geoserver.org/geoserver/main/community-latest/) can be included:
 
 ```
 docker run -it -p 80:8080 \
+  --env DOWNLOAD_EXTENSIONS=true \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="wps,css" \
   --env COMMUNITY_EXTENSIONS="ogcapi-coverages,ogcapi-dggs,ogcapi-features,ogcapi-images,ogcapi-maps,ogcapi-styles,ogcapi-tiled-features,ogcapi-tiles" \
-  -t 2.25.x
+  -t 2.27.x
 ```
 
