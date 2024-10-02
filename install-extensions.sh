@@ -36,7 +36,7 @@ function install_lib() {
     fi
 }
 
-# Download stable plugins only if DOWNLOAD_EXTENSIONS is true
+# Download plugins only if DOWNLOAD_EXTENSIONS is true
 if [ "$DOWNLOAD_EXTENSIONS" = "true" ]; then
   echo "Starting download of extensions"
   if [ ! -d "$ADDITIONAL_LIBS_DIR" ]; then
