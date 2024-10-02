@@ -246,8 +246,8 @@ Following is the list of the all the environment variables that can be passed do
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
 | STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.25.x/ext-latest` |
 | COMMUNITY_EXTENSIONS | Specifies community-contributed GeoServer extensions | |
-| COMMUNITY_PLUGIN_BASE_URL | Specifies the **base** URL for downloading the latest community-contributed GeoServer plugins. | `https://build.geoserver.org/geoserver/` | |
-| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `${COMMUNITY_PLUGIN_BASE_URL}2.25.x/community-latest` |
+| COMMUNITY_PLUGIN_BASE_URL | Specifies the **base** URL for downloading the latest community-contributed GeoServer plugins. | `https://build.geoserver.org/geoserver` | |
+| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins defaults to `${COMMUNITY_PLUGIN_BASE_URL}/${GEOSERVER_RELEASE_BRANCH}/community-latest` |
 | ADDITIONAL_LIBS_DIR | Sets the directory for additional libraries used by GeoServer | `/opt/additional_libs/` |
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer | `false` |
@@ -255,8 +255,9 @@ Following is the list of the all the environment variables that can be passed do
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 | GEOSERVER_ADMIN_USER | Admin username |   |
 | GEOSERVER_ADMIN_PASSWORD | Admin password |  |
-| WGET_OPTS | Options for the `wget` command | `--no-check-certificate` |
+| WGET_OPTS | Options for the `wget` command in case you need some (unset by default)| `--no-check-certificate` |
 | GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
+| GEOSERVER_RELEASE_BRANCH | Geoserver release branch (used internally) is derived from GEOSERVER_VERSION | `2.24.x` or `main` |
 | GEOSERVER_BUILD | Geoserver build (used internally) must not be changed| `1628` |
 
 ## Troubleshooting
