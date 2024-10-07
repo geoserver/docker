@@ -167,4 +167,26 @@ if [ -n "$GEOSERVER_ADMIN_PASSWORD" ] && [ -n "$GEOSERVER_ADMIN_USER" ]; then
     /bin/sh /opt/update_credentials.sh
 fi
 
-exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
+# Run as non-privileged user
+if [ "${RUN_UNPRIVILEGED}" = "true" ]
+then
+  echo "The server will be run as non-privileged user 'tomcat'"
+
+  RUN_WITH_USER_UID=${RUN_WITH_USER_UID:=999}
+  RUN_WITH_USER_GID=${RUN_WITH_USER_GID:=${RUN_WITH_USER_UID} }
+
+  echo "creating user tomcat (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
+  addgroup --gid ${RUN_WITH_USER_GID} tomcat && \
+    adduser --system -u ${RUN_WITH_USER_UID} --gid ${RUN_WITH_USER_GID} \
+            --no-create-home tomcat 
+
+  if [ -n "$CHANGE_OWNERSHIP_ON_FOLDERS" ]; then
+    echo "Changing ownership accordingly ($CHANGE_OWNERSHIP_ON_FOLDERS)"
+    chown -R tomcat:tomcat $CHANGE_OWNERSHIP_ON_FOLDERS
+  fi
+  
+  exec gosu tomcat $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
+else
+  exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
+fi
+
