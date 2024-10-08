@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.25.3
+        - GEOSERVER_VERSION=2.26.0
         - CORS_ENABLED=true
         - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
     ports:
