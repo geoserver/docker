@@ -199,6 +199,15 @@ variables:
 * ``HTTPS_KEYSTORE_PASSWORD`` (defaults to `changeit`)
 * ``HTTPS_KEY_ALIAS`` (defaults to `server`)
 
+## How to run it as a non-privileged user ?
+
+It is usually considered a good practice to run the containers as a non-privileged user (not `root`).
+While it runs by default as root, for backwards compatibility reasons, several environment variables allow you to change this behaviour:
+- `RUN_UNPRIVILEGED=true`: run as unprivileged user `tomcat`. Default uid:gid are 999:999
+- `RUN_WITH_USER_UID` allows you to set `tomcat`'s uid. By default this is 999.
+- `RUN_WITH_USER_GID` allows you to set `tomcat`'s gid. By default this is the same as the uid.
+- `CHANGE_OWNERSHIP_ON_FOLDERS` sets a space-separated list of folders on which a `chmod -R` will be run, changing the ownership of those folders to the `tomcat` user (defaults to `"/opt $GEOSERVER_DATA_DIR"`).
+
 ## How to use the docker-compose demo?
 
 The ``docker-compose-demo.yml`` to build with your own data directory and extensions.
@@ -239,6 +248,10 @@ Following is the list of the all the environment variables that can be passed do
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 | GEOSERVER_ADMIN_USER | Admin username |   |
 | GEOSERVER_ADMIN_PASSWORD | Admin password |  |
+| RUN_UNPRIVILEGED | If set to `true`, runs as an unprivileged user `tomcat` instead of `root`. | `true` |
+| RUN_WITH_USER_UID | When running as unprivileged user, sets the uid of this user. Defaults to `999` | `999` |
+| RUN_WITH_USER_GID | When running as unprivileged user, sets the gid of this user. Defaults to the same as the uid | `999` |
+| CHANGE_OWNERSHIP_ON_FOLDERS | When running as unprivileged user, changes the ownership to this user to these folders | `"/opt /opt/geoserver_data/ /mnt/geoserver_geodata"` |
 
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
