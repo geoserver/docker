@@ -230,7 +230,7 @@ Following is the list of the all the environment variables that can be passed do
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
 | CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST,PUT,DELETE,HEAD,OPTIONS` |
-| CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
+| CORS_ALLOWED_HEADERS | CORS headers configuration | `Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
 | GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
