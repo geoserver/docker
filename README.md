@@ -103,7 +103,7 @@ The ``startup.sh`` script allows some customization on startup:
 * ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
   * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
   * ``CORS_ALLOWED_METHODS`` (default ``GET,POST,PUT,DELETE,HEAD,OPTIONS``)
-  * ``CORS_ALLOWED_HEADERS`` (default ``*``)
+  * ``CORS_ALLOWED_HEADERS`` (default ``Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers``)
   * ``CORS_ALLOW_CREDENTIALS`` (default ``false``) **Setting this to ``true`` will only have the desired effect if ``CORS_ALLOWED_ORIGINS`` defines explicit origins (not ``*``)**
 * ``PROXY_BASE_URL`` to the base URL of the GeoServer web app if GeoServer is behind a proxy. Example: ``https://example.com/geoserver``.
 
