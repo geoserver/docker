@@ -253,6 +253,8 @@ Following is the list of the all the environment variables that can be passed do
 | RUN_WITH_USER_GID | When running as unprivileged user, sets the gid of this user. Defaults to the same as the uid | `999` |
 | CHANGE_OWNERSHIP_ON_FOLDERS | When running as unprivileged user, changes the ownership to this user to these folders | `"/opt /opt/geoserver_data/ /mnt/geoserver_geodata"` |
 
+After the initial setup, it's recommended to remove the `GEOSERVER_ADMIN_USER` and `GEOSERVER_ADMIN_PASSWORD` variable. Otherwise, newly added roles and users may be overwritten by the next time the container is restarted.
+
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
