@@ -103,7 +103,7 @@ The ``startup.sh`` script allows some customization on startup:
 * ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
   * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
   * ``CORS_ALLOWED_METHODS`` (default ``GET,POST,PUT,DELETE,HEAD,OPTIONS``)
-  * ``CORS_ALLOWED_HEADERS`` (default ``*``)
+  * ``CORS_ALLOWED_HEADERS`` (default ``Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers``)
   * ``CORS_ALLOW_CREDENTIALS`` (default ``false``) **Setting this to ``true`` will only have the desired effect if ``CORS_ALLOWED_ORIGINS`` defines explicit origins (not ``*``)**
 * ``PROXY_BASE_URL`` to the base URL of the GeoServer web app if GeoServer is behind a proxy. Example: ``https://example.com/geoserver``.
 
@@ -230,7 +230,7 @@ Following is the list of the all the environment variables that can be passed do
 | CORS_ENABLED | CORS enabled configuration | `false` |
 | CORS_ALLOWED_ORIGINS | CORS origins configuration | `*` |
 | CORS_ALLOWED_METHODS | CORS method configuration | `GET,POST,PUT,DELETE,HEAD,OPTIONS` |
-| CORS_ALLOWED_HEADERS | CORS headers configuration | `*` |
+| CORS_ALLOWED_HEADERS | CORS headers configuration | `Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers` |
 | DEBIAN_FRONTEND | Configures the Debian package manager frontend | `noninteractive`|
 | CATALINA_OPTS | Catalina options. Check [ref](https://www.baeldung.com/tomcat-catalina_opts-vs-java_opts) | `-Djava.awt.headless=true` |
 | GEOSERVER_DATA_DIR | Geoserver data directory location | `/opt/geoserver_data/` |
