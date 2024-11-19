@@ -29,7 +29,7 @@ if [ "$INSTALL_EXTENSIONS" = "true" ]; then
     download_extension ${URL} ${EXTENSION}
   done
   for EXTENSION in $(echo "${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
-    URL="${COMMUNITY_PLUGIN_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
+    URL="${COMMUNITY_PLUGIN_URL}/geoserver-$(echo ${GEOSERVER_VERSION} | cut -d'.' -f1,2)-SNAPSHOT-${EXTENSION}-plugin.zip"
     download_extension ${URL} ${EXTENSION}
   done
   echo "Finished download of extensions"
