@@ -171,12 +171,15 @@ To enable a PostgreSQL JNDI resource, provide the following environment variable
 
 In geoserver, you can then reference this JNDI resource using the name `java:comp/env/jdbc/postgres` (if using default).
 
+Note: previously you could tweak the JNDI settings in a custom `context.xml` (see below), but its contents are now included in `server.xml`.
+
+
 ## How to use custom (tomcat) configuration files
 
 This image provides default (tomcat) configurations that are located in the `./config/` subdir.
 
-* `context.xml` (see/compare JNDI feature from above)
 * `server.xml` (security hardened version by default)
+* ~context.xml~ (now included into `server.xml`, previously used for JNDI settings)
 
 In case you want to fully overwrite such a config file, you can do so by mounting it to the `/opt/config_overrides/` directory of a container.
 The `startup.sh` script will then copy (and overwrite) these files to the catalina conf directory before starting tomcat.
