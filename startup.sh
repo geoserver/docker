@@ -15,8 +15,8 @@ function copy_custom_config() {
 
     # since autodeploy is disabled by default, we need to enable it if the user has not provided a custom server.xml
     if [ "${CONFIG_FILE}" = "server.xml" ] && [ "${ROOT_WEBAPP_REDIRECT}" = "true" ] && [ "${WEBAPP_CONTEXT}" != "" ]; then
-       echo "Deploying ROOT context to allow for redirect to ${WEBAPP_CONTEXT}"
-       sed -i '\:</Host>:i\<Context override="true" docBase="ROOT" path=""></Context>' $CATALINA_HOME/conf/server.xml
+        echo "Deploying ROOT context to allow for redirect to ${WEBAPP_CONTEXT}"
+        sed -i '\:</Host>:i\<Context override="true" docBase="ROOT" path=""></Context>' $CATALINA_HOME/conf/server.xml
     fi
   fi
 }
@@ -42,6 +42,12 @@ DEFAULT_HEALTHCHECK_URL=$(echo "localhost:8080/${WEBAPP_CONTEXT}/web/wicket/reso
 DEFAULT_HEALTHCHECK_URL="http://${DEFAULT_HEALTHCHECK_URL}"
 # write the healthcheck URL to a file that geoserver user has access to but is not served by tomcat
 echo "${HEALTHCHECK_URL:-$DEFAULT_HEALTHCHECK_URL}" > $CATALINA_HOME/conf/healthcheck_url.txt
+
+# ensure that GEOSERVER_DATA_DIR exists as a directory
+if [ ! -e "$GEOSERVER_DATA_DIR" ]; then
+  mkdir -p $GEOSERVER_DATA_DIR
+  echo "Created new GeoServer data directory $GEOSERVER_DATA_DIR as it did not exist."
+fi
 
 if [ "${SKIP_DEMO_DATA}" = "true" ]; then
   # skipping demo data
@@ -209,4 +215,3 @@ then
 else
   exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 fi
-
