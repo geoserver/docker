@@ -1,4 +1,4 @@
-FROM tomcat:9.0.98-jdk17-temurin-jammy@sha256:1cd76e7ff43f6151de0926bfaf2afc1dba6b72b0a05d3b08be029611c4af9676
+FROM tomcat:9.0.98-jdk17-temurin-jammy@sha256:3d6741c5396048c92eccc72b09bce250b3d3a32f6d4e25943f11a4840c686b47
 LABEL vendor="osgeo.org"
 
 # Build arguments
