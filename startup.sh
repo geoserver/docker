@@ -179,6 +179,9 @@ if [ "${HTTPS_ENABLED}" = "true" ]; then
   envsubst < "${CONFIG_DIR}"/server-https.xml > "${CATALINA_HOME}/conf/server.xml"
 fi
 
+# Add configurable runtime options via EXTRA_JAVA_OPTS
+export CATALINA_OPTS="${EXTRA_JAVA_OPTS} ${CATALINA_OPTS}"
+
 # start the tomcat
 # CIS - Tomcat Benchmark recommendations:
 # * Turn off session facade recycling
