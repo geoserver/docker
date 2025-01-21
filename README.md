@@ -4,7 +4,7 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
 
 * Based on the official [`tomcat` docker image](https://hub.docker.com/_/tomcat), in particular:
   * Tomcat 9
-  * JDK11 (eclipse temurin)
+  * JDK17 (eclipse temurin)
   * Ubuntu Jammy (22.04 LTS)
 * GeoServer installation is configurable and supports
   * Dynamic installation of extensions
@@ -13,6 +13,7 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * Additional libraries
   * PostgreSQL JNDI
   * HTTPS
+  * GDAL with Java Bindings
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 

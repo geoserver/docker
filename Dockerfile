@@ -1,18 +1,178 @@
-FROM tomcat:9.0.102-jdk17-temurin-jammy@sha256:7ecf106b1c45baf845856e11c9c2ff7c65d54a9b015ef7e86288293c197d0162
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-jammy
+ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.102-jdk17-temurin-jammy@sha256:7ecf106b1c45baf845856e11c9c2ff7c65d54a9b015ef7e86288293c197d0162
+
+ARG GS_VERSION=2.26.2
+ARG BUILD_GDAL=false
+ARG PROJ_VERSION=9.5.1
+ARG GDAL_VERSION=3.10.2
+ARG INSTALL_PREFIX=/usr/local
+
+# This is a multi stage build.
+
+# The gdal_builder image/stage can be enabled by using
+# `--build-arg BUILD_GDAL=true`. The gdal_builder is derived
+# from the osgeo/gdal Dockerfile (small ubuntu) and simplified
+# version activating the JAVA features on top.
+# It builds gdal from sources, which is necessary to get
+# working gdal JAVA Bindings, e.g. for the geoserver gdal extension.
+# see https://trac.osgeo.org/osgeolive/ticket/2288
+#
+# NOTE: the build process can take up to 15 mins on average hardware!
+FROM $BUILDER_BASE_IMAGE AS gdal_builder
+
+ARG BUILD_GDAL
+ARG PROJ_VERSION
+ARG GDAL_VERSION
+ARG INSTALL_PREFIX
+
+ENV HOME="/root"
+USER root
+
+# Setup build env for PROJ and GDAL
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    # we need these dirs at least empty for the later COPY...
+    mkdir -p /build_projgrids/usr/ \
+    mkdir -p /build${INSTALL_PREFIX}/share/proj/ \
+    mkdir -p /build${INSTALL_PREFIX}/include/\
+    mkdir -p /build${INSTALL_PREFIX}/bin/ \
+    mkdir -p /build${INSTALL_PREFIX}/lib/ \
+    mkdir -p /build/usr/share/bash-completion/ \
+    mkdir -p /build/usr/share/gdal/ \
+    mkdir -p /build/usr/include/ \
+    mkdir -p /build_gdal_python/usr/ \
+    mkdir -p /build_gdal_version_changing/usr/ \
+    && if test "${BUILD_GDAL}" = "true"; then \
+        apt-get update -y \
+        && apt-get upgrade -y \
+        && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
+            # PROJ build dependencies
+            build-essential ca-certificates \
+            git make ninja-build cmake wget unzip libtool automake \
+            zlib1g-dev libsqlite3-dev pkg-config sqlite3 libcurl4-openssl-dev \
+            libtiff-dev patchelf rsync \
+            # GDAL build dependencies
+            python3-dev python3-numpy python3-setuptools \
+            libjpeg-dev libgeos-dev \
+            libexpat-dev libxerces-c-dev \
+            libwebp-dev libpng-dev \
+            libdeflate-dev \
+            libzstd-dev bash zip curl \
+            libpq-dev libssl-dev libopenjp2-7-dev \
+            libspatialite-dev \
+            libmuparser-dev \
+            autoconf automake sqlite3 bash-completion swig ant bison; \
+    fi
+
+# Build PROJ
+RUN --mount=type=cache,id=gs-proj,target=$HOME/.cache \
+    if test "${BUILD_GDAL}" = "true"; then \
+        export GCC_ARCH="$(uname -m)" \
+        && mkdir -p /build_projgrids/${INSTALL_PREFIX}/share/proj \
+        && curl -LO -fsS http://download.osgeo.org/proj/proj-datumgrid-latest.zip \
+        && unzip -q -j -u -o proj-datumgrid-latest.zip  -d /build_projgrids/${INSTALL_PREFIX}/share/proj \
+        && rm -f *.zip \
+        && mkdir proj \
+        && wget -q https://github.com/OSGeo/PROJ/archive/${PROJ_VERSION}.tar.gz -O - \
+            | tar xz -C proj --strip-components=1 \
+        && export PROJ_DB_CACHE_PARAM="" \
+        && cd proj \
+        && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2' \
+            cmake . \
+        -G Ninja \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+            -DBUILD_TESTING=OFF \
+            $PROJ_DB_CACHE_PARAM \
+        && ninja \
+        && DESTDIR="/build" ninja install \
+        && cd .. \
+        && rm -rf proj \
+        && PROJ_SO=$(readlink -f /build${INSTALL_PREFIX}/lib/libproj.so | awk 'BEGIN {FS="libproj.so."} {print $2}') \
+        && PROJ_SO_FIRST=$(echo $PROJ_SO | awk 'BEGIN {FS="."} {print $1}') \
+        && mv /build${INSTALL_PREFIX}/lib/libproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO_FIRST} \
+        && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so \
+        && rm /build${INSTALL_PREFIX}/lib/libproj.*  \
+        && ${GCC_ARCH}-linux-gnu-strip -s /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && for i in /build${INSTALL_PREFIX}/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && for i in /build${INSTALL_PREFIX}/bin/*; do patchelf --replace-needed libproj.so.${PROJ_SO_FIRST} libinternalproj.so.${PROJ_SO_FIRST} $i; done \
+    fi
+
+# Build GDAL
+RUN --mount=type=cache,id=gs-gdal,target=$HOME/.cache \
+    if test "${BUILD_GDAL}" = "true"; then \
+        export GCC_ARCH="$(uname -m)" \
+        && if test "${GDAL_VERSION}" = "master"; then \
+            export GDAL_VERSION=$(curl -Ls https://api.github.com/repos/OSGeo/gdal/commits/HEAD -H "Accept: application/vnd.github.VERSION.sha"); \
+            export GDAL_RELEASE_DATE=$(date "+%Y%m%d"); \
+        fi \
+        && if test "${GCC_ARCH}" = "x86_64"; then \
+            export GDAL_CMAKE_EXTRA_OPTS="-DENABLE_IPO=ON"; \
+        else \
+            export GDAL_CMAKE_EXTRA_OPTS=""; \
+        fi \
+        && mkdir gdal \
+        && wget -q https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz -O - \
+            | tar xz -C gdal --strip-components=1 \
+        && cd gdal \
+        && mkdir build \
+        && cd build \
+        && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2 -Wno-psabi' \
+            cmake .. \
+            -G Ninja \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DGDAL_FIND_PACKAGE_PROJ_MODE=MODULE \
+            -DPROJ_INCLUDE_DIR="/build${INSTALL_PREFIX-/usr/local}/include" \
+            -DPROJ_LIBRARY="/build${INSTALL_PREFIX-/usr/local}/lib/libinternalproj.so" \
+            -DGDAL_USE_TIFF_INTERNAL=ON \
+            -DGDAL_USE_GEOTIFF_INTERNAL=ON ${GDAL_CMAKE_EXTRA_OPTS} \
+            -DBUILD_TESTING=OFF \
+            -DBUILD_JAVA_BINDINGS=ON \
+            -DGDAL_JAVA_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
+            -DGDAL_JAVA_JNI_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
+        && ninja \
+        && DESTDIR="/build" ninja install \
+        && cd .. \
+        && cd .. \
+        && rm -rf gdal \
+        && mkdir -p /build_gdal_python/usr/lib \
+        && mkdir -p /build_gdal_python/usr/bin \
+        && mkdir -p /build_gdal_version_changing/usr/include \
+        && mv /build/usr/lib/python*            /build_gdal_python/usr/lib \
+        && mv /build/usr/lib                    /build_gdal_version_changing/usr \
+        && mv /build/usr/include/gdal_version.h /build_gdal_version_changing/usr/include \
+        && mv /build/usr/bin/*.py               /build_gdal_python/usr/bin \
+        && mv /build/usr/bin                    /build_gdal_version_changing/usr \
+        && for i in /build_gdal_version_changing/usr/lib/${GCC_ARCH}-linux-gnu/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && for i in /build_gdal_python/usr/lib/python3/dist-packages/osgeo/*.so; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && for i in /build_gdal_version_changing/usr/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+    fi
+
+#############################
+#############################
+### final GeoServer image ###
+#############################
+#############################
+FROM $GEOSERVER_BASE_IMAGE AS geoserver
 LABEL vendor="osgeo.org"
 
 # Build arguments
 ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
 ARG ADDITIONAL_LIBS_PATH=./additional_libs/
+ARG BUILD_GDAL
 ARG COMMUNITY_PLUGIN_URL=''
 ARG CORS_ALLOWED_HEADERS=Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers
 ARG CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ARG CORS_ALLOWED_ORIGINS=*
 ARG CORS_ALLOW_CREDENTIALS=false
 ARG CORS_ENABLED=false
+ARG GS_VERSION
 ARG GS_BUILD=release
 ARG GS_DATA_PATH=./geoserver_data/
-ARG GS_VERSION=2.26.2
+ARG INSTALL_PREFIX
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
 
@@ -35,6 +195,7 @@ ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
 ENV GEOSERVER_LIB_DIR=$CATALINA_HOME/webapps/geoserver/WEB-INF/lib/
 ENV SET_GEOSERVER_REQUIRE_FILE=true
 ENV GEOSERVER_VERSION=$GS_VERSION
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ENV HEALTHCHECK_URL=''
 ENV INSTALL_EXTENSIONS=false
 ENV POSTGRES_JNDI_ENABLED=false
@@ -48,16 +209,6 @@ ENV STABLE_EXTENSIONS=''
 ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV WAR_ZIP_URL=$WAR_ZIP_URL
 ENV WEBAPP_CONTEXT=geoserver
-
-# ENV JDK_JAVA_OPTIONS=--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED \
-#    --add-opens=java.base/java.lang=ALL-UNNAMED \
-#    --add-opens=java.base/java.util=ALL-UNNAMED \
-#    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
-#    --add-opens=java.base/java.text=ALL-UNNAMED \
-#    --add-opens=java.desktop/java.awt.font=ALL-UNNAMED \
-#    --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED \
-#    --add-opens=java.naming/com.sun.jndi.ldap=ALL-UNNAMED \
-#    --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
@@ -84,11 +235,43 @@ WORKDIR /tmp
 # Install dependencies
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends openssl unzip curl locales gettext gosu \
+    && apt-get update -y \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+    # Basic dependencies
+    openssl curl unzip locales gettext gosu \
+    && if test "${BUILD_GDAL}" = "true"; then \
+        # PROJ dependencies
+        apt-get install -y --no-install-recommends libsqlite3-0 libtiff5 libcurl4 ca-certificates \
+        # GDAL dependencies
+        bash-completion python3-numpy libpython3.11 libjpeg-turbo8 libgeos3.10.2 libgeos-c1v5 \
+            libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
+            libopenjp2-7 libspatialite7 libmuparser2v5 python3-pil python-is-python3; \
+    fi \
     && apt-get clean \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*
+
+# install gdal (and proj)
+# the source directories are empty in case of
+# BUILD_GDAL=false
+COPY --from=gdal_builder  /build_projgrids/usr/ /usr/
+
+COPY --from=gdal_builder  /build${INSTALL_PREFIX}/share/proj/ ${INSTALL_PREFIX}/share/proj/
+COPY --from=gdal_builder  /build${INSTALL_PREFIX}/include/ ${INSTALL_PREFIX}/include/
+COPY --from=gdal_builder  /build${INSTALL_PREFIX}/bin/ ${INSTALL_PREFIX}/bin/
+COPY --from=gdal_builder  /build${INSTALL_PREFIX}/lib/ ${INSTALL_PREFIX}/lib/
+
+COPY --from=gdal_builder  /build/usr/share/bash-completion/ /usr/share/bash-completion/
+COPY --from=gdal_builder  /build/usr/share/gdal/ /usr/share/gdal/
+COPY --from=gdal_builder  /build/usr/include/ /usr/include/
+COPY --from=gdal_builder  /build_gdal_python/usr/ /usr/
+COPY --from=gdal_builder  /build_gdal_version_changing/usr/ /usr/
+
+RUN if test "${BUILD_GDAL}" = "true"; then \
+        ldconfig; \
+        echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc; \
+    fi
 
 # Download geoserver
 RUN set -eux \
@@ -142,14 +325,6 @@ RUN apt purge -y  \
 # See also CIS Docker benchmark and docker best practices
 
 RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/startup.sh
-
-# # Create a non-privileged tomcat user
-# ARG USER_GID=999
-# ARG USER_UID=999
-# RUN addgroup --gid ${USER_GID} tomcat && \
-#     adduser --system  -u ${USER_UID} --gid ${USER_GID} --no-create-home tomcat && \
-#     chown -R tomcat:tomcat /opt && \
-#     chown tomcat:tomcat $GEOSERVER_DATA_DIR
 
 ENTRYPOINT ["bash", "/opt/startup.sh"]
 

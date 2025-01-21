@@ -63,7 +63,7 @@ if [[ $1 == *build* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
     echo
     if [[ "$BRANCH" == "main" ]]; then
-      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD --build-arg BUILD_GDAL=true -t $TAG ."
       # todo: --no-cache-filter download,install
       docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
@@ -71,22 +71,25 @@ if [[ $1 == *build* ]]; then
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest \
         --build-arg GS_VERSION=$VERSION \
         --build-arg GS_BUILD=$BUILD \
+        --build-arg BUILD_GDAL=true \
         -t $TAG .
     else
-      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+      echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD --build-arg BUILD_GDAL=true -t $TAG ."
       docker build \
         --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip \
         --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/ext-latest \
         --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/$BRANCH/community-latest \
         --build-arg GS_VERSION=$VERSION \
         --build-arg GS_BUILD=$BUILD \
+        --build-arg BUILD_GDAL=true \
         -t $TAG .
     fi
   else
-    echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD -t $TAG ."
+    echo "docker build --build-arg GS_VERSION=$VERSION --build-arg GS_BUILD=$BUILD --build-arg BUILD_GDAL=true -t $TAG ."
     docker build \
       --build-arg GS_VERSION=$VERSION \
       --build-arg GS_BUILD=$BUILD \
+      --build-arg BUILD_GDAL=true \
       -t $TAG .
   fi
 fi
