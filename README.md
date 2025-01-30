@@ -100,6 +100,7 @@ The ``startup.sh`` script allows some customization on startup:
 
 * ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
 * ``STABLE_EXTENSIONS`` list of extensions to download and install
+* ``INSTALL_GDAL`` to ``true`` to download and install GDAL (required for GDAL/OGR extensions)
 * ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
   * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
   * ``CORS_ALLOWED_METHODS`` (default ``GET,POST,PUT,DELETE,HEAD,OPTIONS``)
@@ -241,6 +242,7 @@ Following is the list of the all the environment variables that can be passed do
 | SET_GEOSERVER_REQUIRE_FILE | If set to true, the GEOSERVER_REQUIRE_FILE will be automatically set to `$GEOSERVER_DATA_DIR/global.xml` on startup. If GEOSERVER_REQUIRE_FILE is set it will take precedence. | `true` |
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
+| INSTALL_GDAL | Indicates if GDAL should be installed, GDAL is required for extensions that use GDAL/OGR, it is not installed by default | `false` |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
 | STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.26.x/ext-latest` |
 | COMMUNITY_EXTENSIONS | Specifies community-contributed GeoServer extensions | |
