@@ -80,6 +80,23 @@ else
   fi
 fi
 
+## install GDAL if requested, before extensions which may require it
+if [ "${INSTALL_GDAL}" = "true" ]; then
+  echo "Checking GDAL install status..."
+  STATUS_GDAL="$(dpkg-query -W --showformat='${db:Status-Status}' gdal-bin 2>&1)"
+  echo "... $STATUS_GDAL"
+  if [ ! $? = 0 ] || [ ! "$STATUS_GDAL" = "installed" ]; then
+    echo "Installing GDAL"
+    ## default permissions on temp do not allow writing, enable it
+    chmod 777 /tmp
+    apt-get update
+    ## this includes recommended packages, like proj-bin
+    apt-get install -y gdal-bin
+    ## restore default permissions
+    chmod 755 /tmp
+  fi
+fi
+
 ## install GeoServer extensions before starting the tomcat
 /opt/install-extensions.sh
 
