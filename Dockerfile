@@ -60,7 +60,8 @@ ENV WEBAPP_CONTEXT=geoserver
 #    --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
-ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
+# `EXTRA_JAVA_OPTS` will be prepended during runtime by startup.sh
+ENV CATALINA_OPTS=" \
     --add-exports=java.desktop/sun.awt.image=ALL-UNNAMED \
     --add-opens=java.base/java.lang=ALL-UNNAMED \
     --add-opens=java.base/java.util=ALL-UNNAMED \
