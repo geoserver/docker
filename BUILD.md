@@ -117,3 +117,40 @@ docker run -it -p 80:8080 \
   -t 2.26.x
 ```
 
+## How to build from your own development releases?
+
+Instead of downloading from sourceforge or build.geoserver.org, you need to package your WAR file locally.  Follow the [Building guide](https://docs.geoserver.org/latest/en/developer/maven-guide/index.html#building) for extra details.
+
+```
+git clone git://github.com/geoserver/geoserver.git geoserver
+cd geoserver/src
+# edit files as needed
+mvn clean install -P release -DskipTests
+```
+which results in a WAR file located at: `src/web/app/target/geoserver.war`
+
+First zip up the WAR file: `zip src/web/app/target/geoserver.war geoserver.zip`  
+and host a temporary webserver e.g.
+```
+python3 -m http.server 8000
+```
+then build the docker image, pulling from your locally hosted WAR file, and extensions as needed:
+```
+docker build \
+  --build-arg WAR_ZIP_URL=http://host.docker.internal:8000/geoserver.zip \
+  --build-arg STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/2.26.2/extensions \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.26.x/community-latest/ \
+  --build-arg GS_VERSION=2.26-SNAPSHOT \
+  -t my-2.26.x .
+```
+
+**Note:** For Linux only (not macOS nor Windows): you possibly need to add `--add-host=host.docker.internal:host-gateway` to the docker build command above.
+
+Run as usual:
+```
+docker run -it -p 80:8080 \
+  --env INSTALL_EXTENSIONS=true \
+  --env STABLE_EXTENSIONS="ysld" \
+  --env COMMUNITY_EXTENSIONS="ogcapi" \
+  -t my-2.26.x
+```  
