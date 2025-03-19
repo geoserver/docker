@@ -29,10 +29,7 @@ ENV HOME="/root"
 USER root
 
 # Setup build env for PROJ and GDAL
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    # we need these dirs at least empty for the later COPY...
-    mkdir -p /build_projgrids/usr/ \
+RUN mkdir -p /build_projgrids/usr/ \
     mkdir -p /build${INSTALL_PREFIX}/share/proj/ \
     mkdir -p /build${INSTALL_PREFIX}/include/\
     mkdir -p /build${INSTALL_PREFIX}/bin/ \
@@ -65,8 +62,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     fi
 
 # Build PROJ
-RUN --mount=type=cache,id=gs-proj,target=$HOME/.cache \
-    if test "${BUILD_GDAL}" = "true"; then \
+RUN if test "${BUILD_GDAL}" = "true"; then \
         export GCC_ARCH="$(uname -m)" \
         && mkdir -p /build_projgrids/${INSTALL_PREFIX}/share/proj \
         && curl -LO -fsS http://download.osgeo.org/proj/proj-datumgrid-latest.zip \
@@ -102,8 +98,7 @@ RUN --mount=type=cache,id=gs-proj,target=$HOME/.cache \
     fi
 
 # Build GDAL
-RUN --mount=type=cache,id=gs-gdal,target=$HOME/.cache \
-    if test "${BUILD_GDAL}" = "true"; then \
+RUN if test "${BUILD_GDAL}" = "true"; then \
         export GCC_ARCH="$(uname -m)" \
         && if test "${GDAL_VERSION}" = "master"; then \
             export GDAL_VERSION=$(curl -Ls https://api.github.com/repos/OSGeo/gdal/commits/HEAD -H "Accept: application/vnd.github.VERSION.sha"); \
