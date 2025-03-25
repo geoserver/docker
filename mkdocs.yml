@@ -1,0 +1,32 @@
+site_name: GeoServer Dockerfile Documentation
+repo_url: https://github.com/geoserver/docker
+nav:
+- Home: index.md
+theme:
+  name: material
+  language: en
+  icon:
+    logo: material/library-outline
+  font:
+    text: Roboto
+  features:
+  - content.tooltips
+  - content.code.copy
+  palette:
+  # Palette toggle for dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: black
+    accent: indigo
+    toggle:
+      icon: material/weather-night
+      name: Switch to light mode
+      # Palette toggle for light mode
+  - media: "(prefers-color-scheme: light)"
+
+    scheme: default
+    primary: black
+    accent: indigo
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to dark mode
