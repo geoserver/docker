@@ -3,13 +3,13 @@
 # error out if any statements fail
 set -e
 
-MAIN="2.27"
+MAIN="2.28"
 
 function usage() {
   echo "$0 <mode> <version> [<build>]"
   echo ""
   echo " mode : The mode. Choose one of 'build', 'publish' or 'buildandpublish'"
-  echo " version : The released version to build an docker image for (eg: 2.25.3, ${MAIN}-SNAPSHOT, ${MAIN}-RC)"
+  echo " version : The released version to build an docker image for (eg: 2.27.1, ${MAIN}-SNAPSHOT, ${MAIN}-RC)"
   echo " build : Build number (optional)"
 }
 
