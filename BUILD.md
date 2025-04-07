@@ -138,7 +138,7 @@ then build the docker image, pulling from your locally hosted WAR file, and exte
 ```
 docker build \
   --build-arg WAR_ZIP_URL=http://host.docker.internal:8000/geoserver.zip \
-  --build-arg STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/2.26.2/extensions \
+  --build-arg STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/2.27.0/extensions \
   --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.26.x/community-latest/ \
   --build-arg GS_VERSION=2.26-SNAPSHOT \
   -t my-2.26.x .
