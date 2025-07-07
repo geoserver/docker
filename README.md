@@ -257,6 +257,7 @@ Following is the list of the all the environment variables that can be passed do
 | RUN_WITH_USER_UID | When running as unprivileged user, sets the uid of this user. Defaults to `999` | `999` |
 | RUN_WITH_USER_GID | When running as unprivileged user, sets the gid of this user. Defaults to the same as the uid | `999` |
 | CHANGE_OWNERSHIP_ON_FOLDERS | When running as unprivileged user, changes the ownership to this user to these folders | `"/opt /opt/geoserver_data/ /mnt/geoserver_geodata"` |
+| WEBAPP_CONTEXT | Changes the context path. Default value 'geoserver' makes GeoServer to serve from <http://localhost/geoserver>. |
 
 After the initial setup, it's recommended to remove the `GEOSERVER_ADMIN_USER` and `GEOSERVER_ADMIN_PASSWORD` variable. Otherwise, newly added roles and users may be overwritten by the next time the container is restarted.
 
