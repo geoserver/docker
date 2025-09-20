@@ -1,7 +1,7 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.16_8-jdk-jammy@sha256:ac8a552a417551699694a711119e1c410a4b65ed79cb98b16584bc91c0d491b6
-ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.109-jdk17-temurin-jammy@sha256:48af237e4f570a172473cd2b0397419d7a12f9992a89334935e72fd0ddaa4574
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble
+ARG GEOSERVER_BASE_IMAGE=tomcat:9-jdk17-temurin-noble
 
-ARG GS_VERSION=2.27.0
+ARG GS_VERSION=2.27.2
 ARG BUILD_GDAL=false
 ARG PROJ_VERSION=9.5.1
 ARG GDAL_VERSION=3.10.2
@@ -40,8 +40,8 @@ RUN mkdir -p /build_projgrids/usr/ \
     mkdir -p /build_gdal_python/usr/ \
     mkdir -p /build_gdal_version_changing/usr/ \
     && if test "${BUILD_GDAL}" = "true"; then \
-        apt-get update -y \
-        && apt-get upgrade -y \
+        apt update -y \
+        && apt upgrade -y \
         && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
             # PROJ build dependencies
             build-essential ca-certificates \
@@ -234,14 +234,14 @@ RUN set -eux \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
     # Basic dependencies
-    openssl curl unzip locales gettext gosu \
+    openssl curl unzip zip locales gettext gosu \
     && if test "${BUILD_GDAL}" = "true"; then \
         # PROJ dependencies
-        apt-get install -y --no-install-recommends libsqlite3-0 libtiff5 libcurl4 ca-certificates \
+        apt-get install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
         # GDAL dependencies
-        bash-completion python3-numpy libpython3.11 libjpeg-turbo8 libgeos3.10.2 libgeos-c1v5 \
+        bash-completion python3-numpy libpython3.12t64 libjpeg-turbo8 libgeos3.12.1t64 libgeos-c1v5 \
             libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
-            libopenjp2-7 libspatialite7 libmuparser2v5 python3-pil python-is-python3; \
+            libopenjp2-7 libspatialite8t64 libmuparser2v5 python3-pil python-is-python3; \
     fi \
     && apt-get clean \
     && rm -rf /var/cache/apt/* \
@@ -293,11 +293,11 @@ COPY config $CONFIG_DIR
 # Apply CIS Apache tomcat recommendations regarding server information
 # * Alter the advertised server.info String (2.1 - 2.3)
 RUN cd $CATALINA_HOME/lib \
-    && jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties \
+    && unzip catalina.jar org/apache/catalina/util/ServerInfo.properties \
     && sed -i 's/Apache Tomcat\/'"${TOMCAT_VERSION}"'/i_am_a_teapot/g' org/apache/catalina/util/ServerInfo.properties \
     && sed -i 's/'"${TOMCAT_VERSION}"'/x.y.z/g' org/apache/catalina/util/ServerInfo.properties \
     && sed -i 's/^server.built=.*/server.built=/g' org/apache/catalina/util/ServerInfo.properties \
-    && jar uf catalina.jar org/apache/catalina/util/ServerInfo.properties \
+    && zip -u catalina.jar org/apache/catalina/util/ServerInfo.properties \
     && rm -rf org/apache/catalina/util/ServerInfo.properties
 
 # copy scripts
