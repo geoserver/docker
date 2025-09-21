@@ -1,4 +1,4 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.16_8-jdk-noble@sha256:3353d6e430e9334214726afd77bf5ac87f5f82caaff3d68a5e0653e17b22d225
 ARG GEOSERVER_BASE_IMAGE=tomcat:9-jdk17-temurin-noble
 
 ARG GS_VERSION=2.27.2
