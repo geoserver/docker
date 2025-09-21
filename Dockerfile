@@ -3,8 +3,8 @@ ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.109-jdk17-temurin-noble@sha256:82fb79fd74058
 
 ARG GS_VERSION=2.27.2
 ARG BUILD_GDAL=false
-ARG PROJ_VERSION=9.5.1
-ARG GDAL_VERSION=3.10.2
+ARG PROJ_VERSION=9.7.0
+ARG GDAL_VERSION=3.11.4
 ARG INSTALL_PREFIX=/usr/local
 
 # This is a multi stage build.
@@ -207,12 +207,17 @@ ENV WEBAPP_CONTEXT=geoserver
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
 ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
+    --add-exports=java.desktop/com.sun.imageio.plugins.jpeg=ALL-UNNAMED \
+    --add-exports=java.desktop/com.sun.imageio.plugins.png=ALL-UNNAMED \
     --add-exports=java.desktop/sun.awt.image=ALL-UNNAMED \
     --add-opens=java.base/java.lang=ALL-UNNAMED \
     --add-opens=java.base/java.util=ALL-UNNAMED \
     --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
     --add-opens=java.base/java.text=ALL-UNNAMED \
     --add-opens=java.desktop/java.awt.font=ALL-UNNAMED \
+    --add-opens=java.desktop/java.awt.image=ALL-UNNAMED \
+    --add-opens=java.desktop/javax.imageio.stream=ALL-UNNAMED \
+    --add-opens=java.desktop/javax.imageio=ALL-UNNAMED \
     --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED \
     --add-opens=java.naming/com.sun.jndi.ldap=ALL-UNNAMED \
     --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED \
@@ -241,7 +246,7 @@ RUN set -eux \
         # GDAL dependencies
         bash-completion python3-numpy libpython3.12t64 libjpeg-turbo8 libgeos3.12.1t64 libgeos-c1v5 \
             libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
-            libopenjp2-7 libspatialite8t64 libmuparser2v5 python3-pil python-is-python3; \
+            libopenjp2-7 libspatialite8t64 libmuparser2v5 python-is-python3; \
     fi \
     && apt clean \
     && rm -rf /var/cache/apt/* \
