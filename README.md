@@ -22,20 +22,20 @@ This README.md file covers use of official docker image, additional [build](BUIL
 To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
 ```shell
-docker pull docker.osgeo.org/geoserver:2.27.0
+docker pull docker.osgeo.org/geoserver:2.27.2
 ```
 All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags) and the latest stable and maintenance version numbers can be obtained from [https://geoserver.org/download/](https://geoserver.org/download/)
 
 Afterwards you can run the pulled image locally with:
 
 ```shell
-docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.27.0
+docker run -it -p 80:8080 docker.osgeo.org/geoserver:2.27.2
 ```
 
 Or if you want to start the container daemonized, use e.g.:
 
 ```shell
-docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.27.0
+docker run -d -p 80:8080 docker.osgeo.org/geoserver:2.27.2
 ```
 
 Check <http://localhost/geoserver> to see the geoserver page,
@@ -52,7 +52,7 @@ To use an external folder as your geoserver data directory.
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/absolute/path/on/host",target=/opt/geoserver_data/,type=bind \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 An empty data directory will be populated on first use. You can easily update GeoServer while
@@ -67,7 +67,7 @@ The environment variable `SKIP_DEMO_DATA` can be set to `true` to create an empt
 ```shell
 docker run -it -p 80:8080 \
   --env SKIP_DEMO_DATA=true \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 ## How to set the application context path?
@@ -80,14 +80,14 @@ The following will serve GeoServer from the root (<http://localhost/>):
 ```shell
 docker run -it -p 80:8080 \
   --env WEBAPP_CONTEXT="" \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 The following will serve GeoServer from <http://localhost/my_context_path>:
 ```shell
 docker run -it -p 80:8080 \
   --env WEBAPP_CONTEXT="my_context_path" \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 ## How to issue a redirect from the root ("/") to GeoServer web interface ("/geoserver/web")?
@@ -117,7 +117,7 @@ Example installing wps and ysld extensions:
 ```shell
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 The list of extensions (taken from SourceForge download page):
@@ -142,7 +142,7 @@ If you want to add geoserver extensions/libs, place the respective jar files in 
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/libs/on/host",target=/opt/additional_libs,type=bind \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 ## How to add additional fonts to the docker image (e.g. for SLD styling)?
@@ -152,7 +152,7 @@ If you want to add custom fonts (the base image only contains 26 fonts) by using
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/dir/with/fonts/on/host",target=/opt/additional_fonts,type=bind \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 **Note:** Do not change the target value!
@@ -190,7 +190,7 @@ Example:
 ```shell
 docker run -it -p 80:8080 \
   --mount src="/path/to/my/server.xml",target=/opt/config_overrides/server.xml,type=bind \
-  docker.osgeo.org/geoserver:2.27.0
+  docker.osgeo.org/geoserver:2.27.2
 ```
 
 ## How to enable HTTPS?
@@ -243,9 +243,9 @@ Following is the list of the all the environment variables that can be passed do
 | INSTALL_EXTENSIONS | Indicates whether additional GeoServer extensions should be installed | `false` |
 | WAR_ZIP_URL | Specifies the URL for a GeoServer Web Archive (WAR) file | |
 | STABLE_EXTENSIONS | Specifies stable GeoServer extensions | |
-| STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.26.x/ext-latest` |
+| STABLE_PLUGIN_URL | Specifies the URL for downloading the latest stable GeoServer plugins | `https://build.geoserver.org/geoserver/2.27.x/ext-latest` |
 | COMMUNITY_EXTENSIONS | Specifies community-contributed GeoServer extensions | |
-| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.26.x/community-latest` |
+| COMMUNITY_PLUGIN_URL | Specifies the URL for downloading the latest community-contributed GeoServer plugins | `https://build.geoserver.org/geoserver/2.27.x/community-latest` |
 | ADDITIONAL_LIBS_DIR | Sets the directory for additional libraries used by GeoServer | `/opt/additional_libs/` |
 | ADDITIONAL_FONTS_DIR | Sets the directory for additional fonts used by GeoServer | `/opt/additional_fonts/` |
 | SKIP_DEMO_DATA | Indicates whether to skip the installation of demo data provided by GeoServer. GEOSERVER_REQUIRE_FILE will be ignored if set to true. | `false` |
@@ -264,7 +264,7 @@ After the initial setup, it's recommended to remove the `GEOSERVER_ADMIN_USER` a
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
-| GEOSERVER_VERSION | Geoserver version (used internally) | `2.24-SNAPSHOT`|
+| GEOSERVER_VERSION | Geoserver version (used internally) | `2.27-SNAPSHOT`|
 | GEOSERVER_BUILD | Geoserver build (used internally) | `1628` |
 
 ## Troubleshooting
