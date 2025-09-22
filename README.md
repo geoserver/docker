@@ -253,8 +253,8 @@ Following is the list of the all the environment variables that can be passed do
 | HEALTHCHECK_URL | URL to the resource / endpoint used for `docker` health checks | `http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png` |
 | GEOSERVER_ADMIN_USER | Admin username |   |
 | GEOSERVER_ADMIN_PASSWORD | Admin password |  |
-| GEOSERVER_ADMIN_USER_FILE | Path to admin username file |  |
-| GEOSERVER_ADMIN_PASSWORD_FILE | Path to admin password file |  |
+| GEOSERVER_ADMIN_USER_FILE | Path to admin username file. Pass the username as a container secret (like `podman secret`) |  |
+| GEOSERVER_ADMIN_PASSWORD_FILE | Path to admin password file.  Pass the admin password as a container secret (like `podman secret`) |  |
 | RUN_UNPRIVILEGED | If set to `true`, runs as an unprivileged user `tomcat` instead of `root`. | `true` |
 | RUN_WITH_USER_UID | When running as unprivileged user, sets the uid of this user. Defaults to `999` | `999` |
 | RUN_WITH_USER_GID | When running as unprivileged user, sets the gid of this user. Defaults to the same as the uid | `999` |
@@ -273,10 +273,10 @@ The following values cannot really be safely changed (as they are used to downlo
 
 GeoServer supports file-based credentials for secure handling of admin credentials, particularly useful with Docker secrets or mounted files.
 
-| VAR NAME | DESCRIPTION | SAMPLE VALUE |
-|--------------|-----------|------------|
-| GEOSERVER_ADMIN_USER_FILE | Path to file containing admin username | `/run/secrets/geoserver_user` |
-| GEOSERVER_ADMIN_PASSWORD_FILE | Path to file containing admin password | `/run/secrets/geoserver_password` |
+| VAR NAME | DESCRIPTION | 
+|--------------|-----------|
+| GEOSERVER_ADMIN_USER_FILE | Path to file containing admin username |
+| GEOSERVER_ADMIN_PASSWORD_FILE | Path to file containing admin password |
 
 **Priority:** Direct environment variables (`GEOSERVER_ADMIN_USER`, `GEOSERVER_ADMIN_PASSWORD`) take precedence over file-based credentials when both are provided.
 
