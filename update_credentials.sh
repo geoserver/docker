@@ -14,8 +14,16 @@ if [ ! -d "${GEOSERVER_DATA_DIR}/security" ]; then
   cp -r "${CATALINA_HOME}/webapps/geoserver/data/security" "${GEOSERVER_DATA_DIR}/"
 fi
 
-GEOSERVER_ADMIN_USER=${GEOSERVER_ADMIN_USER:-admin}
-GEOSERVER_ADMIN_PASSWORD=${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+# Accept credentials as arguments or fallback to environment variables
+if [ $# -eq 2 ]; then
+  GEOSERVER_ADMIN_USER="$1"
+  GEOSERVER_ADMIN_PASSWORD="$2"
+  echo "Using credentials provided as script arguments"
+else
+  GEOSERVER_ADMIN_USER=${GEOSERVER_ADMIN_USER:-admin}
+  GEOSERVER_ADMIN_PASSWORD=${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+  echo "Using credentials from environment variables (or defaults)"
+fi
 
 # templates to use as base for replacement
 USERS_XML_ORIG="${CATALINA_HOME}/webapps/geoserver/data/security/usergroup/default/users.xml"
