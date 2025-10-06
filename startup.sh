@@ -190,9 +190,7 @@ if [ ! "${ENABLE_DEFAULT_SHUTDOWN}" = "true" ]; then
 fi
 
 # Handle GeoServer admin credentials
-echo "------------------------------------------------"
 /opt/handle_geoserver_admin_credentials.sh
-echo "------------------------------------------------"
 
 # Run as non-privileged user
 if [ "${RUN_UNPRIVILEGED}" = "true" ]
