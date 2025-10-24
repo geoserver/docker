@@ -65,14 +65,14 @@ Override these arguments to make use of build.geoserver.org nightly releases:
 * ``--build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/ext-latest/``
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/${GS_VERSION}/community-latest/``
 
-Here is a working example for building 2.27.x nightly build::
+Here is a working example for building 2.28.x nightly build::
 ```
 docker build --no-cache-filter download,install \
-  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.27.x/geoserver-2.27.x-latest-war.zip \
-  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.27.x/ext-latest/ \
-  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.27.x/community-latest/ \
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/2.28.x/geoserver-2.28.x-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/2.28.x/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.28.x/community-latest/ \
   --build-arg GS_VERSION=2.27-SNAPSHOT \
-  -t 2.27.x .
+  -t docker.osgeo.org/geoserver:2.28.x .
 ```
 
 When running both stable extensions and community modules can be included:
@@ -82,7 +82,7 @@ docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="ysld" \
   --env COMMUNITY_EXTENSIONS="ogcapi" \
-  -t 2.27.x
+  -t docker.osgeo.org/geoserver:2.08.x 
 ```
 
 Community modules are only available for nightly builds as they have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
@@ -96,15 +96,15 @@ The build.geoserver.org output for the ``main`` branch requires the following:
 * ``--build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/``
 
 
-Here is a working example for building main branch as 2.27.x build:
-
+Here is a working example for building main branch as 3.0.x build:
 ```
 docker build --no-cache-filter download,install \
   --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
   --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
   --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
-  --build-arg GS_VERSION=2.27-SNAPSHOT \
-  -t 2.27.x .
+  --build-arg GS_VERSION=3.0-SNAPSHOT \
+  --build-arg GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk17-temurin-noble \
+  -t docker.osgeo.org/geoserver:3.0.x .
 ```
 
 When running both [stable extensions](https://build.geoserver.org/geoserver/main/ext-latest/) and [community modules](https://build.geoserver.org/geoserver/main/community-latest/) can be included:
@@ -112,9 +112,9 @@ When running both [stable extensions](https://build.geoserver.org/geoserver/main
 ```
 docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true \
-  --env STABLE_EXTENSIONS="wps,css" \
-  --env COMMUNITY_EXTENSIONS="ogcapi-coverages,ogcapi-dggs,ogcapi-features,ogcapi-images,ogcapi-maps,ogcapi-styles,ogcapi-tiled-features,ogcapi-tiles" \
-  -t 2.27.x
+  --env STABLE_EXTENSIONS="ysld,ogcapi-features" \
+  --env COMMUNITY_EXTENSIONS="ogcapi-maps" \
+  -t docker.osgeo.org/geoserver:3.0.x
 ```
 
 ## How to build from your own development releases?
@@ -139,9 +139,9 @@ then build the docker image, pulling from your locally hosted WAR file, and exte
 docker build \
   --build-arg WAR_ZIP_URL=http://host.docker.internal:8000/geoserver.zip \
   --build-arg STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/2.27.2/extensions \
-  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.27.x/community-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.28.x/community-latest/ \
   --build-arg GS_VERSION=2.27-SNAPSHOT \
-  -t my-2.27.x .
+  -t my-2.28.x .
 ```
 
 **Note:** For Linux only (not macOS nor Windows): you possibly need to add `--add-host=host.docker.internal:host-gateway` to the docker build command above.
@@ -152,5 +152,5 @@ docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="ysld" \
   --env COMMUNITY_EXTENSIONS="ogcapi" \
-  -t my-2.27.x
+  -t my-2.28.x
 ```

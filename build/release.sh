@@ -21,6 +21,13 @@ function build_geoserver_image() {
     local BRANCH=$5
 
     if [ -n "$VERSION" ] && [ -n "$BUILD" ] && [ -n "$BUILD_GDAL" ] && [ -n "$TAG" ]; then
+    
+      if [[ "$VERSION" == 3.0* ]]; then
+         GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
+      else
+         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk11-temurin-noble
+      fi
+
       if [ -n "$BRANCH" ]; then
         # all needed vars are set
 
@@ -32,6 +39,7 @@ function build_geoserver_image() {
             --build-arg GS_VERSION="$VERSION" \
             --build-arg GS_BUILD="$BUILD" \
             --build-arg BUILD_GDAL="$BUILD_GDAL" \
+            --build-arg GEOSERVER_BASE_IMAGE="$GEOSERVER_BASE_IMAGE" \
             -t "$TAG" .)
       elif [ -z "$BRANCH" ]; then
         # BRANCH is not set
