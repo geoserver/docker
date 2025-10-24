@@ -4,15 +4,15 @@ services:
     build:
       context: .
       args:
-        - GEOSERVER_VERSION=2.27.2
-        - CORS_ENABLED=true
-        - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
+        - GS_VERSION=2.27.2
     ports:
       - "80:8080"
     environment:
       - INSTALL_EXTENSIONS=true
       - STABLE_EXTENSIONS=wps,csw
       - EXTRA_JAVA_OPTS=-Xms1G -Xmx2G
+      - CORS_ENABLED=true
+      - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
       - POSTGRES_JNDI_ENABLED=true
       - POSTGRES_HOST=postgis
       - POSTGRES_PORT=5432
