@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Configure GeoServer admin credentials
 # Supports: GEOSERVER_ADMIN_USER/PASSWORD (env vars) or GEOSERVER_ADMIN_USER_FILE/PASSWORD_FILE (file paths)
 # Priority: Direct env vars take precedence over files
