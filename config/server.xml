@@ -181,7 +181,7 @@
                        prefix="localhost_access_log" suffix=".txt"
                        pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
-                <Context antiResourceLocking="false" override="true" docBase="geoserver" privileged="true" path="${WEBAPP_CONTEXT}">
+                <Context antiResourceLocking="false" override="true" docBase="geoserver" privileged="true" path="/${WEBAPP_CONTEXT}">
                     <Resource name="${POSTGRES_JNDI_RESOURCE_NAME}"
                             auth="Container"
                             type="javax.sql.DataSource"
