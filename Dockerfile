@@ -1,5 +1,5 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.16_8-jdk-noble@sha256:3353d6e430e9334214726afd77bf5ac87f5f82caaff3d68a5e0653e17b22d225
-ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.109-jdk17-temurin-noble@sha256:82fb79fd7405838f74e4e0a5a34c177e5d531788453dca96dccd1a5e2ee1cc9d
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.16_8-jdk-noble@sha256:bbc959486c469c589091571ba524e6a98f27e19bd99489c683d9b465e4f8db8d
+ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.111-jdk17-temurin-noble@sha256:98274f7c091ef787fe4c7d44f80d8e9acf69a25dff4fa70b53d8cf25fa10f4a3
 
 ARG GS_VERSION=2.27.2
 ARG BUILD_GDAL=false
@@ -40,110 +40,110 @@ RUN mkdir -p /build_projgrids/usr/ \
     mkdir -p /build_gdal_python/usr/ \
     mkdir -p /build_gdal_version_changing/usr/ \
     && if test "${BUILD_GDAL}" = "true"; then \
-    apt update -y \
-    && apt upgrade -y \
-    && DEBIAN_FRONTEND=noninteractive apt install -y --fix-missing --no-install-recommends \
-    # PROJ build dependencies
-    build-essential ca-certificates \
-    git make ninja-build cmake wget unzip libtool automake \
-    zlib1g-dev libsqlite3-dev pkg-config sqlite3 libcurl4-openssl-dev \
-    libtiff-dev patchelf rsync \
-    # GDAL build dependencies
-    python3-dev python3-numpy python3-setuptools \
-    libjpeg-dev libgeos-dev \
-    libexpat-dev libxerces-c-dev \
-    libwebp-dev libpng-dev \
-    libdeflate-dev \
-    libzstd-dev bash zip curl \
-    libpq-dev libssl-dev libopenjp2-7-dev \
-    libspatialite-dev \
-    libmuparser-dev \
-    autoconf automake sqlite3 bash-completion swig ant bison; \
+        apt update -y \
+        && apt upgrade -y \
+        && DEBIAN_FRONTEND=noninteractive apt install -y --fix-missing --no-install-recommends \
+            # PROJ build dependencies
+            build-essential ca-certificates \
+            git make ninja-build cmake wget unzip libtool automake \
+            zlib1g-dev libsqlite3-dev pkg-config sqlite3 libcurl4-openssl-dev \
+            libtiff-dev patchelf rsync \
+            # GDAL build dependencies
+            python3-dev python3-numpy python3-setuptools \
+            libjpeg-dev libgeos-dev \
+            libexpat-dev libxerces-c-dev \
+            libwebp-dev libpng-dev \
+            libdeflate-dev \
+            libzstd-dev bash zip curl \
+            libpq-dev libssl-dev libopenjp2-7-dev \
+            libspatialite-dev \
+            libmuparser-dev \
+            autoconf automake sqlite3 bash-completion swig ant bison; \
     fi
 
 # Build PROJ
 RUN if test "${BUILD_GDAL}" = "true"; then \
-    export GCC_ARCH="$(uname -m)" \
-    && mkdir -p /build_projgrids/${INSTALL_PREFIX}/share/proj \
-    && curl -LO -fsS http://download.osgeo.org/proj/proj-datumgrid-latest.zip \
-    && unzip -q -j -u -o proj-datumgrid-latest.zip  -d /build_projgrids/${INSTALL_PREFIX}/share/proj \
-    && rm -f *.zip \
-    && mkdir proj \
-    && wget -q https://github.com/OSGeo/PROJ/archive/${PROJ_VERSION}.tar.gz -O - \
-    | tar xz -C proj --strip-components=1 \
-    && export PROJ_DB_CACHE_PARAM="" \
-    && cd proj \
-    && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2' \
-    cmake . \
-    -G Ninja \
-    -DBUILD_SHARED_LIBS=ON \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-    -DBUILD_TESTING=OFF \
-    $PROJ_DB_CACHE_PARAM \
-    && ninja \
-    && DESTDIR="/build" ninja install \
-    && cd .. \
-    && rm -rf proj \
-    && PROJ_SO=$(readlink -f /build${INSTALL_PREFIX}/lib/libproj.so | awk 'BEGIN {FS="libproj.so."} {print $2}') \
-    && PROJ_SO_FIRST=$(echo $PROJ_SO | awk 'BEGIN {FS="."} {print $1}') \
-    && mv /build${INSTALL_PREFIX}/lib/libproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
-    && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO_FIRST} \
-    && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so \
-    && rm /build${INSTALL_PREFIX}/lib/libproj.*  \
-    && ${GCC_ARCH}-linux-gnu-strip -s /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
-    && for i in /build${INSTALL_PREFIX}/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
-    && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
-    && for i in /build${INSTALL_PREFIX}/bin/*; do patchelf --replace-needed libproj.so.${PROJ_SO_FIRST} libinternalproj.so.${PROJ_SO_FIRST} $i; done \
+        export GCC_ARCH="$(uname -m)" \
+        && mkdir -p /build_projgrids/${INSTALL_PREFIX}/share/proj \
+        && curl -LO -fsS http://download.osgeo.org/proj/proj-datumgrid-latest.zip \
+        && unzip -q -j -u -o proj-datumgrid-latest.zip  -d /build_projgrids/${INSTALL_PREFIX}/share/proj \
+        && rm -f *.zip \
+        && mkdir proj \
+        && wget -q https://github.com/OSGeo/PROJ/archive/${PROJ_VERSION}.tar.gz -O - \
+            | tar xz -C proj --strip-components=1 \
+        && export PROJ_DB_CACHE_PARAM="" \
+        && cd proj \
+        && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2' \
+            cmake . \
+        -G Ninja \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+            -DBUILD_TESTING=OFF \
+            $PROJ_DB_CACHE_PARAM \
+        && ninja \
+        && DESTDIR="/build" ninja install \
+        && cd .. \
+        && rm -rf proj \
+        && PROJ_SO=$(readlink -f /build${INSTALL_PREFIX}/lib/libproj.so | awk 'BEGIN {FS="libproj.so."} {print $2}') \
+        && PROJ_SO_FIRST=$(echo $PROJ_SO | awk 'BEGIN {FS="."} {print $1}') \
+        && mv /build${INSTALL_PREFIX}/lib/libproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO_FIRST} \
+        && ln -s libinternalproj.so.${PROJ_SO} /build${INSTALL_PREFIX}/lib/libinternalproj.so \
+        && rm /build${INSTALL_PREFIX}/lib/libproj.*  \
+        && ${GCC_ARCH}-linux-gnu-strip -s /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && for i in /build${INSTALL_PREFIX}/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && for i in /build${INSTALL_PREFIX}/bin/*; do patchelf --replace-needed libproj.so.${PROJ_SO_FIRST} libinternalproj.so.${PROJ_SO_FIRST} $i; done \
     fi
 
 # Build GDAL
 RUN if test "${BUILD_GDAL}" = "true"; then \
-    export GCC_ARCH="$(uname -m)" \
-    && if test "${GDAL_VERSION}" = "master"; then \
-    export GDAL_VERSION=$(curl -Ls https://api.github.com/repos/OSGeo/gdal/commits/HEAD -H "Accept: application/vnd.github.VERSION.sha"); \
-    export GDAL_RELEASE_DATE=$(date "+%Y%m%d"); \
-    fi \
-    && if test "${GCC_ARCH}" = "x86_64"; then \
-    export GDAL_CMAKE_EXTRA_OPTS="-DENABLE_IPO=ON"; \
-    else \
-    export GDAL_CMAKE_EXTRA_OPTS=""; \
-    fi \
-    && mkdir gdal \
-    && wget -q https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz -O - \
-    | tar xz -C gdal --strip-components=1 \
-    && cd gdal \
-    && mkdir build \
-    && cd build \
-    && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2 -Wno-psabi' \
-    cmake .. \
-    -G Ninja \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DGDAL_FIND_PACKAGE_PROJ_MODE=MODULE \
-    -DPROJ_INCLUDE_DIR="/build${INSTALL_PREFIX-/usr/local}/include" \
-    -DPROJ_LIBRARY="/build${INSTALL_PREFIX-/usr/local}/lib/libinternalproj.so" \
-    -DGDAL_USE_TIFF_INTERNAL=ON \
-    -DGDAL_USE_GEOTIFF_INTERNAL=ON ${GDAL_CMAKE_EXTRA_OPTS} \
-    -DBUILD_TESTING=OFF \
-    -DBUILD_JAVA_BINDINGS=ON \
-    -DGDAL_JAVA_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
-    -DGDAL_JAVA_JNI_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
-    && ninja \
-    && DESTDIR="/build" ninja install \
-    && cd .. \
-    && cd .. \
-    && rm -rf gdal \
-    && mkdir -p /build_gdal_python/usr/lib \
-    && mkdir -p /build_gdal_python/usr/bin \
-    && mkdir -p /build_gdal_version_changing/usr/include \
-    && mv /build/usr/lib/python*            /build_gdal_python/usr/lib \
-    && mv /build/usr/lib                    /build_gdal_version_changing/usr \
-    && mv /build/usr/include/gdal_version.h /build_gdal_version_changing/usr/include \
-    && mv /build/usr/bin/*.py               /build_gdal_python/usr/bin \
-    && mv /build/usr/bin                    /build_gdal_version_changing/usr \
-    && for i in /build_gdal_version_changing/usr/lib/${GCC_ARCH}-linux-gnu/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
-    && for i in /build_gdal_python/usr/lib/python3/dist-packages/osgeo/*.so; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
-    && for i in /build_gdal_version_changing/usr/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        export GCC_ARCH="$(uname -m)" \
+        && if test "${GDAL_VERSION}" = "master"; then \
+            export GDAL_VERSION=$(curl -Ls https://api.github.com/repos/OSGeo/gdal/commits/HEAD -H "Accept: application/vnd.github.VERSION.sha"); \
+            export GDAL_RELEASE_DATE=$(date "+%Y%m%d"); \
+        fi \
+        && if test "${GCC_ARCH}" = "x86_64"; then \
+            export GDAL_CMAKE_EXTRA_OPTS="-DENABLE_IPO=ON"; \
+        else \
+            export GDAL_CMAKE_EXTRA_OPTS=""; \
+        fi \
+        && mkdir gdal \
+        && wget -q https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz -O - \
+            | tar xz -C gdal --strip-components=1 \
+        && cd gdal \
+        && mkdir build \
+        && cd build \
+        && CFLAGS='-DPROJ_RENAME_SYMBOLS -O2' CXXFLAGS='-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2 -Wno-psabi' \
+            cmake .. \
+            -G Ninja \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DGDAL_FIND_PACKAGE_PROJ_MODE=MODULE \
+            -DPROJ_INCLUDE_DIR="/build${INSTALL_PREFIX-/usr/local}/include" \
+            -DPROJ_LIBRARY="/build${INSTALL_PREFIX-/usr/local}/lib/libinternalproj.so" \
+            -DGDAL_USE_TIFF_INTERNAL=ON \
+            -DGDAL_USE_GEOTIFF_INTERNAL=ON ${GDAL_CMAKE_EXTRA_OPTS} \
+            -DBUILD_TESTING=OFF \
+            -DBUILD_JAVA_BINDINGS=ON \
+            -DGDAL_JAVA_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
+            -DGDAL_JAVA_JNI_INSTALL_DIR=${INSTALL_PREFIX-/usr/local}/lib \
+        && ninja \
+        && DESTDIR="/build" ninja install \
+        && cd .. \
+        && cd .. \
+        && rm -rf gdal \
+        && mkdir -p /build_gdal_python/usr/lib \
+        && mkdir -p /build_gdal_python/usr/bin \
+        && mkdir -p /build_gdal_version_changing/usr/include \
+        && mv /build/usr/lib/python*            /build_gdal_python/usr/lib \
+        && mv /build/usr/lib                    /build_gdal_version_changing/usr \
+        && mv /build/usr/include/gdal_version.h /build_gdal_version_changing/usr/include \
+        && mv /build/usr/bin/*.py               /build_gdal_python/usr/bin \
+        && mv /build/usr/bin                    /build_gdal_version_changing/usr \
+        && for i in /build_gdal_version_changing/usr/lib/${GCC_ARCH}-linux-gnu/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && for i in /build_gdal_python/usr/lib/python3/dist-packages/osgeo/*.so; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
+        && for i in /build_gdal_version_changing/usr/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
     fi
 
 #############################
@@ -241,12 +241,12 @@ RUN set -eux \
     # Basic dependencies
     openssl curl unzip zip locales gettext gosu \
     && if test "${BUILD_GDAL}" = "true"; then \
-    # PROJ dependencies
-    apt install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
-    # GDAL dependencies
-    bash-completion python3-numpy libpython3.12t64 libjpeg-turbo8 libgeos3.12.1t64 libgeos-c1v5 \
-    libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
-    libopenjp2-7 libspatialite8t64 libmuparser2v5 python-is-python3; \
+        # PROJ dependencies
+        apt install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
+        # GDAL dependencies
+        bash-completion python3-numpy libpython3.12t64 libjpeg-turbo8 libgeos3.12.1t64 libgeos-c1v5 \
+            libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
+            libopenjp2-7 libspatialite8t64 libmuparser2v5 python-is-python3; \
     fi \
     && apt clean \
     && rm -rf /var/cache/apt/* \
@@ -269,8 +269,8 @@ COPY --from=gdal_builder  /build_gdal_python/usr/ /usr/
 COPY --from=gdal_builder  /build_gdal_version_changing/usr/ /usr/
 
 RUN if test "${BUILD_GDAL}" = "true"; then \
-    ldconfig; \
-    echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc; \
+        ldconfig; \
+        echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc; \
     fi
 
 # Download geoserver
@@ -313,18 +313,18 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 
 # cleanup
 RUN apt purge -y  \
-    && apt autoremove --purge -y \
-    && rm -rf /tmp/ \
-    && rm -rf $CATALINA_HOME/webapps/ROOT \
-    && rm -rf $CATALINA_HOME/webapps/docs \
-    && rm -rf $CATALINA_HOME/webapps/examples \
-    && rm -rf $CATALINA_HOME/webapps/host-manager \
-    && rm -rf $CATALINA_HOME/webapps/manager
+  && apt autoremove --purge -y \
+  && rm -rf /tmp/ \
+  && rm -rf $CATALINA_HOME/webapps/ROOT \
+  && rm -rf $CATALINA_HOME/webapps/docs \
+  && rm -rf $CATALINA_HOME/webapps/examples \
+  && rm -rf $CATALINA_HOME/webapps/host-manager \
+  && rm -rf $CATALINA_HOME/webapps/manager
 
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
 
-RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/*.sh
+RUN chmod +x /opt/*.sh && sed -i 's/\r$//' /opt/startup.sh
 
 ENTRYPOINT ["bash", "/opt/startup.sh"]
 
@@ -333,4 +333,4 @@ WORKDIR /opt
 EXPOSE 8080
 
 HEALTHCHECK --interval=1m --timeout=20s --retries=3 \
-    CMD curl --fail --url "$(cat $CATALINA_HOME/conf/healthcheck_url.txt)" || exit 1
+  CMD curl --fail --url "$(cat $CATALINA_HOME/conf/healthcheck_url.txt)" || exit 1
