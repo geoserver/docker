@@ -159,6 +159,7 @@ LABEL vendor="osgeo.org"
 # Build arguments
 ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
 ARG ADDITIONAL_LIBS_PATH=./additional_libs/
+ARG WAR_PATH=./geoserver/
 ARG BUILD_GDAL
 ARG COMMUNITY_PLUGIN_URL=''
 ARG CORS_ALLOWED_HEADERS=Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers
@@ -172,6 +173,7 @@ ARG GS_DATA_PATH=./geoserver_data/
 ARG INSTALL_PREFIX
 ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
 ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
+ARG WAR_ZIP_FILE=geoserver-${GS_VERSION}-war.zip
 
 # Environment variables
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
@@ -211,6 +213,7 @@ ENV SKIP_DEMO_DATA=false
 ENV STABLE_EXTENSIONS=''
 ENV STABLE_PLUGIN_URL=$STABLE_PLUGIN_URL
 ENV WAR_ZIP_URL=$WAR_ZIP_URL
+ENV WAR_ZIP_FILE=$WAR_ZIP_FILE
 ENV WEBAPP_CONTEXT=geoserver
 
 # see https://docs.geoserver.org/stable/en/user/production/container.html
@@ -281,10 +284,16 @@ RUN if test "${BUILD_GDAL}" = "true"; then \
         echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc; \
     fi
 
+# Copy geoserver.zip if staged by release.sh
+COPY $WAR_PATH /tmp/
+RUN set -ux \
+    && mv /tmp/$WAR_ZIP_FILE /tmp/geoserver.zip 2>/dev/null || true \
+    && ls /tmp/geoserver.zip || true
+
 # Download geoserver
 RUN set -eux \
     && echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
-    && wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
+    && wget -c -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
     && unzip geoserver.zip geoserver.war -d /tmp/ \
     && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
     && rm /tmp/geoserver.war \
