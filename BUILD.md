@@ -82,7 +82,7 @@ docker run -it -p 80:8080 \
   --env INSTALL_EXTENSIONS=true \
   --env STABLE_EXTENSIONS="ysld" \
   --env COMMUNITY_EXTENSIONS="ogcapi" \
-  -t docker.osgeo.org/geoserver:2.08.x 
+  -t docker.osgeo.org/geoserver:2.28.x 
 ```
 
 Community modules are only available for nightly builds as they have not yet met the requirements for production use. Developers have shared these to attract participation, feedback and funding.
