@@ -26,7 +26,7 @@ function build_geoserver_image() {
       if [[ "$VERSION" == "3."* ]]; then
          GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
       else
-         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk11-temurin-noble
+         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk17-temurin-noble
       fi
 
       if [ -n "$BRANCH" ]; then
