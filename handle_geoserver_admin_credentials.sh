@@ -4,7 +4,7 @@
 # Supports: GEOSERVER_ADMIN_USER/PASSWORD (env vars) or GEOSERVER_ADMIN_USER_FILE/PASSWORD_FILE (file paths)
 # Priority: Direct env vars take precedence over files
 
-ADMIN_USER=""
+ADMIN_USER="admin"
 ADMIN_PASSWORD=""
 
 # Resolve password from file or env var
