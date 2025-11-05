@@ -198,9 +198,9 @@ then
   echo "The server will be run as non-privileged user 'tomcat'"
 
   RUN_WITH_USER_UID=${RUN_WITH_USER_UID:=999}
-  RUN_WITH_USER_GID=${RUN_WITH_USER_GID:=${RUN_WITH_USER_UID} }
+  RUN_WITH_USER_GID=${RUN_WITH_USER_GID:=${RUN_WITH_USER_UID}}
 
-  echo "creating user tomcat (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
+  echo "Creating user tomcat (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
   addgroup --gid ${RUN_WITH_USER_GID} tomcat && \
     adduser --system -u ${RUN_WITH_USER_UID} --gid ${RUN_WITH_USER_GID} \
             --no-create-home tomcat
@@ -210,7 +210,8 @@ then
     chown -R tomcat:tomcat $CHANGE_OWNERSHIP_ON_FOLDERS
   fi
 
-  exec gosu tomcat $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
+  exec setpriv --reuid $RUN_WITH_USER_UID --regid $RUN_WITH_USER_GID --init-groups \
+    $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 else
   exec $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 fi
