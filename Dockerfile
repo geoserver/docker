@@ -1,12 +1,12 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble@sha256:bbc959486c469c589091571ba524e6a98f27e19bd99489c683d9b465e4f8db8d
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble@sha256:4eefabcbfa2c3ea85292af4c510297bbcf6f1a0cd15fc1fb0c83f36baaf5672b
 
 # For GeoServer 3.0.0 tomcat:11.0-jdk21-temurin-noble required
-ARG GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk11-temurin-noble@sha256:a14da60fbc2e02d0ef79b11cb4d9af0170a229ec89d2a1f823d31661c8431200
+ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.112-jdk17-temurin-noble@sha256:3f9ea7e18d26808a5cecc7aa2f952f9a268380777415bf7bcae82b0d2f6e230d
 
-ARG GS_VERSION=2.27.2
+ARG GS_VERSION=2.28.0
 ARG BUILD_GDAL=false
 ARG PROJ_VERSION=9.7.0
-ARG GDAL_VERSION=3.11.4
+ARG GDAL_VERSION=3.12.0
 ARG INSTALL_PREFIX=/usr/local
 
 # This is a multi stage build.
