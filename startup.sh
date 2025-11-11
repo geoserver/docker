@@ -8,8 +8,8 @@ function copy_custom_config() {
   if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/${CONFIG_FILE}" ]; then
     echo "Installing configuration override for ${CONFIG_FILE} with substituted environment variables"
     envsubst < "${CONFIG_OVERRIDES_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
-  else
-    # Otherwise use the default
+  elif [ -f "${CONFIG_DIR}/${CONFIG_FILE}" ]; then
+    # Otherwise use the default if it exists
     echo "Installing default ${CONFIG_FILE} with substituted environment variables"
     envsubst < "${CONFIG_DIR}"/"${CONFIG_FILE}" > "${CATALINA_HOME}/conf/${CONFIG_FILE}"
 
