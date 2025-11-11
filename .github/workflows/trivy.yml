@@ -17,7 +17,7 @@ jobs:
             name: gdal
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       - name: Build image
         run: docker build --build-arg BUILD_GDAL=${{ matrix.build_gdal }} -t geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }} .
@@ -33,6 +33,6 @@ jobs:
           vuln-type: 'os,library'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4
         with:
           sarif_file: 'trivy-results-${{ matrix.name }}.sarif'
