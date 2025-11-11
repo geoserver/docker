@@ -250,7 +250,7 @@ RUN set -eux \
     && apt upgrade -y \
     && apt install -y --no-install-recommends \
     # Basic dependencies
-    openssl curl unzip zip locales gettext gosu \
+    openssl curl unzip zip locales gettext \
     && if test "${BUILD_GDAL}" = "true"; then \
         # PROJ dependencies
         apt install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
