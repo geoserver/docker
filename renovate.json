@@ -3,7 +3,11 @@
   "extends": [
     "config:best-practices"
   ],
-  "github-actions": {
-    "pinDigests": false
-  }
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": false,
+      "rangeStrategy": "replace"
+    }
+  ]
 }
