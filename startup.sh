@@ -195,21 +195,45 @@ fi
 # Run as non-privileged user
 if [ "${RUN_UNPRIVILEGED}" = "true" ]
 then
-  echo "The server will be run as non-privileged user 'tomcat'"
+  echo "The server will be run as non-privileged user"
 
   RUN_WITH_USER_UID=${RUN_WITH_USER_UID:=999}
   RUN_WITH_USER_GID=${RUN_WITH_USER_GID:=${RUN_WITH_USER_UID}}
 
-  echo "Creating user tomcat (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
-  addgroup --gid ${RUN_WITH_USER_GID} tomcat && \
-    adduser --system -u ${RUN_WITH_USER_UID} --gid ${RUN_WITH_USER_GID} \
-            --no-create-home tomcat
+  echo "Setting up user with UID/GID (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
 
-  if [ -n "$CHANGE_OWNERSHIP_ON_FOLDERS" ]; then
-    echo "Changing ownership accordingly ($CHANGE_OWNERSHIP_ON_FOLDERS)"
-    chown -R tomcat:tomcat $CHANGE_OWNERSHIP_ON_FOLDERS
+  # Handle group setup
+  if getent group ${RUN_WITH_USER_GID} >/dev/null 2>&1; then
+    GROUP_NAME=$(getent group ${RUN_WITH_USER_GID} | cut -d: -f1)
+    echo "Using existing group: ${GROUP_NAME} (${RUN_WITH_USER_GID})"
+  else
+    GROUP_NAME="tomcat"
+    addgroup --gid ${RUN_WITH_USER_GID} ${GROUP_NAME}
+    echo "Created new group: ${GROUP_NAME} (${RUN_WITH_USER_GID})"
   fi
 
+  # Handle user setup - use existing user if available
+  if getent passwd ${RUN_WITH_USER_UID} >/dev/null 2>&1; then
+    USER_NAME=$(getent passwd ${RUN_WITH_USER_UID} | cut -d: -f1)
+    echo "Using existing user: ${USER_NAME} (${RUN_WITH_USER_UID})"
+
+    # Ensure user is in the correct group
+    usermod -g ${RUN_WITH_USER_GID} ${USER_NAME} 2>/dev/null || {
+      echo "Warning: Could not change primary group for user ${USER_NAME}"
+    }
+  else
+    USER_NAME="tomcat"
+    adduser --system -u ${RUN_WITH_USER_UID} --gid ${RUN_WITH_USER_GID} \
+            --no-create-home ${USER_NAME}
+    echo "Created user: ${USER_NAME} (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
+  fi
+
+  if [ -n "$CHANGE_OWNERSHIP_ON_FOLDERS" ]; then
+    echo "Changing ownership to ${USER_NAME}:${GROUP_NAME} for: $CHANGE_OWNERSHIP_ON_FOLDERS"
+    chown -R ${USER_NAME}:${GROUP_NAME} $CHANGE_OWNERSHIP_ON_FOLDERS
+  fi
+
+  echo "Starting GeoServer as user: ${USER_NAME} (${RUN_WITH_USER_UID}:${RUN_WITH_USER_GID})"
   exec setpriv --reuid $RUN_WITH_USER_UID --regid $RUN_WITH_USER_GID --init-groups \
     $CATALINA_HOME/bin/catalina.sh run -Dorg.apache.catalina.connector.RECYCLE_FACADES=true
 else
