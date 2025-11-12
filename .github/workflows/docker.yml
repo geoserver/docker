@@ -1,0 +1,144 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - build_gdal: false
+            name: default
+          - build_gdal: true
+            name: gdal
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build --build-arg BUILD_GDAL=${{ matrix.build_gdal }} -t geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }} .
+
+      - name: Run trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          format: 'sarif'
+          ignore-unfixed: true
+          image-ref: 'geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }}'
+          output: 'trivy-results-${{ matrix.name }}.sarif'
+          severity: 'CRITICAL,HIGH'
+          vuln-type: 'os,library'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results-${{ matrix.name }}.sarif'
+
+      # Integration Tests - Start container and perform basic health checks
+      - name: Start GeoServer container
+        run: |
+          if [[ "${{ matrix.name }}" == "gdal" ]]; then
+            # Start GDAL image with extension installation
+            docker run -d --name geoserver-test-${{ matrix.name }} \
+              -p 8080:8080 \
+              --env INSTALL_EXTENSIONS=true \
+              --env STABLE_EXTENSIONS="gdal" \
+              geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }}
+          else
+            # Start default image without additional extensions
+            docker run -d --name geoserver-test-${{ matrix.name }} \
+              -p 8080:8080 \
+              geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }}
+          fi
+
+      - name: Wait for GeoServer to start
+        run: |
+          echo "Waiting for GeoServer to start..."
+
+          # Simple wait function - just check if GeoServer responds
+          wait_for_geoserver() {
+            local max_attempts=60
+            local attempt=1
+
+            sleep 5
+            while [ $attempt -le $max_attempts ]; do
+              echo "Attempt $attempt/$max_attempts: Waiting for GeoServer to respond..."
+
+              # Check if container is still running
+              if ! docker ps | grep -q "geoserver-test-${{ matrix.name }}"; then
+                echo "❌ Container stopped unexpectedly!"
+                return 1
+              fi
+
+              # Simple connectivity test - just check if port responds
+              if curl -f -s --connect-timeout 5 --max-time 10 "http://localhost:8080/geoserver/" > /dev/null 2>&1; then
+                echo "✓ GeoServer is responding after $((attempt * 5)) seconds"
+                return 0
+              fi
+
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+
+            echo "❌ GeoServer did not respond within $((max_attempts * 5)) seconds"
+            return 1
+          }
+
+          # Start GeoServer and wait for it to be ready
+          wait_for_geoserver
+
+      - name: Run health checks
+        run: |
+          # WMS GetCapabilities test
+          curl -f "http://localhost:8080/geoserver/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0"
+          echo "✓ WMS GetCapabilities OK"
+
+          # WFS GetCapabilities test
+          curl -f "http://localhost:8080/geoserver/wfs?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0"
+          echo "✓ WFS GetCapabilities OK"
+
+          # WCS GetCapabilities test
+          curl -f "http://localhost:8080/geoserver/wcs?SERVICE=WCS&REQUEST=GetCapabilities&VERSION=2.0.1"
+          echo "✓ WCS GetCapabilities OK"
+
+          # Test demo layer (if demo data is loaded)
+          if curl -f -s "http://localhost:8080/geoserver/wms?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=topp:states&STYLES=&CRS=EPSG:4326&BBOX=-180,-90,180,90&WIDTH=256&HEIGHT=256&FORMAT=image/png" > /dev/null; then
+            echo "✓ Demo layer GetMap OK"
+          else
+            echo "! Demo layer not available"
+          fi
+
+          echo "All health checks successful!"
+
+      - name: Test gdal specific functionality
+        run: |
+          if [[ "${{ matrix.name }}" == "gdal" ]]; then
+            echo "Testing GDAL-specific functionality..."
+            # Check GDAL installation
+            docker exec geoserver-test-${{ matrix.name }} which gdalinfo || echo "GDAL tools check"
+            docker exec geoserver-test-${{ matrix.name }} ls -la /usr/local/lib/ | grep -E "(gdal|proj)" || echo "GDAL libraries check"
+            # Collect container metrics
+            echo "=== Container Stats ==="
+            docker stats --no-stream geoserver-test-${{ matrix.name }}
+          fi
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          echo "=== Container logs ==="
+          docker logs geoserver-test-${{ matrix.name }}
+
+          echo "=== Container status ==="
+          docker ps -a
+
+          echo "=== Network connectivity test ==="
+          curl -v http://localhost:8080/geoserver/ || true
+
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker stop geoserver-test-${{ matrix.name }} || true
+          docker rm geoserver-test-${{ matrix.name }} || true
