@@ -60,7 +60,7 @@ jobs:
 
           # Simple wait function - just check if GeoServer responds
           wait_for_geoserver() {
-            local max_attempts=60
+            local max_attempts=10
             local attempt=1
 
             sleep 5
@@ -93,15 +93,15 @@ jobs:
       - name: Run health checks
         run: |
           # WMS GetCapabilities test
-          curl -f "http://localhost:8080/geoserver/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0"
+          curl -f -s "http://localhost:8080/geoserver/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0" > /dev/null
           echo "✓ WMS GetCapabilities OK"
 
           # WFS GetCapabilities test
-          curl -f "http://localhost:8080/geoserver/wfs?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0"
+          curl -f -s "http://localhost:8080/geoserver/wfs?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=2.0.0" > /dev/null
           echo "✓ WFS GetCapabilities OK"
 
           # WCS GetCapabilities test
-          curl -f "http://localhost:8080/geoserver/wcs?SERVICE=WCS&REQUEST=GetCapabilities&VERSION=2.0.1"
+          curl -f -s "http://localhost:8080/geoserver/wcs?SERVICE=WCS&REQUEST=GetCapabilities&VERSION=2.0.1" > /dev/null
           echo "✓ WCS GetCapabilities OK"
 
           # Test demo layer (if demo data is loaded)
