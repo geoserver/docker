@@ -1,4 +1,4 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.17_10-jdk-noble@sha256:752ad23b15e8ae92d49a3ff27870f186d2ba450a7dde06304ccc8901c0eb2818
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.17_10-jdk-noble@sha256:37823ac22e65c6248a897229583835089aa06337ba4477a2878533655333f44d
 
 # For GeoServer 3.0.0 tomcat:11.0-jdk21-temurin-noble required
 ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.112-jdk17-temurin-noble@sha256:3f9ea7e18d26808a5cecc7aa2f952f9a268380777415bf7bcae82b0d2f6e230d
