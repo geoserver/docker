@@ -14,7 +14,7 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * Additional libraries
   * PostgreSQL JNDI
   * HTTPS
-  * GDAL with Java Bindings
+  * GDAL with Java Bindings (append `-gdal` after the version)
 
 This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
 
@@ -24,7 +24,11 @@ To pull an official image use ``docker.osgeo.org/geoserver:{{VERSION}}``, e.g.:
 
 ```shell
 docker pull docker.osgeo.org/geoserver:2.28.0
+or
+docker pull docker.osgeo.org/geoserver:2.28.0-gdal
 ```
+
+
 All the images can be found at: [https://repo.osgeo.org](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags) and the latest stable and maintenance version numbers can be obtained from [https://geoserver.org/download/](https://geoserver.org/download/)
 
 Afterwards you can run the pulled image locally with:
