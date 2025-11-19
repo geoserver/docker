@@ -41,3 +41,11 @@ Examples:
 `./release.sh buildandpublish 2.27.2`
 
 `./release.sh buildandpublish 2.27-SNAPSHOT 1234`
+
+### GDAL bindings
+
+The [release script](https://github.com/geoserver/docker/blob/master/build/release.sh) now automatically builds both a non-GDAL and a GDAL version and publishes both versions to the [OSGeo repo](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags).  The GDAL version appends `-gdal` to the tag after the version, e.g.
+
+```shell
+docker pull docker.osgeo.org/geoserver:2.28.0-gdal
+```
