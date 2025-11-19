@@ -271,14 +271,14 @@ After the initial setup, it's recommended to remove the `GEOSERVER_ADMIN_USER` a
 The following values cannot really be safely changed (as they are used to download extensions and community modules as the docker image first starts up).
 | VAR NAME | DESCRIPTION | SAMPLE VALUE |
 |--------------|-----------|------------|
-| GEOSERVER_VERSION | Geoserver version (used internally) | `2.27-SNAPSHOT`|
+| GEOSERVER_VERSION | Geoserver version (used internally) | `2.28-SNAPSHOT`|
 | GEOSERVER_BUILD | Geoserver build (used internally) | `1628` |
 
 ## Secrets
 
 GeoServer supports file-based credentials for secure handling of admin credentials, particularly useful with Docker secrets or mounted files.
 
-| VAR NAME | DESCRIPTION | 
+| VAR NAME | DESCRIPTION |
 |--------------|-----------|
 | GEOSERVER_ADMIN_USER_FILE | Path to file containing admin username |
 | GEOSERVER_ADMIN_PASSWORD_FILE | Path to file containing admin password |
