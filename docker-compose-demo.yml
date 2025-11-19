@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        - GS_VERSION=2.27.2
+        - GS_VERSION=2.28.0
     ports:
       - "80:8080"
     environment:
