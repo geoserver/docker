@@ -42,9 +42,9 @@ RUN mkdir -p /build_projgrids/usr/ \
     mkdir -p /build_gdal_python/usr/ \
     mkdir -p /build_gdal_version_changing/usr/ \
     && if test "${BUILD_GDAL}" = "true"; then \
-        apt update -y \
-        && apt upgrade -y \
-        && DEBIAN_FRONTEND=noninteractive apt install -y --fix-missing --no-install-recommends \
+        apt-get update -y \
+        && apt-get upgrade -y \
+        && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
             # PROJ build dependencies
             build-essential ca-certificates \
             git make ninja-build cmake wget unzip libtool automake \
@@ -241,20 +241,20 @@ WORKDIR /tmp
 # Install dependencies
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt update -y \
-    && apt upgrade -y \
-    && apt install -y --no-install-recommends \
+    && apt-get update -y \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
     # Basic dependencies
     openssl curl unzip zip locales gettext \
     && if test "${BUILD_GDAL}" = "true"; then \
         # PROJ dependencies
-        apt install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
+        apt-get install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
         # GDAL dependencies
         bash-completion python3-numpy libpython3.12t64 libjpeg-turbo8 libgeos3.12.1t64 libgeos-c1v5 \
             libexpat1 libxerces-c3.2 libwebp7 libpng16-16 libdeflate0 libzstd1 bash libpq5 libssl3 \
             libopenjp2-7 libspatialite8t64 libmuparser2v5 python-is-python3; \
     fi \
-    && apt clean \
+    && apt-get clean \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*
 
@@ -324,8 +324,8 @@ COPY *.sh /opt/
 RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 
 # cleanup
-RUN apt purge -y  \
-  && apt autoremove --purge -y \
+RUN apt-get purge -y  \
+  && apt-get autoremove --purge -y \
   && rm -rf /tmp/ \
   && rm -rf $CATALINA_HOME/webapps/ROOT \
   && rm -rf $CATALINA_HOME/webapps/docs \
