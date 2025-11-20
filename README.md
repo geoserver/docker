@@ -228,6 +228,13 @@ Run ``docker-compose``:
 ```shell
 docker-compose -f docker-compose-demo.yml up --build
 ```
+
+In case of problems try something like
+
+```shell
+docker-compose -f docker-compose-demo.yml down --remove-orphans
+```
+
 ## Environment Variables
 
 Following is the list of the all the environment variables that can be passed down to the geoserver docker image, you can check the default values for an image using `docker inspect [IMAGE_NAME]`
