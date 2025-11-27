@@ -33,7 +33,7 @@ services:
       retries: 3
       timeout: 20s
   postgis:
-    image: postgis/postgis:18-3.6-alpine@sha256:5376ab0fbcd1624ad8755037cbe565cb47c8e4477b20831cf4cbb14e3bf250e8
+    image: postgis/postgis:18-3.6-alpine
     ports:
       - "5555:5432"
     environment:
