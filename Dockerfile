@@ -333,6 +333,11 @@ RUN apt-get purge -y  \
   && rm -rf $CATALINA_HOME/webapps/host-manager \
   && rm -rf $CATALINA_HOME/webapps/manager
 
+# Fix up permissions on /tmp. Although it is deleted by the previous command,
+# because WORKDIR is /tmp, it is immediately re-created, but with the wrong
+# permission bits.
+RUN chmod 1777 /tmp
+
 # GeoServer user => restrict access to $CATALINA_HOME and GeoServer directories
 # See also CIS Docker benchmark and docker best practices
 
