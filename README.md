@@ -16,7 +16,7 @@ This Dockerfile can be used to create images for all geoserver versions since 2.
   * HTTPS
   * GDAL with Java Bindings (append `-gdal` after the version)
 
-This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](RELEASE.md) instructions are available.
+This README.md file covers use of official docker image, additional [build](BUILD.md) and [release](build/README.md) instructions are available.
 
 ## How to run official release?
 

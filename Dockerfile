@@ -288,7 +288,7 @@ RUN set -ux \
 # Download geoserver
 RUN set -eux \
     && echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
-    && wget -c -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
+    && if [ -f "/tmp/geoserver.zip" ]; then echo "Using provided /tmp/geoserver.zip"; else wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL; fi \
     && unzip geoserver.zip geoserver.war -d /tmp/ \
     && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
     && rm /tmp/geoserver.war \

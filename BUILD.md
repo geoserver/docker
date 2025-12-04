@@ -130,18 +130,23 @@ mvn clean install -P release -DskipTests
 which results in a WAR file located at: `src/web/app/target/geoserver.war`
 
 First zip up the WAR file: `zip src/web/app/target/geoserver.war geoserver.zip`
+
+Copy the zip file to `./geoserver/` folder using the expected naming pattern.
+
+```
+mv geoserver.zip geoserver/eoserver-main-latest-war.zip
+```
+
 and host a temporary webserver e.g.
-```
-python3 -m http.server 8000
-```
-then build the docker image, pulling from your locally hosted WAR file, and extensions as needed:
+
+Then build the docker image, it will copy your locally zip file into the docker image, rather than download:
 ```
 docker build \
-  --build-arg WAR_ZIP_URL=http://host.docker.internal:8000/geoserver.zip \
-  --build-arg STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/2.28.0/extensions \
-  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/2.28.x/community-latest/ \
-  --build-arg GS_VERSION=2.28-SNAPSHOT \
-  -t my-2.28.x .
+  --build-arg WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip \
+  --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
+  --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
+  --build-arg GS_VERSION=2.27-SNAPSHOT \
+  -t my-3.0.x .
 ```
 
 **Note:** For Linux only (not macOS nor Windows): you possibly need to add `--add-host=host.docker.internal:host-gateway` to the docker build command above.
