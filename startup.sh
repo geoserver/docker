@@ -145,7 +145,7 @@ fi
 if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
 
   # Set up some default values
-  if [ -z "${POSTGRES_JNDI_RESOURCE_NAME}" ]; then
+  if [ "${POSTGRES_JNDI_RESOURCE_NAME}" = "jdbc/disabled" ]; then
     export POSTGRES_JNDI_RESOURCE_NAME="jdbc/postgres"
   fi
   if [ -z "${POSTGRES_PORT}" ]; then
