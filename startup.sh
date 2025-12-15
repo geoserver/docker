@@ -99,6 +99,21 @@ if [ -d "$ADDITIONAL_FONTS_DIR" ] && [ $count != 0 ]; then
     echo "Installed $count TTF font file(s) from the additional fonts folder"
 fi
 
+# if JSONP_ENABLED enabled, this will add the the context param to the end of the web.xml
+# (this will only happen if the context param has not yet been added before)
+if [ "${JSONP_ENABLED}" = "true" ]; then
+  if ! grep -q JsonpEnabledByStartupScript "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
+    echo "Enable JSONP for $CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+
+    sed -i "\:</web-app>:i\\
+    <!-- JsonpEnabledByStartupScript -->\n\
+    <context-param>\n\
+      <param-name>ENABLE_JSONP</param-name>\n\
+      <param-value>true</param-value>\n\
+    </context-param>\n" "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml";
+  fi
+fi
+
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
 # if enabled, this will add the filter definitions
 # to the end of the web.xml
@@ -162,6 +177,10 @@ copy_custom_config "server.xml"
 # Use a custom "web.xml" if the user mounted one into the container
 if [ -d "${CONFIG_OVERRIDES_DIR}" ] && [ -f "${CONFIG_OVERRIDES_DIR}/web.xml" ]; then
   echo "Installing configuration override for web.xml with substituted environment variables"
+
+  if [ "${JSONP_ENABLED}" = "true" ]; then
+    echo "Warning: the JSONP_ENABLED's changes will be overwritten!"
+  fi
 
   if [ "${CORS_ENABLED}" = "true" ]; then
     echo "Warning: the CORS_ENABLED's changes will be overwritten!"
