@@ -93,10 +93,14 @@ fi
 
 # copy additional fonts before starting the tomcat
 # we also count whether at least one file with the fonts exists
-count=`ls -1 $ADDITIONAL_FONTS_DIR/*.ttf 2>/dev/null | wc -l`
-if [ -d "$ADDITIONAL_FONTS_DIR" ] && [ $count != 0 ]; then
-    cp $ADDITIONAL_FONTS_DIR/*.ttf /usr/share/fonts/truetype/
-    echo "Installed $count TTF font file(s) from the additional fonts folder"
+ttf_count=$(ls -1 "$ADDITIONAL_FONTS_DIR"/*.ttf 2>/dev/null | wc -l)
+ttc_count=$(ls -1 "$ADDITIONAL_FONTS_DIR"/*.ttc 2>/dev/null | wc -l)
+total_count=$((ttf_count + ttc_count))
+if [ -d "$ADDITIONAL_FONTS_DIR" ] && [ $total_count != 0 ]; then
+    [ "$ttf_count" -gt 0 ] && cp "$ADDITIONAL_FONTS_DIR"/*.ttf /usr/share/fonts/truetype/
+    [ "$ttc_count" -gt 0 ] && cp "$ADDITIONAL_FONTS_DIR"/*.ttc /usr/share/fonts/truetype/
+    
+    echo "Installed $total_count ttf/ttc font file(s) from the additional fonts folder"
 fi
 
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
