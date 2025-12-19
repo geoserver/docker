@@ -60,7 +60,7 @@ then
     mv $TMP_USERS $USERS_XML
     echo "Successfully replaced $USERS_XML"
 else
-    echo "CAUTION: Abort update_credentials.sh due to error while creating users.xml. File at $USERS_XML keeps untouched"
+    echo "CAUTION: Abort update_credentials.sh due to error while creating users.xml. File at $USERS_XML is left untouched"
     exit
 fi
 
@@ -72,7 +72,7 @@ then
     mv $TMP_ROLES $ROLES_XML
     echo "Successfully replaced $ROLES_XML"
 else
-    echo "CAUTION: Abort update_credentials.sh due to error while creating roles.xml. File at $ROLES_XML keeps untouched"
+    echo "CAUTION: Abort update_credentials.sh due to error while creating roles.xml. File at $ROLES_XML is left untouched"
     exit
 fi
 
