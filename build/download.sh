@@ -61,14 +61,14 @@ else
 fi
 
 # Go up one level to the Dockerfile
-echo "  Download GeoSesrver $VERSION"
+echo "  Download GeoServer $VERSION"
 
 if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
   echo "  Download nightly build from https://build.geoserver.org/geoserver/$BRANCH"
   if [[ "$CLEAN" == "clean" ]]; then
     rm -rf "../geoserver/geoserver-$BRANCH-latest-war.zip"
   fi
-  echo "  dowloading geoserver-$BRANCH-latest-war.zip"
+  echo "  downloading geoserver-$BRANCH-latest-war.zip"
   wget -c -q -P "../geoserver/" \
        "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip" 
 else
@@ -76,6 +76,6 @@ else
   if [[ "$CLEAN" == "clean" ]]; then
     rm -rf "../geoserver/geoserver-${VERSION}-war.zip"
   fi
-  echo "  dowloading geoserver-${VERSION}-war.zip"
+  echo "  downloading geoserver-${VERSION}-war.zip"
   wget -c -q -P "../geoserver/" "https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/geoserver-${VERSION}-war.zip"
 fi

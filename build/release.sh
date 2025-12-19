@@ -23,9 +23,9 @@ function build_geoserver_image() {
 
     if [ -n "$VERSION" ] && [ -n "$BUILD" ] && [ -n "$BUILD_GDAL" ] && [ -n "$TAG" ]; then
       
-      if [[ "$VERSION" == "3."* ]]; then
+      if [[ "$VERSION" == "3"* ]]; then
         GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
-      elif [[ "$VERSION" == "2.28."* ]]; then
+      elif [[ "$VERSION" == "2.28"* ]]; then	# removing trailing dot, as the check must support both 2.28.x and 2.28-SNAPSHOT
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk17-temurin-noble
       else
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk11-temurin-noble
@@ -131,7 +131,7 @@ if [[ $1 == *build* ]]; then
   echo "Building GeoServer Docker Image..."
   if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
-    echo "  dowloading geoserver-$BRANCH-latest-war.zip"
+    echo "  downloading geoserver-$BRANCH-latest-war.zip"
     wget -c -q -P./geoserver/ \
          "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip" 
     echo
@@ -139,7 +139,7 @@ if [[ $1 == *build* ]]; then
     build_geoserver_image $VERSION $BUILD "true" $GDAL_TAG $BRANCH # with gdal
   else
     echo "  release build from https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}"
-    echo "  dowloading geoserver-${VERSION}-war.zip"
+    echo "  downloading geoserver-${VERSION}-war.zip"
     wget -c -q -P./geoserver/ \
          "https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/geoserver-${VERSION}-war.zip"
     echo    
