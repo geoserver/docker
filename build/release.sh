@@ -23,9 +23,9 @@ function build_geoserver_image() {
 
     if [ -n "$VERSION" ] && [ -n "$BUILD" ] && [ -n "$BUILD_GDAL" ] && [ -n "$TAG" ]; then
       
-      if [[ “$VERSION” == “3.”* ]]; then
+      if [[ "$VERSION" == "3."* ]]; then
         GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
-      elif [[ “$VERSION” == “2.28.”* ]]; then
+      elif [[ "$VERSION" == "2.28."* ]]; then
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk17-temurin-noble
       else
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk11-temurin-noble
