@@ -5,12 +5,16 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "pinDigests": false,
       "rangeStrategy": "replace"
     },
     {
-      "matchFiles": ["docker-compose-demo.yml"],
+      "matchFileNames": [
+        "docker-compose-demo.yml"
+      ],
       "pinDigests": false
     }
   ]
