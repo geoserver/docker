@@ -134,7 +134,7 @@ First zip up the WAR file: `zip src/web/app/target/geoserver.war geoserver.zip`
 Copy the zip file to `./geoserver/` folder using the expected naming pattern.
 
 ```
-mv geoserver.zip geoserver/eoserver-main-latest-war.zip
+mv geoserver.zip geoserver/geoserver-main-latest-war.zip
 ```
 
 and host a temporary webserver e.g.
