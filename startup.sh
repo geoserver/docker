@@ -162,15 +162,6 @@ if [ "${CORS_ENABLED}" = "true" ]; then
 fi
 
 if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
-
-  # Set up some default values
-  if [ -z "${POSTGRES_JNDI_RESOURCE_NAME}" ]; then
-    export POSTGRES_JNDI_RESOURCE_NAME="jdbc/postgres"
-  fi
-  if [ -z "${POSTGRES_PORT}" ]; then
-    export POSTGRES_PORT="5432"
-  fi
-
   # Use a custom "context.xml" if the user mounted one into the container
   copy_custom_config "context.xml"
 fi
