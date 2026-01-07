@@ -327,7 +327,7 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 # cleanup
 RUN apt-get purge -y  \
   && apt-get autoremove --purge -y \
-  && rm -rf /tmp/ \
+  && rm -rf /tmp/* \
   && rm -rf $CATALINA_HOME/webapps/ROOT \
   && rm -rf $CATALINA_HOME/webapps/docs \
   && rm -rf $CATALINA_HOME/webapps/examples \
