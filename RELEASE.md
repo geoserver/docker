@@ -7,7 +7,7 @@ OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The result
 Build locally:
 
 ```shell
-docker build -t geoserver-docker.osgeo.org/geoserver:2.28.0 .
+docker build -t geoserver-docker.osgeo.org/geoserver:2.28.1 .
 ```
 
 Login using with osgeo user id:
@@ -19,7 +19,7 @@ docker login geoserver-docker.osgeo.org
 Push to osgeo repository:
 
 ```shell
-docker push geoserver-docker.osgeo.org/geoserver:2.28.0
+docker push geoserver-docker.osgeo.org/geoserver:2.28.1
 ```
 
 ## How to automate release?
@@ -34,11 +34,11 @@ The third, optional, is used to supply the jenkins build number - triggering a n
 
 Examples:
 
-`./release.sh build 2.28.0`
+`./release.sh build 2.28.1`
 
-`./release.sh publish 2.28.0`
+`./release.sh publish 2.28.1`
 
-`./release.sh buildandpublish 2.28.0`
+`./release.sh buildandpublish 2.28.1`
 
 `./release.sh buildandpublish 2.28-SNAPSHOT 1234`
 
@@ -47,5 +47,5 @@ Examples:
 The [release script](https://github.com/geoserver/docker/blob/master/build/release.sh) now automatically builds both a non-GDAL and a GDAL version and publishes both versions to the [OSGeo repo](https://repo.osgeo.org/#browse/browse:geoserver-docker:v2/geoserver/tags).  The GDAL version appends `-gdal` to the tag after the version, e.g.
 
 ```shell
-docker pull docker.osgeo.org/geoserver:2.28.0-gdal
+docker pull docker.osgeo.org/geoserver:2.28.1-gdal
 ```

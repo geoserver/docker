@@ -5,8 +5,8 @@ ARG GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
 
 ARG GS_VERSION=3.0-SNAPSHOT
 ARG BUILD_GDAL=false
-ARG PROJ_VERSION=9.7.0
-ARG GDAL_VERSION=3.12.0
+ARG PROJ_VERSION=9.7.1
+ARG GDAL_VERSION=3.12.1
 ARG INSTALL_PREFIX=/usr/local
 
 # This is a multi stage build.
@@ -186,6 +186,7 @@ ENV CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
 ENV CORS_ALLOWED_ORIGINS=*
 ENV CORS_ALLOW_CREDENTIALS=false
 ENV CORS_ENABLED=false
+ENV JSONP_ENABLED=false
 ENV EXTRA_JAVA_OPTS="-Xms256m -Xmx1g"
 ENV GEOSERVER_BUILD=$GS_BUILD
 ENV GEOSERVER_DATA_DIR=/opt/geoserver_data/
@@ -196,7 +197,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ENV HEALTHCHECK_URL=''
 ENV INSTALL_EXTENSIONS=false
 ENV POSTGRES_JNDI_ENABLED=false
-ENV POSTGRES_JNDI_RESOURCE_NAME=jdbc/disabled
+ENV POSTGRES_JNDI_RESOURCE_NAME=jdbc/postgres
 ENV POSTGRES_HOST=disabled
 ENV POSTGRES_PORT=5432
 ENV POSTGRES_DB=disabled
@@ -234,7 +235,7 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     -Dfile.encoding=UTF-8 \
     -Djavax.servlet.request.encoding=UTF-8 \
     -Djavax.servlet.response.encoding=UTF-8 \
-    -D-XX:SoftRefLRUPolicyMSPerMB=36000 \
+    -XX:SoftRefLRUPolicyMSPerMB=36000 \
     -Xbootclasspath/a:$CATALINA_HOME/lib/marlin.jar \
     -Dsun.java2d.renderer=sun.java2d.marlin.DMarlinRenderingEngine \
     -Dorg.geotools.coverage.jaiext.enabled=true"
@@ -291,7 +292,7 @@ RUN set -ux \
 # Download geoserver
 RUN set -eux \
     && echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
-    && wget -c -q -O /tmp/geoserver.zip $WAR_ZIP_URL \
+    && if [ -f "/tmp/geoserver.zip" ]; then echo "Using provided /tmp/geoserver.zip"; else wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL; fi \
     && unzip geoserver.zip geoserver.war -d /tmp/ \
     && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
     && rm /tmp/geoserver.war \
@@ -329,7 +330,7 @@ RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
 # cleanup
 RUN apt-get purge -y  \
   && apt-get autoremove --purge -y \
-  && rm -rf /tmp/ \
+  && rm -rf /tmp/* \
   && rm -rf $CATALINA_HOME/webapps/ROOT \
   && rm -rf $CATALINA_HOME/webapps/docs \
   && rm -rf $CATALINA_HOME/webapps/examples \
