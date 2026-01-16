@@ -34,9 +34,9 @@ For CI purposes, scripts in the `build` folder are used to simplify the above st
    ./download.sh 3.0-SNAPSHOT clean
    ```
    
-   The frist argument is the version number to release.
+   The first argument is the version number to release.
    
-   The thrid argument, optional, is `clean` if you wish to remove any prior download.
+   The third argument, optional, is `clean` if you wish to remove any prior download.
    This is useful when downloading SNAPSHOTs where the same filename is used, and thus
    resuming a download is problematic.
    
