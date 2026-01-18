@@ -12,6 +12,9 @@ on:
         required: false
         type: string
         default: 'github'
+  push:
+    branches:
+      - ci/publish-test
 
 env:
   MAIN_VERSION: "3.0"  # Update when main branch changes
@@ -43,6 +46,13 @@ jobs:
         run: |
           VERSION="${{ inputs.version }}"
           BUILD="${{ inputs.build_number }}"
+
+          # If triggered by a push (test), allow a sensible default so this can be run without workflow_dispatch inputs
+          if [ -z "$VERSION" ] && [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            VERSION="3.0-SNAPSHOT"
+            BUILD="${GITHUB_RUN_NUMBER:-github}"
+            echo "No version input (push trigger). Falling back to VERSION=$VERSION BUILD=$BUILD"
+          fi
           
           echo "Parsing version: $VERSION"
           
