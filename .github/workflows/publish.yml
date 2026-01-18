@@ -125,8 +125,8 @@ jobs:
             COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/community-latest"
           else
             WAR_URL="https://downloads.sourceforge.net/project/geoserver/GeoServer/$VERSION/geoserver-$VERSION-war.zip"
-            STABLE_PLUGIN_URL=""    # TODO: fix url
-            COMMUNITY_PLUGIN_URL=""
+            STABLE_PLUGIN_URL="https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/extensions"
+            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/${BRANCH}/community-latest"
           fi
           
           echo "war_url=$WAR_URL" >> $GITHUB_OUTPUT
@@ -235,9 +235,9 @@ jobs:
             GS_BUILD=${{ inputs.build_number }}
             BUILD_GDAL=${{ matrix.gdal }}
             GEOSERVER_BASE_IMAGE=${{ needs.prepare.outputs.base_image }}
-            ${{ needs.prepare.outputs.is_nightly == 'true' && format('WAR_ZIP_URL={0}', needs.prepare.outputs.war_url) || '' }}
-            ${{ needs.prepare.outputs.is_nightly == 'true' && format('STABLE_PLUGIN_URL={0}', needs.prepare.outputs.stable_plugin_url) || '' }}
-            ${{ needs.prepare.outputs.is_nightly == 'true' && format('COMMUNITY_PLUGIN_URL={0}', needs.prepare.outputs.community_plugin_url) || '' }}
+            WAR_ZIP_URL=${{ needs.prepare.outputs.war_url }}
+            STABLE_PLUGIN_URL=${{ needs.prepare.outputs.stable_plugin_url }}
+            COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }} 
           outputs: type=image,name=petersmythe/geoserver-test,push-by-digest=true,name-canonical=true,push=true
       
       - name: Export digest
