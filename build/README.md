@@ -4,7 +4,9 @@
 
 OSGeo maintains geoserver-docker.osgeo.org repository for publishing. The results are combined into docker.osgeo.org repository alongside other software such as PostGIS.
 
-Build locally:
+The [job](https://build.geoserver.org/view/release/job/geoserver-release-docker/) is performed by build.geoserver.org (the Jenkins server) and triggered by various upstream projects.
+
+If you really, really need to build and publish locally:
 
 ```shell
 docker build -t geoserver-docker.osgeo.org/geoserver:2.27.2 .
