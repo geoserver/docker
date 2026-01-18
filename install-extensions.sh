@@ -42,16 +42,20 @@ function download_extension() {
         if [ -n "${BASE_URL}" ]; then
           echo "Attempting to discover plugin filename from ${BASE_URL}/"
           LISTING=$(curl -s "${BASE_URL}/" || true)
-          FILE=$(echo "${LISTING}" | grep -oE "geoserver-[^/]*-${EXTENSION}-plugin.zip" | head -n 1 || true)
+          # flatten and extract the href value for the matching plugin file
+          LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
+          FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
+          # ensure we only have a bare filename
+          FILE=$(basename "${FILE}")
           if [ -n "${FILE}" ]; then
             echo "Found candidate file: ${FILE}"
             NEW_URL="${BASE_URL}/${FILE}"
-            # extract version (e.g., geoserver-3.0-SNAPSHOT-authkey-plugin.zip -> 3.0-SNAPSHOT)
             VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION}"'-plugin\.zip$/\1/p')
             if [ -n "${VERSION}" ]; then
               GEOSERVER_VERSION="${VERSION}"
               echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
             fi
+            DOWNLOAD_FILE="${DOWNLOAD_DIR}${FILE}"
             echo -e "\nDownloading ${EXTENSION} extension from ${NEW_URL} to ${DOWNLOAD_FILE}"
             wget --progress=bar:force:noscroll -c --no-check-certificate "${NEW_URL}" -O "${DOWNLOAD_FILE}"
           else
@@ -92,7 +96,8 @@ echo "Starting installation of extensions"
 for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
   EXTENSION=$(echo "${EXTENSION}" | xargs)
   [ -z "$EXTENSION" ] && continue
-  ADDITIONAL_LIB="${ADDITIONAL_LIBS_DIR%/}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
+  # find any downloaded plugin matching the extension name (handles discovered filenames)
+  ADDITIONAL_LIB=$(ls -1 "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-${EXTENSION}-plugin.zip 2>/dev/null | head -n 1 || true)
   [ -e "$ADDITIONAL_LIB" ] || continue
 
   if [[ $ADDITIONAL_LIB == *.zip ]]; then
