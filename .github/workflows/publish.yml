@@ -238,7 +238,7 @@ jobs:
             ${{ needs.prepare.outputs.is_nightly == 'true' && format('WAR_ZIP_URL={0}', needs.prepare.outputs.war_url) || '' }}
             ${{ needs.prepare.outputs.is_nightly == 'true' && format('STABLE_PLUGIN_URL={0}', needs.prepare.outputs.stable_plugin_url) || '' }}
             ${{ needs.prepare.outputs.is_nightly == 'true' && format('COMMUNITY_PLUGIN_URL={0}', needs.prepare.outputs.community_plugin_url) || '' }}
-          outputs: type=image,name=petersmythe/geoserver-TEST,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=petersmythe/geoserver-test,push-by-digest=true,name-canonical=true,push=true
       
       - name: Export digest
         run: |
@@ -295,18 +295,18 @@ jobs:
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
           # Build tag list
-          TAGS="petersmythe/geoserver-TEST:$PRIMARY_TAG"
+          TAGS="petersmythe/geoserver-test:$PRIMARY_TAG"
           
           if [ -n "$ADDITIONAL_TAGS" ]; then
             IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
             for tag in "${TAG_ARRAY[@]}"; do
-              TAGS="$TAGS petersmythe/geoserver-TEST:$tag"
+              TAGS="$TAGS petersmythe/geoserver-test:$tag"
             done
           fi
           
           # Create manifest
           docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
-            $(printf 'petersmythe/geoserver-TEST@sha256:%s ' *)
+            $(printf 'petersmythe/geoserver-test@sha256:%s ' *)
           
           echo "Created manifest for tags: $TAGS"
       
@@ -317,25 +317,25 @@ jobs:
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
           # Build tag list with -gdal suffix
-          TAGS="petersmythe/geoserver-TEST:$PRIMARY_TAG"
+          TAGS="petersmythe/geoserver-test:$PRIMARY_TAG"
           
           if [ -n "$ADDITIONAL_TAGS" ]; then
             IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
             for tag in "${TAG_ARRAY[@]}"; do
-              TAGS="$TAGS petersmythe/geoserver-TEST:$tag-gdal"
+              TAGS="$TAGS petersmythe/geoserver-test:$tag-gdal"
             done
           fi
           
           # Create manifest
           docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
-            $(printf 'petersmythe/geoserver-TEST@sha256:%s ' *)
+            $(printf 'petersmythe/geoserver-test@sha256:%s ' *)
           
           echo "Created manifest for tags: $TAGS"
       
       - name: Inspect manifests
         run: |
-          docker buildx imagetools inspect petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }}
-          docker buildx imagetools inspect petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }}-gdal
+          docker buildx imagetools inspect petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}
+          docker buildx imagetools inspect petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal
 
   # ============================================================
   # JOB 4: FUTURE - Publish to OSGeo repo (dual publishing)
@@ -357,13 +357,13 @@ jobs:
       - name: Tag and push to OSGeo
         run: |
           # Pull from petersmythe, retag, push to OSGeo
-          docker pull petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }}
-          docker tag petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }} \
+          docker pull petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}
+          docker tag petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }} \
             geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}
           docker push geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}
           
           # Same for GDAL variant
-          docker pull petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }}-gdal
-          docker tag petersmythe/geoserver-TEST:${{ needs.prepare.outputs.primary_tag }}-gdal \
+          docker pull petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal
+          docker tag petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal \
             geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}-gdal
           docker push geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}-gdal
