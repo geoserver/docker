@@ -1,4 +1,4 @@
-name: Pages
+name: Build docs and deploy to GitHub Pages
 on:
   push:
     paths:

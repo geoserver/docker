@@ -1,5 +1,7 @@
-name: build
+name: Validate a PR on push to master
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - master
