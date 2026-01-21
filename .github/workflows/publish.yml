@@ -143,7 +143,7 @@ jobs:
           
           # Add semantic tags for main/stable/maintenance releases
           if [[ "$VERSION" == "${MAIN_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
-            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,latest"
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS"
           elif [[ "$VERSION" == "${STABLE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-latest"
           elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
@@ -152,7 +152,7 @@ jobs:
           
           # Add nightly tags for snapshot builds
           if [[ "$VERSION" == "${MAIN_VERSION}-SNAPSHOT" ]]; then
-            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,latest"
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly,latest"
           elif [[ "$VERSION" == "${STABLE_VERSION}-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-nightly"
           elif [[ "$VERSION" == "${MAINTENANCE_VERSION}-SNAPSHOT" ]]; then
