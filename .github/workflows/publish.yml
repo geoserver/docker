@@ -20,6 +20,7 @@ env:
   MAIN_VERSION: "3.0"  # Update when main branch changes
   STABLE_VERSION: "2.28"
   MAINTENANCE_VERSION: "2.27"
+  DOCKER_REPO: "petersmythe/geoserver-test"  # Change to docker.osgeo.org/geoserver for production
 
 jobs:
   # ============================================================
@@ -29,6 +30,8 @@ jobs:
     name: Prepare Build Parameters
     runs-on: ubuntu-latest
     outputs:
+      version: ${{ steps.parse.outputs.version }}
+      build_number: ${{ steps.parse.outputs.build_number }}
       major: ${{ steps.parse.outputs.major }}
       minor: ${{ steps.parse.outputs.minor }}
       base_image: ${{ steps.parse.outputs.base_image }}
@@ -53,6 +56,10 @@ jobs:
             BUILD="${GITHUB_RUN_NUMBER:-github}"
             echo "No version input (push trigger). Falling back to VERSION=$VERSION BUILD=$BUILD"
           fi
+          
+          # Output version and build number for use in other jobs
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD" >> $GITHUB_OUTPUT
           
           echo "Parsing version: $VERSION"
           
@@ -231,14 +238,14 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           build-args: |
-            GS_VERSION=${{ inputs.version }}
-            GS_BUILD=${{ inputs.build_number }}
+            GS_VERSION=${{ needs.prepare.outputs.version }}
+            GS_BUILD=${{ needs.prepare.outputs.build_number }}
             BUILD_GDAL=${{ matrix.gdal }}
             GEOSERVER_BASE_IMAGE=${{ needs.prepare.outputs.base_image }}
             WAR_ZIP_URL=${{ needs.prepare.outputs.war_url }}
             STABLE_PLUGIN_URL=${{ needs.prepare.outputs.stable_plugin_url }}
             COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }} 
-          outputs: type=image,name=petersmythe/geoserver-test,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
       
       - name: Export digest
         run: |
@@ -295,18 +302,18 @@ jobs:
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
           # Build tag list
-          TAGS="petersmythe/geoserver-test:$PRIMARY_TAG"
+          TAGS="${{ env.DOCKER_REPO }}:$PRIMARY_TAG"
           
           if [ -n "$ADDITIONAL_TAGS" ]; then
             IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
             for tag in "${TAG_ARRAY[@]}"; do
-              TAGS="$TAGS petersmythe/geoserver-test:$tag"
+              TAGS="$TAGS ${{ env.DOCKER_REPO }}:$tag"
             done
           fi
           
           # Create manifest
           docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
-            $(printf 'petersmythe/geoserver-test@sha256:%s ' *)
+            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
           
           echo "Created manifest for tags: $TAGS"
       
@@ -317,53 +324,66 @@ jobs:
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
           # Build tag list with -gdal suffix
-          TAGS="petersmythe/geoserver-test:$PRIMARY_TAG"
+          TAGS="${{ env.DOCKER_REPO }}:$PRIMARY_TAG"
           
           if [ -n "$ADDITIONAL_TAGS" ]; then
             IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
             for tag in "${TAG_ARRAY[@]}"; do
-              TAGS="$TAGS petersmythe/geoserver-test:$tag-gdal"
+              TAGS="$TAGS ${{ env.DOCKER_REPO }}:$tag-gdal"
             done
           fi
           
           # Create manifest
           docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
-            $(printf 'petersmythe/geoserver-test@sha256:%s ' *)
+            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
           
           echo "Created manifest for tags: $TAGS"
       
       - name: Inspect manifests
         run: |
-          docker buildx imagetools inspect petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}
-          docker buildx imagetools inspect petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
 
   # ============================================================
-  # JOB 4: FUTURE - Publish to OSGeo repo (dual publishing)
+  # JOB 4: TEST - Copy multi-arch manifests (testing buildx imagetools)
   # ============================================================
   publish-osgeo:
-    name: Publish to OSGeo Registry (Future)
+    name: Test Multi-Arch Manifest Copy
     runs-on: ubuntu-latest
     needs: merge
-    if: false  # Enable when ready to dual-publish
+    if: true  # Enabled for testing multi-arch manifest copy
     
     steps:
-      - name: Login to OSGeo Registry
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: geoserver-docker.osgeo.org
-          username: ${{ secrets.OSGEO_USERNAME }}
-          password: ${{ secrets.OSGEO_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Tag and push to OSGeo
+      - name: Test copying multi-arch manifests to alternate tags
         run: |
-          # Pull from petersmythe, retag, push to OSGeo
-          docker pull petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}
-          docker tag petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }} \
-            geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}
-          docker push geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}
+          # Test: Copy multi-arch manifest to alternate tag (simulates OSGeo publish)
+          # Using -test-copy suffix to avoid overwriting existing tags
+          docker buildx imagetools create \
+            -t ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-test-copy \
+            ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
           
-          # Same for GDAL variant
-          docker pull petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal
-          docker tag petersmythe/geoserver-test:${{ needs.prepare.outputs.primary_tag }}-gdal \
-            geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}-gdal
-          docker push geoserver-docker.osgeo.org/geoserver:${{ needs.prepare.outputs.primary_tag }}-gdal
+          # Copy multi-arch manifest for the GDAL variant
+          docker buildx imagetools create \
+            -t ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal-test-copy \
+            ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+          
+          echo "Successfully copied multi-arch manifests to test tags."
+          echo "Verify at: https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags"
+          
+          # Inspect to confirm multi-arch
+          echo ""
+          echo "Inspecting copied manifest (no GDAL):"
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-test-copy
+          
+          echo ""
+          echo "Inspecting copied manifest (with GDAL):"
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal-test-copy

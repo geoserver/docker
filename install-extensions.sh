@@ -26,6 +26,8 @@ fi
 function download_extension() {
   URL=$1
   EXTENSION=$2
+  # Escape EXTENSION for safe use inside sed regular expressions
+  EXTENSION_REGEX_ESCAPED=$(printf '%s\n' "${EXTENSION}" | sed 's/[][\\.^$*+?{}|()]/\\&/g')
   DOWNLOAD_DIR="${ADDITIONAL_LIBS_DIR%/}/"
   DOWNLOAD_FILE="${DOWNLOAD_DIR}geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
 
@@ -44,13 +46,13 @@ function download_extension() {
           LISTING=$(curl -s "${BASE_URL}/" || true)
           # flatten and extract the href value for the matching plugin file
           LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
-          FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
+          FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip\)".*/\1/p' | head -n 1 || true)
           # ensure we only have a bare filename
           FILE=$(basename "${FILE}")
           if [ -n "${FILE}" ]; then
             echo "Found candidate file: ${FILE}"
             NEW_URL="${BASE_URL}/${FILE}"
-            VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION}"'-plugin\.zip$/\1/p')
+            VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
             if [ -n "${VERSION}" ]; then
               GEOSERVER_VERSION="${VERSION}"
               echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
