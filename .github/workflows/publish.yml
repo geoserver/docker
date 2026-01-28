@@ -57,6 +57,12 @@ jobs:
             echo "No version input (push trigger). Falling back to VERSION=$VERSION BUILD=$BUILD"
           fi
           
+          # If BUILD is empty, use a default
+          if [ -z "$BUILD" ]; then
+            BUILD="${GITHUB_RUN_NUMBER:-github}"
+            echo "Build number not provided. Using BUILD=$BUILD"
+          fi
+          
           # Output version and build number for use in other jobs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD" >> $GITHUB_OUTPUT
@@ -350,7 +356,9 @@ jobs:
   publish-osgeo:
     name: Test Multi-Arch Manifest Copy
     runs-on: ubuntu-latest
-    needs: merge
+    needs: 
+      - prepare
+      - merge
     if: true  # Enabled for testing multi-arch manifest copy
     
     steps:
