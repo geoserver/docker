@@ -36,7 +36,7 @@ function download_extension() {
   else
     if curl --output /dev/null --silent --head --fail "${URL}"; then
         echo -e "\nDownloading ${EXTENSION} extension from ${URL} to ${DOWNLOAD_FILE}"
-        wget --progress=bar:force:noscroll -c --no-check-certificate "${URL}" -O "${DOWNLOAD_FILE}"
+        wget --progress=bar:force:noscroll -c "${URL}" -O "${DOWNLOAD_FILE}"
     else
         echo "URL does not exist: ${URL}"
         # Try to discover an actual plugin file at the base URL and use it
@@ -80,7 +80,7 @@ function download_extension() {
               fi
               DOWNLOAD_FILE="${DOWNLOAD_DIR}${FILE}"
               echo -e "\nDownloading ${EXTENSION} extension from ${NEW_URL} to ${DOWNLOAD_FILE}"
-              wget --progress=bar:force:noscroll -c --no-check-certificate "${NEW_URL}" -O "${DOWNLOAD_FILE}"
+              wget --progress=bar:force:noscroll -c "${NEW_URL}" -O "${DOWNLOAD_FILE}"
             else
               echo "No matching plugin found at ${BASE_URL}/"
             fi
