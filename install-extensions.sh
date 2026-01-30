@@ -47,6 +47,7 @@ function download_extension() {
         BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
         if [ -n "${BASE_URL}" ]; then
           echo "Attempting to discover plugin filename from ${BASE_URL}/"
+          # Curl failure is tolerated (|| true) since directory scraping is optional fallback
           LISTING=$(curl -fsS "${BASE_URL}/" 2>/dev/null || true)
           if [ -z "${LISTING}" ]; then
             echo "Unable to retrieve directory listing from ${BASE_URL}/; skipping automatic plugin discovery."

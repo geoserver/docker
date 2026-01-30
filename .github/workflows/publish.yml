@@ -20,6 +20,12 @@ concurrency:
   group: publish-${{ github.event.inputs.version || 'push-test' }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
 env:
   # ------------------------------------------------------------------
   # GeoServer Version Series Configuration
@@ -292,7 +298,11 @@ jobs:
             GEOSERVER_BASE_IMAGE=${{ needs.prepare.outputs.base_image }}
             WAR_ZIP_URL=${{ needs.prepare.outputs.war_url }}
             STABLE_PLUGIN_URL=${{ needs.prepare.outputs.stable_plugin_url }}
-            COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }} 
+            COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }}
+          cache-from: type=gha,scope=build-${{ matrix.arch }}-${{ matrix.gdal && 'gdal' || 'nogdal' }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}-${{ matrix.gdal && 'gdal' || 'nogdal' }}
+          provenance: true
+          sbom: true
           outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
       
       - name: Export digest
@@ -414,6 +424,61 @@ jobs:
         run: |
           docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
           docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+      
+      - name: Generate Job Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## GeoServer Multi-Arch Build Summary
+          
+          ### Build Information
+          - **Version**: ${{ needs.prepare.outputs.version }}
+          - **Build Number**: ${{ needs.prepare.outputs.build_number }}
+          - **Base Image**: ${{ needs.prepare.outputs.base_image }}
+          - **Is Nightly**: ${{ needs.prepare.outputs.is_nightly }}
+          
+          ### Images Created
+          
+          #### Without GDAL
+          - Primary: [${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)
+          EOF
+          
+          # Add additional tags if present
+          ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              echo "- Additional: [${{ env.DOCKER_REPO }}:$tag](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          
+          #### With GDAL
+          - Primary: [${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)
+          EOF
+          
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              echo "- Additional: [${{ env.DOCKER_REPO }}:$tag-gdal](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          
+          ### Architectures
+          - linux/amd64
+          - linux/arm64
+          
+          ### Pull Commands
+          ```bash
+          # Without GDAL
+          docker pull ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
+          
+          # With GDAL
+          docker pull ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+          ```
+          EOF
 
   # ============================================================
   # JOB 4: TEST - Copy multi-arch manifests (testing buildx imagetools)
