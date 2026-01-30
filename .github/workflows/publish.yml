@@ -340,6 +340,17 @@ jobs:
       - name: Create manifest list and push (no GDAL)
         working-directory: /tmp/digests-nogdal
         run: |
+          set -euo pipefail
+          
+          # Validate digest files exist
+          DIGEST_COUNT=$(ls -1 2>/dev/null | wc -l)
+          if [ "$DIGEST_COUNT" -eq 0 ]; then
+            echo "ERROR: No digest files found in /tmp/digests-nogdal" >&2
+            echo "Expected digests from build jobs (amd64 and arm64)" >&2
+            exit 1
+          fi
+          echo "Found $DIGEST_COUNT digest file(s)"
+          
           PRIMARY_TAG="${{ needs.prepare.outputs.primary_tag }}"
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
@@ -362,6 +373,17 @@ jobs:
       - name: Create manifest list and push (with GDAL)
         working-directory: /tmp/digests-gdal
         run: |
+          set -euo pipefail
+          
+          # Validate digest files exist
+          DIGEST_COUNT=$(ls -1 2>/dev/null | wc -l)
+          if [ "$DIGEST_COUNT" -eq 0 ]; then
+            echo "ERROR: No digest files found in /tmp/digests-gdal" >&2
+            echo "Expected digests from build jobs (amd64 and arm64)" >&2
+            exit 1
+          fi
+          echo "Found $DIGEST_COUNT digest file(s)"
+          
           PRIMARY_TAG="${{ needs.prepare.outputs.primary_tag }}-gdal"
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
