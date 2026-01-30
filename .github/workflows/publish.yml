@@ -54,6 +54,7 @@ jobs:
   prepare:
     name: Prepare Build Parameters
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.parse.outputs.version }}
       build_number: ${{ steps.parse.outputs.build_number }}
@@ -231,6 +232,7 @@ jobs:
     name: Build ${{ matrix.platform }} ${{ matrix.gdal && 'with GDAL' || 'without GDAL' }}
     runs-on: ${{ matrix.runner }}
     needs: prepare
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -312,6 +314,7 @@ jobs:
     needs: 
       - prepare
       - build
+    timeout-minutes: 15
     
     steps:
       - name: Download all digests (no GDAL)
@@ -417,6 +420,7 @@ jobs:
     needs: 
       - prepare
       - merge
+    timeout-minutes: 15
     if: false  # Disabled - testing complete
     
     steps:
