@@ -188,6 +188,16 @@ jobs:
           echo "  Additional Tags: $ADDITIONAL_TAGS"
           echo "  WAR URL: $WAR_URL"
           echo "============================================"
+      
+      - name: Validate GeoServer WAR URL
+        run: |
+          set -euo pipefail
+          echo "Validating GeoServer WAR URL: ${{ steps.parse.outputs.war_url }}"
+          if ! wget --spider "${{ steps.parse.outputs.war_url }}"; then
+            echo "ERROR: GeoServer WAR URL is not accessible: ${{ steps.parse.outputs.war_url }}" >&2
+            exit 1
+          fi
+          echo "GeoServer WAR URL is accessible"
 
   # ============================================================
   # JOB 2: Build images on native runners (matrix)
