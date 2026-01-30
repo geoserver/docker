@@ -17,7 +17,32 @@ on:
       - ci/publish-test
 
 env:
-  MAIN_VERSION: "3.0"  # Update when main branch changes
+  # ------------------------------------------------------------------
+  # GeoServer Version Series Configuration
+  # 
+  # These variables define the currently supported GeoServer release series.
+  # They MUST be updated when a new major or minor series is released (every 6 months).
+  #
+  # MAIN_VERSION: Current development series (main branch, experimental)
+  # STABLE_VERSION: Current stable release series (recommended for production)
+  # MAINTENANCE_VERSION: Previous stable series (receives critical fixes only)
+  #
+  # These values determine:
+  # - Docker image tags (e.g., "nightly", "stable-latest", "maintenance-latest")
+  # - Base Tomcat/JDK images for each series
+  # - Download URLs for WAR files and plugins
+  # - Git branch mappings for nightly builds
+  #
+  # When a new series is released (e.g., 3.1 becomes main):
+  # 1. Update MAIN_VERSION to the new series (e.g., "3.1")
+  # 2. Update STABLE_VERSION to the previous main (e.g., "3.0")
+  # 3. Update MAINTENANCE_VERSION to the previous stable (e.g., "2.28")
+  # 4. Update base image selection logic if JDK requirements change (line 89)
+  #
+  # WARNING: Incorrect values will cause images to be tagged incorrectly,
+  # use wrong base images, and download from incorrect plugin URLs.
+  # ------------------------------------------------------------------
+  MAIN_VERSION: "3.0"
   STABLE_VERSION: "2.28"
   MAINTENANCE_VERSION: "2.27"
   DOCKER_REPO: "petersmythe/geoserver-test"  # Change to docker.osgeo.org/geoserver for production
