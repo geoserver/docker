@@ -6,12 +6,14 @@ normalize_url() {
   echo "${1%/}"
 }
 
-# If GEOSERVER_VERSION is not set, try to infer it from the plugin URLs
-# e.g. https://build.geoserver.org/geoserver/<branch>/ext-latest/ -> <branch>
+# Version inference: Extract GeoServer version from plugin URLs if not explicitly set
+# This handles cases where GEOSERVER_VERSION is not provided as a build arg
 if [ -z "${GEOSERVER_VERSION}" ]; then
+  # Try extracting version from STABLE_PLUGIN_URL (e.g., .../geoserver/2.28.x/ext-latest/ -> 2.28.x)
   if [ -n "${STABLE_PLUGIN_URL}" ]; then
     VERSION=$(echo "${STABLE_PLUGIN_URL}" | sed -n 's#.*/geoserver/\([^/]*\)/.*#\1#p')
   fi
+  # Fallback to COMMUNITY_PLUGIN_URL if stable URL didn't yield a version
   if [ -z "${VERSION}" ] && [ -n "${COMMUNITY_PLUGIN_URL}" ]; then
     VERSION=$(echo "${COMMUNITY_PLUGIN_URL}" | sed -n 's#.*/geoserver/\([^/]*\)/.*#\1#p')
   fi
@@ -26,7 +28,7 @@ fi
 function download_extension() {
   URL=$1
   EXTENSION=$2
-  # Escape EXTENSION for safe use inside sed regular expressions
+  # Escape special regex characters in extension name for safe use in sed patterns
   EXTENSION_REGEX_ESCAPED=$(printf '%s\n' "${EXTENSION}" | sed 's/[][\\.^$*+?{}|()]/\\&/g')
   DOWNLOAD_DIR="${ADDITIONAL_LIBS_DIR%/}/"
   DOWNLOAD_FILE="${DOWNLOAD_DIR}geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
@@ -34,12 +36,14 @@ function download_extension() {
   if [ -e "$DOWNLOAD_FILE" ]; then
       echo "$DOWNLOAD_FILE already exists. Skipping download."
   else
+    # Try downloading from expected URL first
     if curl --output /dev/null --silent --head --fail "${URL}"; then
         echo -e "\nDownloading ${EXTENSION} extension from ${URL} to ${DOWNLOAD_FILE}"
         wget --progress=bar:force:noscroll -c "${URL}" -O "${DOWNLOAD_FILE}"
     else
         echo "URL does not exist: ${URL}"
-        # Try to discover an actual plugin file at the base URL and use it
+        # Fallback: scrape directory listing to discover actual filename
+        # This handles cases where version format in filename differs from expected
         BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
         if [ -n "${BASE_URL}" ]; then
           echo "Attempting to discover plugin filename from ${BASE_URL}/"
@@ -47,13 +51,13 @@ function download_extension() {
           if [ -z "${LISTING}" ]; then
             echo "Unable to retrieve directory listing from ${BASE_URL}/; skipping automatic plugin discovery."
           else
-            # flatten and extract the href value for the matching plugin file
+            # Parse HTML to extract href matching the extension plugin pattern
             LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
             FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip\)".*/\1/p' | head -n 1 || true)
             
             # Basic sanity checks before using the discovered value
             if [ -n "${FILE}" ]; then
-              # Reject absolute URLs or paths with slashes (we only expect a simple filename)
+              # Security: reject absolute URLs or paths (only accept simple filenames)
               if echo "${FILE}" | grep -qE '://' || echo "${FILE}" | grep -q '/'; then
                 echo "Discovered candidate '${FILE}' is not a simple filename; skipping."
                 FILE=""
@@ -63,7 +67,7 @@ function download_extension() {
             if [ -n "${FILE}" ]; then
               # Ensure we only have a bare filename
               FILE=$(basename "${FILE}")
-              # Validate filename against expected pattern: geoserver-<version>-<extension>-plugin.zip
+              # Validate filename matches expected pattern: geoserver-<version>-<extension>-plugin.zip
               if ! echo "${FILE}" | grep -qE '^geoserver-[^-][^/]*-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip$'; then
                 echo "Discovered candidate filename '${FILE}' does not match expected pattern; skipping."
                 FILE=""
@@ -73,6 +77,7 @@ function download_extension() {
             if [ -n "${FILE}" ]; then
               echo "Found candidate file: ${FILE}"
               NEW_URL="${BASE_URL}/${FILE}"
+              # Extract version from discovered filename if GEOSERVER_VERSION is not yet set
               VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
               if [ -n "${VERSION}" ] && [ -z "${GEOSERVER_VERSION}" ]; then
                 GEOSERVER_VERSION="${VERSION}"
@@ -120,7 +125,7 @@ echo "Starting installation of extensions"
 for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
   EXTENSION=$(echo "${EXTENSION}" | xargs)
   [ -z "$EXTENSION" ] && continue
-  # find any downloaded plugin matching the extension name (handles discovered filenames)
+  # Find downloaded plugin (handles both expected and discovered filenames)
   ADDITIONAL_LIB=$(ls -1 "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-${EXTENSION}-plugin.zip 2>/dev/null | head -n 1 || true)
   [ -e "$ADDITIONAL_LIB" ] || continue
 
