@@ -74,7 +74,7 @@ function download_extension() {
               echo "Found candidate file: ${FILE}"
               NEW_URL="${BASE_URL}/${FILE}"
               VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
-              if [ -n "${VERSION}" ]; then
+              if [ -n "${VERSION}" ] && [ -z "${GEOSERVER_VERSION}" ]; then
                 GEOSERVER_VERSION="${VERSION}"
                 echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
               fi
