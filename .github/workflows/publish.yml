@@ -154,21 +154,20 @@ jobs:
             ADDITIONAL_TAGS="${MAJOR}.${MINOR}-latest"
           fi
           
-          # Add semantic tags for main/stable/maintenance releases
-          if [[ "$VERSION" == "${MAIN_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
-            ADDITIONAL_TAGS="$ADDITIONAL_TAGS"
-          elif [[ "$VERSION" == "${STABLE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
+          # Add semantic tags for stable/maintenance releases only
+          # (main releases get x.y-latest but no semantic tag since they're experimental)
+          if [[ "$VERSION" == "${STABLE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-latest"
           elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-latest"
           fi
           
           # Add nightly tags for snapshot builds
-          if [[ "$VERSION" == "${MAIN_VERSION}-SNAPSHOT" ]]; then
-            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly,latest"
-          elif [[ "$VERSION" == "${STABLE_VERSION}-SNAPSHOT" ]]; then
+          if [[ "$VERSION" == "${MAIN_VERSION}."*"-SNAPSHOT" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly"
+          elif [[ "$VERSION" == "${STABLE_VERSION}."*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-nightly"
-          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}-SNAPSHOT" ]]; then
+          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-nightly"
           fi
           
@@ -359,7 +358,7 @@ jobs:
     needs: 
       - prepare
       - merge
-    if: true  # Enabled for testing multi-arch manifest copy
+    if: false  # Disabled - testing complete
     
     steps:
       - name: Set up Docker Buildx
