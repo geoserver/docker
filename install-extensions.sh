@@ -43,25 +43,47 @@ function download_extension() {
         BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
         if [ -n "${BASE_URL}" ]; then
           echo "Attempting to discover plugin filename from ${BASE_URL}/"
-          LISTING=$(curl -s "${BASE_URL}/" || true)
-          # flatten and extract the href value for the matching plugin file
-          LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
-          FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip\)".*/\1/p' | head -n 1 || true)
-          # ensure we only have a bare filename
-          FILE=$(basename "${FILE}")
-          if [ -n "${FILE}" ]; then
-            echo "Found candidate file: ${FILE}"
-            NEW_URL="${BASE_URL}/${FILE}"
-            VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
-            if [ -n "${VERSION}" ]; then
-              GEOSERVER_VERSION="${VERSION}"
-              echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
-            fi
-            DOWNLOAD_FILE="${DOWNLOAD_DIR}${FILE}"
-            echo -e "\nDownloading ${EXTENSION} extension from ${NEW_URL} to ${DOWNLOAD_FILE}"
-            wget --progress=bar:force:noscroll -c --no-check-certificate "${NEW_URL}" -O "${DOWNLOAD_FILE}"
+          LISTING=$(curl -fsS "${BASE_URL}/" 2>/dev/null || true)
+          if [ -z "${LISTING}" ]; then
+            echo "Unable to retrieve directory listing from ${BASE_URL}/; skipping automatic plugin discovery."
           else
-            echo "No matching plugin found at ${BASE_URL}/"
+            # flatten and extract the href value for the matching plugin file
+            LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
+            FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip\)".*/\1/p' | head -n 1 || true)
+            
+            # Basic sanity checks before using the discovered value
+            if [ -n "${FILE}" ]; then
+              # Reject absolute URLs or paths with slashes (we only expect a simple filename)
+              if echo "${FILE}" | grep -qE '://' || echo "${FILE}" | grep -q '/'; then
+                echo "Discovered candidate '${FILE}' is not a simple filename; skipping."
+                FILE=""
+              fi
+            fi
+            
+            if [ -n "${FILE}" ]; then
+              # Ensure we only have a bare filename
+              FILE=$(basename "${FILE}")
+              # Validate filename against expected pattern: geoserver-<version>-<extension>-plugin.zip
+              if ! echo "${FILE}" | grep -qE '^geoserver-[^-][^/]*-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip$'; then
+                echo "Discovered candidate filename '${FILE}' does not match expected pattern; skipping."
+                FILE=""
+              fi
+            fi
+            
+            if [ -n "${FILE}" ]; then
+              echo "Found candidate file: ${FILE}"
+              NEW_URL="${BASE_URL}/${FILE}"
+              VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
+              if [ -n "${VERSION}" ]; then
+                GEOSERVER_VERSION="${VERSION}"
+                echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
+              fi
+              DOWNLOAD_FILE="${DOWNLOAD_DIR}${FILE}"
+              echo -e "\nDownloading ${EXTENSION} extension from ${NEW_URL} to ${DOWNLOAD_FILE}"
+              wget --progress=bar:force:noscroll -c --no-check-certificate "${NEW_URL}" -O "${DOWNLOAD_FILE}"
+            else
+              echo "No matching plugin found at ${BASE_URL}/"
+            fi
           fi
         fi
     fi
