@@ -47,6 +47,8 @@ jobs:
       - name: Parse Version and Determine Build Parameters
         id: parse
         run: |
+          set -euo pipefail
+          
           VERSION="${{ inputs.version }}"
           BUILD="${{ inputs.build_number }}"
 
