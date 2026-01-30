@@ -125,6 +125,11 @@ echo "Starting installation of extensions"
 for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
   EXTENSION=$(echo "${EXTENSION}" | xargs)
   [ -z "$EXTENSION" ] && continue
+  # Validate extension name contains only safe characters (lowercase letters, numbers, hyphens, underscores)
+  if ! [[ "$EXTENSION" =~ ^[a-z0-9_-]+$ ]]; then
+    echo "WARNING: Skipping invalid extension name: ${EXTENSION}" >&2
+    continue
+  fi
   # Find downloaded plugin (handles both expected and discovered filenames)
   ADDITIONAL_LIB=$(ls -1 "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-${EXTENSION}-plugin.zip 2>/dev/null | head -n 1 || true)
   [ -e "$ADDITIONAL_LIB" ] || continue
