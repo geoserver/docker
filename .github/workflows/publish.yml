@@ -16,6 +16,10 @@ on:
     branches:
       - ci/publish-test
 
+concurrency:
+  group: publish-${{ github.event.inputs.version || 'push-test' }}
+  cancel-in-progress: true
+
 env:
   # ------------------------------------------------------------------
   # GeoServer Version Series Configuration
