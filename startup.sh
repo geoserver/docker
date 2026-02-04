@@ -161,6 +161,21 @@ if [ "${CORS_ENABLED}" = "true" ]; then
   fi
 fi
 
+# if GEOSERVER_CSRF_WHITELIST is set, this will add the the context param to the end of the web.xml
+# (this will only happen if the context param has not yet been added before)
+if [ -n "${GEOSERVER_CSRF_WHITELIST}" ]; then
+  if ! grep -q CsrfWhitelistByStartupScript "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
+    echo "Enable CSRF Whitelist for $CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+
+    sed -i "\:</web-app>:i\\
+    <!-- CsrfWhitelistByStartupScript -->\n\
+    <context-param>\n\
+      <param-name>GEOSERVER_CSRF_WHITELIST</param-name>\n\
+      <param-value>${GEOSERVER_CSRF_WHITELIST}</param-value>\n\
+    </context-param>\n" "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml";
+  fi
+fi
+
 if [ "${POSTGRES_JNDI_ENABLED}" = "true" ]; then
   # Use a custom "context.xml" if the user mounted one into the container
   copy_custom_config "context.xml"
