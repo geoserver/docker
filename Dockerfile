@@ -95,7 +95,7 @@ RUN if test "${BUILD_GDAL}" = "true"; then \
         && rm /build${INSTALL_PREFIX}/lib/libproj.*  \
         && ${GCC_ARCH}-linux-gnu-strip -s /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
         && for i in /build${INSTALL_PREFIX}/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
-        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build/${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
         && for i in /build${INSTALL_PREFIX}/bin/*; do patchelf --replace-needed libproj.so.${PROJ_SO_FIRST} libinternalproj.so.${PROJ_SO_FIRST} $i; done \
     fi
 
@@ -312,7 +312,7 @@ COPY config $CONFIG_DIR
 # * Alter the advertised server.info String (2.1 - 2.3)
 RUN cd $CATALINA_HOME/lib \
     && unzip catalina.jar org/apache/catalina/util/ServerInfo.properties \
-    && sed -i 's/Apache Tomcat\/"${TOMCAT_VERSION}"'/i_am_a_teapot/g' org/apache/catalina/util/ServerInfo.properties \
+    && sed -i 's/Apache Tomcat\/'"${TOMCAT_VERSION}"'/i_am_a_teapot/g' org/apache/catalina/util/ServerInfo.properties \
     && sed -i 's/'"${TOMCAT_VERSION}"'/x.y.z/g' org/apache/catalina/util/ServerInfo.properties \
     && sed -i 's/^server.built=.*/server.built=/g' org/apache/catalina/util/ServerInfo.properties \
     && zip -u catalina.jar org/apache/catalina/util/ServerInfo.properties \
