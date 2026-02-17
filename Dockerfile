@@ -95,7 +95,7 @@ RUN if test "${BUILD_GDAL}" = "true"; then \
         && rm /build${INSTALL_PREFIX}/lib/libproj.*  \
         && ${GCC_ARCH}-linux-gnu-strip -s /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
         && for i in /build${INSTALL_PREFIX}/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
-        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
+        && patchelf --set-soname libinternalproj.so.${PROJ_SO_FIRST} /build/${INSTALL_PREFIX}/lib/libinternalproj.so.${PROJ_SO} \
         && for i in /build${INSTALL_PREFIX}/bin/*; do patchelf --replace-needed libproj.so.${PROJ_SO_FIRST} libinternalproj.so.${PROJ_SO_FIRST} $i; done \
     fi
 
@@ -180,7 +180,7 @@ ENV CONFIG_DIR=/opt/config
 ENV CONFIG_OVERRIDES_DIR=/opt/config_overrides
 ENV CORS_ALLOWED_HEADERS=Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers
 ENV CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,HEAD,OPTIONS
-ENV CORS_ALLOWED_ORIGINS=* 
+ENV CORS_ALLOWED_ORIGINS=*
 ENV CORS_ALLOW_CREDENTIALS=false
 ENV CORS_ENABLED=false
 ENV JSONP_ENABLED=false
@@ -225,6 +225,7 @@ ENV CATALINA_OPTS="\$EXTRA_JAVA_OPTS \
     --add-opens=java.desktop/java.awt.image=ALL-UNNAMED \
     --add-opens=java.desktop/javax.imageio.stream=ALL-UNNAMED \
     --add-opens=java.desktop/javax.imageio=ALL-UNNAMED \
+    --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED \
     --add-opens=java.naming/com.sun.jndi.ldap=ALL-UNNAMED \
     --add-opens=java.desktop/sun.java2d.pipe=ALL-UNNAMED \
     -Djava.awt.headless=true -server \
@@ -296,7 +297,7 @@ RUN set -eux \
     && echo "Installing GeoServer $GS_VERSION $GS_BUILD" \
     && mv /tmp/geoserver $CATALINA_HOME/webapps/geoserver \
     && ([ -e $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar ] && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar || true) \
-    && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/ \
+    && ([ -e $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar ] && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/ || true) \
     && mkdir -p $GEOSERVER_DATA_DIR
 
 # Copy data and additional libs / fonts
