@@ -296,8 +296,8 @@ RUN set -eux \
     && rm geoserver.zip \
     && echo "Installing GeoServer $GS_VERSION $GS_BUILD" \
     && mv /tmp/geoserver $CATALINA_HOME/webapps/geoserver \
-    && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
-    && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/ \
+    && ([ -e $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar ] && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar || true) \
+    && ([ -e $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar ] && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/ || true) \
     && mkdir -p $GEOSERVER_DATA_DIR
 
 # Copy data and additional libs / fonts

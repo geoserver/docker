@@ -1,0 +1,528 @@
+name: Build and Publish Multi-Arch GeoServer Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'GeoServer version (e.g., 2.28.1, 2.27-SNAPSHOT, 3.0-RC)'
+        required: true
+        type: string
+      build_number:
+        description: 'Build number (optional, defaults to "github")'
+        required: false
+        type: string
+        default: 'github'
+  push:
+    branches:
+      - ci/publish-test
+
+concurrency:
+  group: publish-${{ github.event.inputs.version || 'push-test' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  # ------------------------------------------------------------------
+  # GeoServer Version Series Configuration
+  # 
+  # These variables define the currently supported GeoServer release series.
+  # They MUST be updated when a new major or minor series is released (every 6 months).
+  #
+  # MAIN_VERSION: Current development series (main branch, experimental)
+  # STABLE_VERSION: Current stable release series (recommended for production)
+  # MAINTENANCE_VERSION: Previous stable series (receives critical fixes only)
+  #
+  # These values determine:
+  # - Docker image tags (e.g., "nightly", "stable-latest", "maintenance-latest")
+  # - Base Tomcat/JDK images for each series
+  # - Download URLs for WAR files and plugins
+  # - Git branch mappings for nightly builds
+  #
+  # When a new series is released (e.g., 3.1 becomes main):
+  # 1. Update MAIN_VERSION to the new series (e.g., "3.1")
+  # 2. Update STABLE_VERSION to the previous main (e.g., "3.0")
+  # 3. Update MAINTENANCE_VERSION to the previous stable (e.g., "2.28")
+  # 4. Update base image selection logic if JDK requirements change (line 89)
+  #
+  # WARNING: Incorrect values will cause images to be tagged incorrectly,
+  # use wrong base images, and download from incorrect plugin URLs.
+  # ------------------------------------------------------------------
+  MAIN_VERSION: "3.0"
+  STABLE_VERSION: "2.28"
+  MAINTENANCE_VERSION: "2.27"
+  DOCKER_REPO: "petersmythe/geoserver-test"  # Change to docker.osgeo.org/geoserver for production
+
+jobs:
+  # ============================================================
+  # JOB 1: Prepare build parameters
+  # ============================================================
+  prepare:
+    name: Prepare Build Parameters
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      build_number: ${{ steps.parse.outputs.build_number }}
+      major: ${{ steps.parse.outputs.major }}
+      minor: ${{ steps.parse.outputs.minor }}
+      base_image: ${{ steps.parse.outputs.base_image }}
+      branch: ${{ steps.parse.outputs.branch }}
+      is_nightly: ${{ steps.parse.outputs.is_nightly }}
+      war_url: ${{ steps.parse.outputs.war_url }}
+      stable_plugin_url: ${{ steps.parse.outputs.stable_plugin_url }}
+      community_plugin_url: ${{ steps.parse.outputs.community_plugin_url }}
+      primary_tag: ${{ steps.parse.outputs.primary_tag }}
+      additional_tags: ${{ steps.parse.outputs.additional_tags }}
+      
+    steps:
+      - name: Parse Version and Determine Build Parameters
+        id: parse
+        run: |
+          set -euo pipefail
+          
+          VERSION="${{ inputs.version }}"
+          BUILD="${{ inputs.build_number }}"
+
+          # If triggered by a push (test), allow a sensible default so this can be run without workflow_dispatch inputs
+          if [ -z "$VERSION" ] && [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            VERSION="3.0-SNAPSHOT"
+            BUILD="${GITHUB_RUN_NUMBER:-github}"
+            echo "No version input (push trigger). Falling back to VERSION=$VERSION BUILD=$BUILD"
+          fi
+          
+          # If BUILD is empty, use a default
+          if [ -z "$BUILD" ]; then
+            BUILD="${GITHUB_RUN_NUMBER:-github}"
+            echo "Build number not provided. Using BUILD=$BUILD"
+          fi
+          
+          # Output version and build number for use in other jobs
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD" >> $GITHUB_OUTPUT
+          
+          echo "Parsing version: $VERSION"
+          
+          # Extract major.minor version
+          if [[ $VERSION =~ ^([0-9]+)\.([0-9]+) ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            echo "major=$MAJOR" >> $GITHUB_OUTPUT
+            echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          else
+            echo "ERROR: Unable to parse version $VERSION"
+            exit 1
+          fi
+          
+          # Determine base image based on version
+          if [[ "$VERSION" == "3"* ]]; then
+            BASE_IMAGE="tomcat:11.0-jdk21-temurin-noble"
+          elif [[ "$VERSION" == "2.28"* ]]; then
+            BASE_IMAGE="tomcat:9.0-jdk21-temurin-noble"
+          elif [[ "$VERSION" == "2.27"* ]] || [[ "$VERSION" == "2.26"* ]]; then
+            BASE_IMAGE="tomcat:9.0-jdk17-temurin-noble"
+          else
+            BASE_IMAGE="tomcat:9.0-jdk11-temurin-noble"
+          fi
+          echo "base_image=$BASE_IMAGE" >> $GITHUB_OUTPUT
+          
+          # Determine branch and tag based on version pattern
+          if [[ "$VERSION" == *"-M"* ]]; then
+            # Milestone release (e.g., 2.28-M0)
+            BRANCH="$VERSION"
+            PRIMARY_TAG="$VERSION"
+            IS_NIGHTLY="true"
+          elif [[ "$VERSION" == *"-RC"* ]]; then
+            # Release candidate (e.g., 2.28-RC)
+            BRANCH="$VERSION"
+            PRIMARY_TAG="$VERSION"
+            IS_NIGHTLY="true"
+          elif [[ "$VERSION" == "${{ env.MAIN_VERSION }}"* ]]; then
+            # Main branch (e.g., 3.0-SNAPSHOT or 3.0.0)
+            if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
+              BRANCH="main"
+              PRIMARY_TAG="${{ env.MAIN_VERSION }}.x"
+              IS_NIGHTLY="true"
+            else
+              BRANCH="main"
+              PRIMARY_TAG="$VERSION"
+              IS_NIGHTLY="false"
+            fi
+          else
+            # Stable or maintenance branch
+            if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
+              BRANCH="${MAJOR}.${MINOR}.x"
+              PRIMARY_TAG="${MAJOR}.${MINOR}.x"
+              IS_NIGHTLY="true"
+            else
+              BRANCH="${MAJOR}.${MINOR}.x"
+              PRIMARY_TAG="$VERSION"
+              IS_NIGHTLY="false"
+            fi
+          fi
+          
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "is_nightly=$IS_NIGHTLY" >> $GITHUB_OUTPUT
+          echo "primary_tag=$PRIMARY_TAG" >> $GITHUB_OUTPUT
+          
+          # Determine download URLs
+          if [[ "$IS_NIGHTLY" == "true" ]]; then
+            WAR_URL="https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
+            STABLE_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/ext-latest"
+            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/community-latest"
+          else
+            WAR_URL="https://downloads.sourceforge.net/project/geoserver/GeoServer/$VERSION/geoserver-$VERSION-war.zip"
+            STABLE_PLUGIN_URL="https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/extensions"
+            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/${BRANCH}/community-latest"
+          fi
+          
+          echo "war_url=$WAR_URL" >> $GITHUB_OUTPUT
+          echo "stable_plugin_url=$STABLE_PLUGIN_URL" >> $GITHUB_OUTPUT
+          echo "community_plugin_url=$COMMUNITY_PLUGIN_URL" >> $GITHUB_OUTPUT
+          
+          # Determine additional tags based on version pattern
+          ADDITIONAL_TAGS=""
+          
+          # Add series-latest tag (e.g., 2.28-latest)
+          if [[ "$IS_NIGHTLY" == "false" ]]; then
+            ADDITIONAL_TAGS="${MAJOR}.${MINOR}-latest"
+          fi
+          
+          # Add semantic tags for stable/maintenance releases only
+          # (main releases get x.y-latest but no semantic tag since they're experimental)
+          if [[ "$VERSION" == "${STABLE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-latest"
+          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-latest"
+          fi
+          
+          # Add nightly tags for snapshot builds
+          if [[ "$VERSION" == "${MAIN_VERSION}."*"-SNAPSHOT" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly"
+          elif [[ "$VERSION" == "${STABLE_VERSION}."*"-SNAPSHOT" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-nightly"
+          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."*"-SNAPSHOT" ]]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-nightly"
+          fi
+          
+          # Clean up leading comma
+          ADDITIONAL_TAGS=$(echo "$ADDITIONAL_TAGS" | sed 's/^,//')
+          
+          echo "additional_tags=$ADDITIONAL_TAGS" >> $GITHUB_OUTPUT
+          
+          echo "============================================"
+          echo "Build Configuration:"
+          echo "  Version: $VERSION"
+          echo "  Branch: $BRANCH"
+          echo "  Base Image: $BASE_IMAGE"
+          echo "  Is Nightly: $IS_NIGHTLY"
+          echo "  Primary Tag: $PRIMARY_TAG"
+          echo "  Additional Tags: $ADDITIONAL_TAGS"
+          echo "  WAR URL: $WAR_URL"
+          echo "============================================"
+      
+      - name: Validate GeoServer WAR URL
+        run: |
+          set -euo pipefail
+          echo "Validating GeoServer WAR URL: ${{ steps.parse.outputs.war_url }}"
+          if ! wget --spider "${{ steps.parse.outputs.war_url }}"; then
+            echo "ERROR: GeoServer WAR URL is not accessible: ${{ steps.parse.outputs.war_url }}" >&2
+            exit 1
+          fi
+          echo "GeoServer WAR URL is accessible"
+
+  # ============================================================
+  # JOB 2: Build images on native runners (matrix)
+  # ============================================================
+  build:
+    name: Build ${{ matrix.platform }} ${{ matrix.gdal && 'with GDAL' || 'without GDAL' }}
+    runs-on: ${{ matrix.runner }}
+    needs: prepare
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # AMD64 builds
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+            gdal: false
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+            gdal: true
+          # ARM64 builds
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            gdal: false
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            gdal: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Download GeoServer WAR
+        run: |
+          mkdir -p geoserver
+          cd geoserver
+          wget -c "${{ needs.prepare.outputs.war_url }}"
+      
+      - name: Build and export digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            GS_VERSION=${{ needs.prepare.outputs.version }}
+            GS_BUILD=${{ needs.prepare.outputs.build_number }}
+            BUILD_GDAL=${{ matrix.gdal }}
+            GEOSERVER_BASE_IMAGE=${{ needs.prepare.outputs.base_image }}
+            WAR_ZIP_URL=${{ needs.prepare.outputs.war_url }}
+            STABLE_PLUGIN_URL=${{ needs.prepare.outputs.stable_plugin_url }}
+            COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }}
+          cache-from: type=gha,scope=build-${{ matrix.arch }}-${{ matrix.gdal && 'gdal' || 'nogdal' }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}-${{ matrix.gdal && 'gdal' || 'nogdal' }}
+          provenance: true
+          sbom: true
+          outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
+      
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}-${{ matrix.gdal && 'gdal' || 'nogdal' }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # ============================================================
+  # JOB 3: Merge digests into multi-arch manifests
+  # ============================================================
+  merge:
+    name: Create Multi-Arch Manifests
+    runs-on: ubuntu-latest
+    needs: 
+      - prepare
+      - build
+    timeout-minutes: 15
+    
+    steps:
+      - name: Download all digests (no GDAL)
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digests-*-nogdal
+          merge-multiple: true
+          path: /tmp/digests-nogdal
+      
+      - name: Download all digests (with GDAL)
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digests-*-gdal
+          merge-multiple: true
+          path: /tmp/digests-gdal
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Create manifest list and push (no GDAL)
+        working-directory: /tmp/digests-nogdal
+        run: |
+          set -euo pipefail
+          
+          # Validate digest files exist
+          DIGEST_COUNT=$(ls -1 2>/dev/null | wc -l)
+          if [ "$DIGEST_COUNT" -eq 0 ]; then
+            echo "ERROR: No digest files found in /tmp/digests-nogdal" >&2
+            echo "Expected digests from build jobs (amd64 and arm64)" >&2
+            exit 1
+          fi
+          echo "Found $DIGEST_COUNT digest file(s)"
+          
+          PRIMARY_TAG="${{ needs.prepare.outputs.primary_tag }}"
+          ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
+          
+          # Build tag list
+          TAGS="${{ env.DOCKER_REPO }}:$PRIMARY_TAG"
+          
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              TAGS="$TAGS ${{ env.DOCKER_REPO }}:$tag"
+            done
+          fi
+          
+          # Create manifest
+          docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
+            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
+          
+          echo "Created manifest for tags: $TAGS"
+      
+      - name: Create manifest list and push (with GDAL)
+        working-directory: /tmp/digests-gdal
+        run: |
+          set -euo pipefail
+          
+          # Validate digest files exist
+          DIGEST_COUNT=$(ls -1 2>/dev/null | wc -l)
+          if [ "$DIGEST_COUNT" -eq 0 ]; then
+            echo "ERROR: No digest files found in /tmp/digests-gdal" >&2
+            echo "Expected digests from build jobs (amd64 and arm64)" >&2
+            exit 1
+          fi
+          echo "Found $DIGEST_COUNT digest file(s)"
+          
+          PRIMARY_TAG="${{ needs.prepare.outputs.primary_tag }}-gdal"
+          ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
+          
+          # Build tag list with -gdal suffix
+          TAGS="${{ env.DOCKER_REPO }}:$PRIMARY_TAG"
+          
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              TAGS="$TAGS ${{ env.DOCKER_REPO }}:$tag-gdal"
+            done
+          fi
+          
+          # Create manifest
+          docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
+            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
+          
+          echo "Created manifest for tags: $TAGS"
+      
+      - name: Inspect manifests
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+      
+      - name: Generate Job Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## GeoServer Multi-Arch Build Summary
+          
+          ### Build Information
+          - **Version**: ${{ needs.prepare.outputs.version }}
+          - **Build Number**: ${{ needs.prepare.outputs.build_number }}
+          - **Base Image**: ${{ needs.prepare.outputs.base_image }}
+          - **Is Nightly**: ${{ needs.prepare.outputs.is_nightly }}
+          
+          ### Images Created
+          
+          #### Without GDAL
+          - Primary: [${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)
+          EOF
+          
+          # Add additional tags if present
+          ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              echo "- Additional: [${{ env.DOCKER_REPO }}:$tag](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          
+          #### With GDAL
+          - Primary: [${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)
+          EOF
+          
+          if [ -n "$ADDITIONAL_TAGS" ]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              echo "- Additional: [${{ env.DOCKER_REPO }}:$tag-gdal](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          
+          ### Architectures
+          - linux/amd64
+          - linux/arm64
+          
+          ### Pull Commands
+          ```bash
+          # Without GDAL
+          docker pull ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
+          
+          # With GDAL
+          docker pull ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+          ```
+          EOF
+
+  # ============================================================
+  # JOB 4: TEST - Copy multi-arch manifests (testing buildx imagetools)
+  # ============================================================
+  publish-osgeo:
+    name: Test Multi-Arch Manifest Copy
+    runs-on: ubuntu-latest
+    needs: 
+      - prepare
+      - merge
+    timeout-minutes: 15
+    if: false  # Disabled - testing complete
+    
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Test copying multi-arch manifests to alternate tags
+        run: |
+          # Test: Copy multi-arch manifest to alternate tag (simulates OSGeo publish)
+          # Using -test-copy suffix to avoid overwriting existing tags
+          docker buildx imagetools create \
+            -t ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-test-copy \
+            ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}
+          
+          # Copy multi-arch manifest for the GDAL variant
+          docker buildx imagetools create \
+            -t ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal-test-copy \
+            ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal
+          
+          echo "Successfully copied multi-arch manifests to test tags."
+          echo "Verify at: https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags"
+          
+          # Inspect to confirm multi-arch
+          echo ""
+          echo "Inspecting copied manifest (no GDAL):"
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-test-copy
+          
+          echo ""
+          echo "Inspecting copied manifest (with GDAL):"
+          docker buildx imagetools inspect ${{ env.DOCKER_REPO }}:${{ needs.prepare.outputs.primary_tag }}-gdal-test-copy

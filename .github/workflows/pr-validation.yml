@@ -1,20 +1,24 @@
-name: build
+name: Validate a PR on push to master
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - master
 
 jobs:
   build:
-    name: Build (${{ matrix.name }})
+    name: Build (${{ matrix.display_name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - build_gdal: false
-            name: default
           - build_gdal: true
-            name: gdal
+            name: with-gdal
+            display_name: "with GDAL"
+          - build_gdal: false
+            name: without-gdal
+            display_name: "without GDAL"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -40,7 +44,7 @@ jobs:
       # Integration Tests - Start container and perform basic health checks
       - name: Start GeoServer container
         run: |
-          if [[ "${{ matrix.name }}" == "gdal" ]]; then
+          if [[ "${{ matrix.build_gdal }}" == "true" ]]; then
             # Start GDAL image with extension installation
             docker run -d --name geoserver-test-${{ matrix.name }} \
               -p 8080:8080 \
@@ -115,7 +119,7 @@ jobs:
 
       - name: Test gdal specific functionality
         run: |
-          if [[ "${{ matrix.name }}" == "gdal" ]]; then
+          if [[ "${{ matrix.build_gdal }}" == "true" ]]; then
             echo "Testing GDAL-specific functionality..."
             # Check GDAL installation
             docker exec geoserver-test-${{ matrix.name }} which gdalinfo || echo "GDAL tools check"
