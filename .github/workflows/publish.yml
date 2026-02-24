@@ -408,18 +408,18 @@ jobs:
           ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
           
           # Build tag list with -gdal suffix
-          TAGS="${{ env.DOCKER_REPO }}:$PRIMARY_TAG"
+          TAGS="${{ env.PRIMARY_REGISTRY }}:$PRIMARY_TAG"
           
           if [ -n "$ADDITIONAL_TAGS" ]; then
             IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
             for tag in "${TAG_ARRAY[@]}"; do
-              TAGS="$TAGS ${{ env.DOCKER_REPO }}:$tag-gdal"
+              TAGS="$TAGS ${{ env.PRIMARY_REGISTRY }}:$tag-gdal"
             done
           fi
           
           # Create manifest
           docker buildx imagetools create $(printf -- '-t %s ' $TAGS) \
-            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
+            $(printf '${{ env.PRIMARY_REGISTRY }}@sha256:%s ' *)
           
           echo "Created manifest for tags: $TAGS"
       
