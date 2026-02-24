@@ -259,15 +259,15 @@ jobs:
             runner: ubuntu-latest
             arch: amd64
             gdal: true
-          # ARM64 builds (disabled - runner not available)
-          # - platform: linux/arm64
-          #   runner: ubuntu-24.04-arm
-          #   arch: arm64
-          #   gdal: false
-          # - platform: linux/arm64
-          #   runner: ubuntu-24.04-arm
-          #   arch: arm64
-          #   gdal: true
+          # ARM64 builds
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            gdal: false
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            gdal: true
     
     steps:
       - name: Checkout repository
