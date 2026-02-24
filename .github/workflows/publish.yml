@@ -58,7 +58,7 @@ env:
   # Primary registry: pushed to during build, receives personal account credentials
   PRIMARY_REGISTRY: "petersmythe/geoserver-test"
   # Secondary registry: mirrored after build, receives OSGeo credentials
-  SECONDARY_REGISTRY: "docker.osgeo.org/geoserver"
+  SECONDARY_REGISTRY: "geoserver-docker.osgeo.org/geoserver"
 
 jobs:
   # ============================================================
