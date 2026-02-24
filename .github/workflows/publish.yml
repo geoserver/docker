@@ -204,11 +204,11 @@ jobs:
           fi
           
           # Add nightly tags for snapshot builds
-          if [[ "$VERSION" == "${MAIN_VERSION}."*"-SNAPSHOT" ]]; then
+          if [[ "$VERSION" == "${MAIN_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly"
-          elif [[ "$VERSION" == "${STABLE_VERSION}."*"-SNAPSHOT" ]]; then
+          elif [[ "$VERSION" == "${STABLE_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-nightly"
-          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."*"-SNAPSHOT" ]]; then
+          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-nightly"
           fi
           
