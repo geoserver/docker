@@ -55,10 +55,10 @@ env:
   MAIN_VERSION: "3.0"
   STABLE_VERSION: "2.28"
   MAINTENANCE_VERSION: "2.27"
-  # Primary registry: pushed to during build, receives personal account credentials
-  PRIMARY_REGISTRY: "petersmythe/geoserver-test"
-  # Secondary registry: mirrored after build, receives OSGeo credentials
-  SECONDARY_REGISTRY: "geoserver-docker.osgeo.org/geoserver"
+  # Primary registry: pushed to during build, receives OSGeo credentials
+  PRIMARY_REGISTRY: "geoserver-docker.osgeo.org/geoserver"
+  # Secondary registry: mirrored after build, receives personal account credentials, for docker scout analysis
+  SECONDARY_REGISTRY: "petersmythe/geoserver-test"
 
 jobs:
   # ============================================================
