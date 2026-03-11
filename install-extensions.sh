@@ -54,7 +54,7 @@ function download_extension() {
           else
             # Parse HTML to extract href matching the extension plugin pattern
             LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
-            FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip\)".*/\1/p' | head -n 1 || true)
+            FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
             
             # Basic sanity checks before using the discovered value
             if [ -n "${FILE}" ]; then
