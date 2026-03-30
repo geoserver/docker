@@ -1,9 +1,9 @@
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.18_8-jdk-noble@sha256:f327660a29e6da7d86258ce6ffaf33451b7d9fa5e958b2e1e2da64a871122f47
+ARG BUILDER_BASE_IMAGE=eclipse-temurin:21-jdk-noble
 
 # For GeoServer 3.0.0 tomcat:11.0-jdk21-temurin-noble required
-ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.116-jdk17-temurin-noble@sha256:8ffb46723346c5bc7d4a5f56b9ee9295da3fac216a6de31d1c8cf07a0c8efe59
+ARG GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
 
-ARG GS_VERSION=2.28.2
+ARG GS_VERSION=3.0-SNAPSHOT
 ARG BUILD_GDAL=false
 ARG PROJ_VERSION=9.8.0
 ARG GDAL_VERSION=3.12.2
@@ -161,13 +161,16 @@ ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
 ARG ADDITIONAL_LIBS_PATH=./additional_libs/
 ARG WAR_PATH=./geoserver/
 ARG BUILD_GDAL
-ARG COMMUNITY_PLUGIN_URL=''
+# TODO GS3 revert to original value once GS3 is released
+ARG COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/
 ARG GS_VERSION
 ARG GS_BUILD=release
 ARG GS_DATA_PATH=./geoserver_data/
 ARG INSTALL_PREFIX
-ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
-ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
+ARG STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/
+# TODO GS3 revert to original value once GS3 is released
+ARG WAR_ZIP_URL=https://build.geoserver.org/geoserver/main/geoserver-main-latest-war.zip
+# TODO GS3 revert to original value once GS3 is released
 ARG WAR_ZIP_FILE=geoserver-${GS_VERSION}-war.zip
 
 # Environment variables
