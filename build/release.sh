@@ -22,13 +22,16 @@ function build_geoserver_image() {
     local BRANCH=$5
 
     if [ -n "$VERSION" ] && [ -n "$BUILD" ] && [ -n "$BUILD_GDAL" ] && [ -n "$TAG" ]; then
-      
+
       if [[ "$VERSION" == "3"* ]]; then
         GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
+        BUILDER_BASE_IMAGE=eclipse-temurin:21-jdk-noble
       elif [[ "$VERSION" == "2.28"* ]]; then	# removing trailing dot, as the check must support both 2.28.x and 2.28-SNAPSHOT
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk21-temurin-noble
+        BUILDER_BASE_IMAGE=eclipse-temurin:21-jdk-noble
       else
         GEOSERVER_BASE_IMAGE=tomcat:9.0-jdk17-temurin-noble
+        BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble
       fi
 
       if [ -n "$BRANCH" ]; then
@@ -44,6 +47,8 @@ function build_geoserver_image() {
             --build-arg GS_BUILD="$BUILD" \
             --build-arg BUILD_GDAL="$BUILD_GDAL" \
             --build-arg GEOSERVER_BASE_IMAGE="$GEOSERVER_BASE_IMAGE" \
+            --build-arg BUILDER_BASE_IMAGE="$BUILDER_BASE_IMAGE" \
+            --pull \
             -t "$TAG" .)
       elif [ -z "$BRANCH" ]; then
         # BRANCH is not set
@@ -133,7 +138,7 @@ if [[ $1 == *build* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
     echo "  downloading geoserver-$BRANCH-latest-war.zip"
     wget -c -q -P./geoserver/ \
-         "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip" 
+         "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
     echo
     build_geoserver_image $VERSION $BUILD "false" $TAG $BRANCH     # without gdal
     build_geoserver_image $VERSION $BUILD "true" $GDAL_TAG $BRANCH # with gdal
@@ -142,7 +147,7 @@ if [[ $1 == *build* ]]; then
     echo "  downloading geoserver-${VERSION}-war.zip"
     wget -c -q -P./geoserver/ \
          "https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/geoserver-${VERSION}-war.zip"
-    echo    
+    echo
     build_geoserver_image $VERSION $BUILD "false" $TAG   # without gdal
     build_geoserver_image $VERSION $BUILD "true" $GDAL_TAG # with gdal
   fi
