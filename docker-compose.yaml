@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   geoserver:
     build:
@@ -7,32 +7,61 @@ services:
         - GS_VERSION=2.28.2
     ports:
       - "80:8080"
+    env_file:
+      - .env
     environment:
-      - INSTALL_EXTENSIONS=true
-      - STABLE_EXTENSIONS=wps,csw,gwc-s3
-      - COMMUNITY_EXTENSIONS=cog-s3
-      - EXTRA_JAVA_OPTS=-Xms1G -Xmx2G
-      - CORS_ENABLED=true
-      - CORS_ALLOWED_METHODS=GET,POST,PUT,HEAD,OPTIONS
-      - POSTGRES_JNDI_ENABLED=true
-      - POSTGRES_HOST=postgis
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=geoserver
-      - POSTGRES_USERNAME=geoserver
-      - POSTGRES_PASSWORD=geoserver
-      - POSTGRES_JNDI_RESOURCE_NAME=jdbc/postgres
-      - RUN_UNPRIVILEGED=true
-      - RUN_WITH_USER_UID=1000 # you may change this to match your host user id
-      - RUN_WITH_USER_GID=1000 # you may change this to match your host group id
+      # ── GeoServer General ───────────────────────────────
+      - INSTALL_EXTENSIONS=${INSTALL_EXTENSIONS}
+      - STABLE_EXTENSIONS=${STABLE_EXTENSIONS}
+      - COMMUNITY_EXTENSIONS=${COMMUNITY_EXTENSIONS}
+      - EXTRA_JAVA_OPTS=${EXTRA_JAVA_OPTS}
 
-      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      # - AWS_REGION=${AWS_REGION:-us-east-1}
-      - S3_ALIAS=minio
-      - S3_ENDPOINT=${MINIO_ENDPOINT}
-      - S3_USER=${AWS_ACCESS_KEY_ID}
-      - S3_PASS=${AWS_SECRET_ACCESS_KEY}
-      
+      # ── CORS ────────────────────────────────────────────
+      - CORS_ENABLED=${CORS_ENABLED}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - CORS_ALLOWED_METHODS=${CORS_ALLOWED_METHODS}
+      - CORS_ALLOWED_HEADERS=${CORS_ALLOWED_HEADERS}
+      - CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS}
+
+      # ── PostgreSQL ───────────────────────────────────────
+      - POSTGRES_JNDI_ENABLED=${POSTGRES_JNDI_ENABLED}
+      - POSTGRES_JNDI_RESOURCE_NAME=${POSTGRES_JNDI_RESOURCE_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      # ── User/Permission ──────────────────────────────────
+      - RUN_UNPRIVILEGED=${RUN_UNPRIVILEGED}
+      - RUN_WITH_USER_UID=${RUN_WITH_USER_UID}
+      - RUN_WITH_USER_GID=${RUN_WITH_USER_GID}
+
+      # ── GeoServer S3 Plugin (MinIO) ──────────────────────
+      - S3_ALIAS=${S3_ALIAS}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - S3_USER=${S3_USER}
+      - S3_PASS=${S3_PASS}
+
+      # ── AWS SDK (MinIO endpoint override) ───────────────
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL}
+      - AWS_S3_ADDRESSING_STYLE=${AWS_S3_ADDRESSING_STYLE}
+      - AWS_HTTPS=${AWS_HTTPS}
+      - AWS_VIRTUAL_HOSTING=${AWS_VIRTUAL_HOSTING}
+
+      # ── imageio-ext COG S3 Range Reader ─────────────────
+      - IIO_S3_AWS_USER=${IIO_S3_AWS_USER}
+      - IIO_S3_AWS_PASSWORD=${IIO_S3_AWS_PASSWORD}
+      - IIO_S3_AWS_REGION=${IIO_S3_AWS_REGION}
+      - IIO_S3_AWS_ENDPOINT=${IIO_S3_AWS_ENDPOINT}
+      - IIO_S3_AWS_CORE_POOL_SIZE=${IIO_S3_AWS_CORE_POOL_SIZE}
+      - IIO_S3_AWS_MAX_POOL_SIZE=${IIO_S3_AWS_MAX_POOL_SIZE}
+      - IIO_S3_AWS_KEEP_ALIVE_TIME=${IIO_S3_AWS_KEEP_ALIVE_TIME}
+
     volumes:
       - ./geoserver_data:/opt/geoserver_data/:Z
       - ./additional_libs:/opt/additional_libs:Z # by mounting this we can install libs from host on startup
