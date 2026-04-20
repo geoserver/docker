@@ -8,10 +8,15 @@ on:
         required: true
         type: string
       build_number:
-        description: 'Build number (optional, defaults to "github")'
+        description: 'Jenkins build number for RC/milestone (e.g., 20). If provided for RC/milestone builds, fetches WAR from Jenkins artifacts and tags image as {version}-build{number}.'
         required: false
         type: string
-        default: 'github'
+        default: ''
+      jenkins_job:
+        description: 'Jenkins job name for RC/milestone WAR artifacts (e.g., geoserver-release-jdk17)'
+        required: false
+        type: string
+        default: 'geoserver-release-jdk17'
   push:
     branches:
       - ci/publish-test
@@ -90,23 +95,23 @@ jobs:
           
           VERSION="${{ inputs.version }}"
           BUILD="${{ inputs.build_number }}"
+          JENKINS_JOB="${{ inputs.jenkins_job }}"
 
           # If triggered by a push (test), allow a sensible default so this can be run without workflow_dispatch inputs
           if [ -z "$VERSION" ] && [ "${GITHUB_EVENT_NAME}" = "push" ]; then
             VERSION="3.0-SNAPSHOT"
-            BUILD="${GITHUB_RUN_NUMBER:-github}"
-            echo "No version input (push trigger). Falling back to VERSION=$VERSION BUILD=$BUILD"
+            BUILD=""
+            echo "No version input (push trigger). Falling back to VERSION=$VERSION"
           fi
           
-          # If BUILD is empty, use a default
-          if [ -z "$BUILD" ]; then
-            BUILD="${GITHUB_RUN_NUMBER:-github}"
-            echo "Build number not provided. Using BUILD=$BUILD"
+          # Default jenkins_job if not provided
+          if [ -z "$JENKINS_JOB" ]; then
+            JENKINS_JOB="geoserver-release-jdk17"
           fi
           
           # Output version and build number for use in other jobs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "build_number=$BUILD" >> $GITHUB_OUTPUT
+          echo "build_number=${BUILD:-github}" >> $GITHUB_OUTPUT
           
           echo "Parsing version: $VERSION"
           
@@ -134,16 +139,20 @@ jobs:
           echo "base_image=$BASE_IMAGE" >> $GITHUB_OUTPUT
           
           # Determine branch and tag based on version pattern
-          if [[ "$VERSION" == *"-M"* ]]; then
-            # Milestone release (e.g., 2.28-M0)
-            BRANCH="$VERSION"
-            PRIMARY_TAG="$VERSION"
-            IS_NIGHTLY="true"
-          elif [[ "$VERSION" == *"-RC"* ]]; then
-            # Release candidate (e.g., 2.28-RC)
-            BRANCH="$VERSION"
-            PRIMARY_TAG="$VERSION"
-            IS_NIGHTLY="true"
+          if [[ "$VERSION" == *"-M"* ]] || [[ "$VERSION" == *"-RC"* ]]; then
+            # Milestone or Release Candidate (e.g., 2.28-M0, 3.0-RC)
+            if [ -n "$BUILD" ]; then
+              # Pre-release build: Jenkins build number provided
+              # Tag includes build number to distinguish from the final RC/milestone tag
+              BRANCH="$VERSION"
+              PRIMARY_TAG="${VERSION}-build${BUILD}"
+              IS_NIGHTLY="true"
+            else
+              # Final release: no build number, WAR expected on SourceForge
+              BRANCH="$VERSION"
+              PRIMARY_TAG="$VERSION"
+              IS_NIGHTLY="false"
+            fi
           elif [[ "$VERSION" == "${{ env.MAIN_VERSION }}"* ]]; then
             # Main branch (e.g., 3.0-SNAPSHOT or 3.0.0)
             if [[ "$VERSION" == *"-SNAPSHOT"* ]]; then
@@ -173,7 +182,12 @@ jobs:
           echo "primary_tag=$PRIMARY_TAG" >> $GITHUB_OUTPUT
           
           # Determine download URLs
-          if [[ "$IS_NIGHTLY" == "true" ]]; then
+          if [[ ("$VERSION" == *"-M"* || "$VERSION" == *"-RC"*) && -n "$BUILD" ]]; then
+            # Pre-release RC/Milestone: fetch WAR from Jenkins artifacts
+            WAR_URL="https://build.geoserver.org/view/release/job/${JENKINS_JOB}/${BUILD}/artifact/distribution/${VERSION}/geoserver-${VERSION}-war.zip"
+            STABLE_PLUGIN_URL="https://build.geoserver.org/view/release/job/${JENKINS_JOB}/${BUILD}/artifact/distribution/${VERSION}/plugins"
+            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/${BRANCH}/community-latest"
+          elif [[ "$IS_NIGHTLY" == "true" ]]; then
             WAR_URL="https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
             STABLE_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/ext-latest"
             COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/community-latest"
