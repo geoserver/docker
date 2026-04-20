@@ -25,6 +25,15 @@ if [ -z "${GEOSERVER_VERSION}" ]; then
   fi
 fi
 
+# Cache for directory listings, keyed by base URL.
+# Avoids re-fetching the same listing for every community extension.
+declare -A _DIR_LISTING_CACHE
+
+# When the version in filenames differs from GEOSERVER_VERSION (e.g. 3.0-SNAPSHOT
+# vs 3.0-RC), this variable holds the resolved filename version so that subsequent
+# extensions can be downloaded directly without the fallback.
+_RESOLVED_FILENAME_VERSION=""
+
 function download_extension() {
   URL=$1
   EXTENSION=$2
@@ -35,41 +44,67 @@ function download_extension() {
 
   if [ -e "$DOWNLOAD_FILE" ]; then
       echo "$DOWNLOAD_FILE already exists. Skipping download."
+      return
+  fi
+
+  # If a previous fallback resolved a different filename version for this base URL,
+  # try that version first (avoids a guaranteed 404 + directory scrape per extension).
+  if [ -n "${_RESOLVED_FILENAME_VERSION}" ] && [ "${_RESOLVED_FILENAME_VERSION}" != "${GEOSERVER_VERSION}" ]; then
+    BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
+    ALT_FILE="geoserver-${_RESOLVED_FILENAME_VERSION}-${EXTENSION}-plugin.zip"
+    ALT_URL="${BASE_URL}/${ALT_FILE}"
+    ALT_DOWNLOAD_FILE="${DOWNLOAD_DIR}${ALT_FILE}"
+    if [ -e "$ALT_DOWNLOAD_FILE" ]; then
+      echo "$ALT_DOWNLOAD_FILE already exists. Skipping download."
+      return
+    fi
+    if curl --output /dev/null --silent --head --fail "${ALT_URL}"; then
+      echo -e "\nDownloading ${EXTENSION} extension from ${ALT_URL} to ${ALT_DOWNLOAD_FILE}"
+      wget --progress=bar:force:noscroll --tries=3 -c "${ALT_URL}" -O "${ALT_DOWNLOAD_FILE}"
+      return
+    fi
+  fi
+
+  # Try downloading from expected URL first
+  if curl --output /dev/null --silent --head --fail "${URL}"; then
+      echo -e "\nDownloading ${EXTENSION} extension from ${URL} to ${DOWNLOAD_FILE}"
+      wget --progress=bar:force:noscroll --tries=3 -c "${URL}" -O "${DOWNLOAD_FILE}"
   else
-    # Try downloading from expected URL first
-    if curl --output /dev/null --silent --head --fail "${URL}"; then
-        echo -e "\nDownloading ${EXTENSION} extension from ${URL} to ${DOWNLOAD_FILE}"
-        wget --progress=bar:force:noscroll --tries=3 -c "${URL}" -O "${DOWNLOAD_FILE}"
-    else
-        echo "URL does not exist: ${URL}"
-        # Fallback: scrape directory listing to discover actual filename
-        # This handles cases where version format in filename differs from expected
-        BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
-        if [ -n "${BASE_URL}" ]; then
-          echo "Attempting to discover plugin filename from ${BASE_URL}/"
+      echo "URL does not exist: ${URL}"
+      # Fallback: scrape directory listing to discover actual filename
+      # This handles cases where version format in filename differs from expected
+      BASE_URL="${URL%/geoserver-*-${EXTENSION}-plugin.zip}"
+      if [ -n "${BASE_URL}" ]; then
+        # Use cached directory listing if available
+        if [ -n "${_DIR_LISTING_CACHE[$BASE_URL]+_}" ]; then
+          LISTING="${_DIR_LISTING_CACHE[$BASE_URL]}"
+        else
+          echo "Fetching directory listing from ${BASE_URL}/ (will be cached for remaining extensions)"
           # Curl failure is tolerated (|| true) since directory scraping is optional fallback
           LISTING=$(curl -fsS "${BASE_URL}/" 2>/dev/null || true)
-          if [ -z "${LISTING}" ]; then
-            echo "Unable to retrieve directory listing from ${BASE_URL}/; skipping automatic plugin discovery."
-          else
-            # Parse HTML to extract href matching the extension plugin pattern
-            LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
-            FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
-            
-            # Basic sanity checks before using the discovered value
-            if [ -n "${FILE}" ]; then
-              # Security: reject absolute URLs or paths (only accept simple filenames)
-              if echo "${FILE}" | grep -qE '://' || echo "${FILE}" | grep -q '/'; then
-                echo "Discovered candidate '${FILE}' is not a simple filename; skipping."
-                FILE=""
-              fi
+          _DIR_LISTING_CACHE[$BASE_URL]="${LISTING}"
+        fi
+        if [ -z "${LISTING}" ]; then
+          echo "Unable to retrieve directory listing from ${BASE_URL}/; skipping automatic plugin discovery."
+        else
+          # Parse HTML to extract href matching the extension plugin pattern
+          LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
+          FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
+          
+          # Basic sanity checks before using the discovered value
+          if [ -n "${FILE}" ]; then
+            # Security: reject absolute URLs or paths (only accept simple filenames)
+            if echo "${FILE}" | grep -qE '://' || echo "${FILE}" | grep -q '/'; then
+              echo "Discovered candidate '${FILE}' is not a simple filename; skipping."
+              FILE=""
             fi
-            
-            if [ -n "${FILE}" ]; then
-              # Ensure we only have a bare filename
-              FILE=$(basename "${FILE}")
-              # Validate filename matches expected pattern: geoserver-<version>-<extension>-plugin.zip
-              if ! echo "${FILE}" | grep -qE '^geoserver-[^-][^/]*-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip$'; then
+          fi
+          
+          if [ -n "${FILE}" ]; then
+            # Ensure we only have a bare filename
+            FILE=$(basename "${FILE}")
+            # Validate filename matches expected pattern: geoserver-<version>-<extension>-plugin.zip
+            if ! echo "${FILE}" | grep -qE '^geoserver-[^-][^/]*-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip$'; then
                 echo "Discovered candidate filename '${FILE}' does not match expected pattern; skipping."
                 FILE=""
               fi
@@ -78,11 +113,16 @@ function download_extension() {
             if [ -n "${FILE}" ]; then
               echo "Found candidate file: ${FILE}"
               NEW_URL="${BASE_URL}/${FILE}"
-              # Extract version from discovered filename if GEOSERVER_VERSION is not yet set
-              VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
-              if [ -n "${VERSION}" ] && [ -z "${GEOSERVER_VERSION}" ]; then
-                GEOSERVER_VERSION="${VERSION}"
-                echo "Resolved GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
+              # Extract version from discovered filename
+              DISCOVERED_VERSION=$(echo "${FILE}" | sed -n 's/^geoserver-\(.*\)-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\\.zip$/\1/p')
+              if [ -n "${DISCOVERED_VERSION}" ]; then
+                # Cache the resolved version so subsequent extensions skip the fallback
+                _RESOLVED_FILENAME_VERSION="${DISCOVERED_VERSION}"
+                echo "Resolved filename version: ${DISCOVERED_VERSION} (will use for remaining extensions)"
+                if [ -z "${GEOSERVER_VERSION}" ]; then
+                  GEOSERVER_VERSION="${DISCOVERED_VERSION}"
+                  echo "Set GEOSERVER_VERSION=${GEOSERVER_VERSION} from ${FILE}"
+                fi
               fi
               DOWNLOAD_FILE="${DOWNLOAD_DIR}${FILE}"
               echo -e "\nDownloading ${EXTENSION} extension from ${NEW_URL} to ${DOWNLOAD_FILE}"
@@ -93,7 +133,6 @@ function download_extension() {
           fi
         fi
     fi
-  fi
 }
 
 # Download stable plugins only if INSTALL_EXTENSIONS is true
@@ -105,12 +144,26 @@ if [ "$INSTALL_EXTENSIONS" = "true" ]; then
   BASE_STABLE_URL=$(normalize_url "${STABLE_PLUGIN_URL}")
   BASE_COMM_URL=$(normalize_url "${COMMUNITY_PLUGIN_URL}")
 
+  # Pre-resolve the community filename version for RC/milestone builds.
+  # Community modules are built from nightly branches and use SNAPSHOT versioning,
+  # not the RC/milestone version. E.g. 3.0-RC -> 3.0-SNAPSHOT, 2.28-M0 -> 2.28-SNAPSHOT.
+  COMMUNITY_FILENAME_VERSION=""
+  if [[ "${GEOSERVER_VERSION}" == *-RC* ]] || [[ "${GEOSERVER_VERSION}" == *-M* ]]; then
+    COMMUNITY_FILENAME_VERSION=$(echo "${GEOSERVER_VERSION}" | sed 's/-RC.*/-SNAPSHOT/;s/-M.*/-SNAPSHOT/')
+    echo "RC/milestone version detected: community plugins will use filename version ${COMMUNITY_FILENAME_VERSION}"
+  fi
+
   for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
     EXTENSION=$(echo "${EXTENSION}" | xargs)
     [ -z "$EXTENSION" ] && continue
     URL="${BASE_STABLE_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
     download_extension "${URL}" "${EXTENSION}"
   done
+
+  # Apply the pre-resolved community filename version before the community loop
+  if [ -n "${COMMUNITY_FILENAME_VERSION}" ]; then
+    _RESOLVED_FILENAME_VERSION="${COMMUNITY_FILENAME_VERSION}"
+  fi
 
   for EXTENSION in $(echo "${COMMUNITY_EXTENSIONS}" | tr ',' ' '); do
     EXTENSION=$(echo "${EXTENSION}" | xargs)

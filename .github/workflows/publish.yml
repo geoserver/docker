@@ -183,10 +183,18 @@ jobs:
           
           # Determine download URLs
           if [[ ("$VERSION" == *"-M"* || "$VERSION" == *"-RC"*) && -n "$BUILD" ]]; then
-            # Pre-release RC/Milestone: fetch WAR from Jenkins artifacts
+            # Pre-release RC/Milestone: fetch WAR and extensions from Jenkins artifacts
             WAR_URL="https://build.geoserver.org/view/release/job/${JENKINS_JOB}/${BUILD}/artifact/distribution/${VERSION}/geoserver-${VERSION}-war.zip"
             STABLE_PLUGIN_URL="https://build.geoserver.org/view/release/job/${JENKINS_JOB}/${BUILD}/artifact/distribution/${VERSION}/plugins"
-            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/${BRANCH}/community-latest"
+            # Community modules are not part of the release build.
+            # Map the RC/milestone version to the corresponding nightly branch
+            # so community plugins can be fetched from the nightly build server.
+            if [[ "${MAJOR}.${MINOR}" == "${{ env.MAIN_VERSION }}" ]]; then
+              COMMUNITY_BRANCH="main"
+            else
+              COMMUNITY_BRANCH="${MAJOR}.${MINOR}.x"
+            fi
+            COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/${COMMUNITY_BRANCH}/community-latest"
           elif [[ "$IS_NIGHTLY" == "true" ]]; then
             WAR_URL="https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
             STABLE_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/ext-latest"
