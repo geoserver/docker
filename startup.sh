@@ -119,8 +119,9 @@ if [ "${JSONP_ENABLED}" = "true" ]; then
 fi
 
 # configure CORS (inspired by https://github.com/oscarfonts/docker-geoserver)
-# if enabled, this will add the filter definitions
-# to the end of the web.xml
+# if enabled, this will add the filter definition and filter-mapping to web.xml
+# The filter-mapping is inserted BEFORE the Spring Security filterChainProxy
+# so that CORS preflight (OPTIONS) requests are handled before authentication.
 # (this will only happen if our filter has not yet been added before)
 if [ "${CORS_ENABLED}" = "true" ]; then
   if ! grep -q DockerGeoServerCorsFilter "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"; then
@@ -133,6 +134,7 @@ if [ "${CORS_ENABLED}" = "true" ]; then
       CORS_ALLOW_CREDENTIALS="false"
     fi
 
+    # Add the filter definition before </web-app>
     sed -i "\:</web-app>:i\\
     <filter>\n\
       <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
@@ -153,11 +155,21 @@ if [ "${CORS_ENABLED}" = "true" ]; then
         <param-name>cors.support.credentials</param-name>\n\
         <param-value>${CORS_ALLOW_CREDENTIALS}</param-value>\n\
       </init-param>\n\
-    </filter>\n\
-    <filter-mapping>\n\
-      <filter-name>DockerGeoServerCorsFilter</filter-name>\n\
-      <url-pattern>/*</url-pattern>\n\
-    </filter-mapping>" "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml";
+    </filter>" "$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml";
+
+    # Add the filter-mapping BEFORE filterChainProxy so CORS preflight
+    # requests are handled before Spring Security rejects them with 401/403.
+    # filterChainProxy appears twice in web.xml: in the <filter> definition and
+    # in the <filter-mapping>. We skip the first occurrence and insert before
+    # the second (which is the filter-mapping we need to precede).
+    WEBXML="$CATALINA_HOME/webapps/geoserver/WEB-INF/web.xml"
+    # Find the line number of the second occurrence of filterChainProxy
+    LINE=$(grep -n "filterChainProxy" "$WEBXML" | sed -n '2p' | cut -d: -f1)
+    # Insert the CORS filter-mapping 1 line before (the <filter-mapping> tag is on the previous line)
+    if [ -n "$LINE" ]; then
+      INSERT_LINE=$((LINE - 1))
+      sed -i "${INSERT_LINE}i\\    <filter-mapping>\n      <filter-name>DockerGeoServerCorsFilter</filter-name>\n      <url-pattern>/*</url-pattern>\n    </filter-mapping>" "$WEBXML"
+    fi
   fi
 fi
 
