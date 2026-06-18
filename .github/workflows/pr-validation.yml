@@ -21,7 +21,7 @@ jobs:
             display_name: "without GDAL"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build image
         run: docker build --build-arg BUILD_GDAL=${{ matrix.build_gdal }} -t geoserver-docker.osgeo.org/geoserver:${{ github.sha }}-${{ matrix.name }} .
