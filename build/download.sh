@@ -4,7 +4,7 @@
 set -e
 
 # Update this each time a new release cycle started on https://github.com/geoserver/geoserver
-MAIN="3.0"
+MAIN="3.1"
 
 function usage() {
   echo "$0 <version> [<clean>]"
