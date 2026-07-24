@@ -83,6 +83,7 @@ jobs:
       major: ${{ steps.parse.outputs.major }}
       minor: ${{ steps.parse.outputs.minor }}
       base_image: ${{ steps.parse.outputs.base_image }}
+      builder_base_image: ${{ steps.parse.outputs.builder_base_image }}
       branch: ${{ steps.parse.outputs.branch }}
       is_nightly: ${{ steps.parse.outputs.is_nightly }}
       war_url: ${{ steps.parse.outputs.war_url }}
@@ -133,14 +134,19 @@ jobs:
           # Determine base image based on version
           if [[ "$VERSION" == "3"* ]]; then
             BASE_IMAGE="tomcat:11.0-jdk21-temurin-noble"
+            BUILDER_BASE_IMAGE="eclipse-temurin:21-jdk-noble"
           elif [[ "$VERSION" == "2.28"* ]]; then
             BASE_IMAGE="tomcat:9.0-jdk21-temurin-noble"
+            BUILDER_BASE_IMAGE="eclipse-temurin:21-jdk-noble"
           elif [[ "$VERSION" == "2.27"* ]] || [[ "$VERSION" == "2.26"* ]]; then
             BASE_IMAGE="tomcat:9.0-jdk17-temurin-noble"
+            BUILDER_BASE_IMAGE="eclipse-temurin:17-jdk-noble"
           else
             BASE_IMAGE="tomcat:9.0-jdk11-temurin-noble"
+            BUILDER_BASE_IMAGE="eclipse-temurin:11-jdk-noble"
           fi
           echo "base_image=$BASE_IMAGE" >> $GITHUB_OUTPUT
+          echo "builder_base_image=$BUILDER_BASE_IMAGE" >> $GITHUB_OUTPUT
           
           # Determine branch and tag based on version pattern
           if [[ "$VERSION" == *"-M"* ]] || [[ "$VERSION" == *"-RC"* ]]; then
@@ -248,6 +254,7 @@ jobs:
           echo "  Version: $VERSION"
           echo "  Branch: $BRANCH"
           echo "  Base Image: $BASE_IMAGE"
+          echo "  (GDAL) Builder Base Image: $BUILDER_BASE_IMAGE"
           echo "  Is Nightly: $IS_NIGHTLY"
           echo "  Primary Tag: $PRIMARY_TAG"
           echo "  Additional Tags: $ADDITIONAL_TAGS"
@@ -321,11 +328,13 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          pull: true
           build-args: |
             GS_VERSION=${{ needs.prepare.outputs.version }}
             GS_BUILD=${{ needs.prepare.outputs.build_number }}
             BUILD_GDAL=${{ matrix.gdal }}
             GEOSERVER_BASE_IMAGE=${{ needs.prepare.outputs.base_image }}
+            BUILDER_BASE_IMAGE=${{ needs.prepare.outputs.builder_base_image }}
             WAR_ZIP_URL=${{ needs.prepare.outputs.war_url }}
             STABLE_PLUGIN_URL=${{ needs.prepare.outputs.stable_plugin_url }}
             COMMUNITY_PLUGIN_URL=${{ needs.prepare.outputs.community_plugin_url }}
@@ -465,6 +474,7 @@ jobs:
           - **Version**: ${{ needs.prepare.outputs.version }}
           - **Build Number**: ${{ needs.prepare.outputs.build_number }}
           - **Base Image**: ${{ needs.prepare.outputs.base_image }}
+          - **(GDAL) Builder Base Image**: ${{ needs.prepare.outputs.builder_base_image }}
           - **Is Nightly**: ${{ needs.prepare.outputs.is_nightly }}
           
           ### Images Created
