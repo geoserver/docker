@@ -34,6 +34,31 @@ declare -A _DIR_LISTING_CACHE
 # extensions can be downloaded directly without the fallback.
 _RESOLVED_FILENAME_VERSION=""
 
+# Guard against extension-name prefix collisions such as "wps" vs "geofence-wps"
+# (GEOS-12131). Given a candidate filename and the extension name we are looking
+# for, return 0 when the file's version segment (the part between "geoserver-"
+# and "-${extension}-plugin.zip") is a plausible version — i.e. non-empty and
+# does NOT contain a hyphen followed by a lowercase letter or underscore.
+# GeoServer version suffixes (-SNAPSHOT, -RC*, -M*) all start with an uppercase
+# letter, while extension names are validated as [a-z0-9_-]+, so any "-[a-z_]"
+# segment inside the version part indicates a different extension leaking into
+# the greedy glob (e.g. "2.28.4-geofence" when looking for extension "wps").
+# The caller must have already verified that the filename ends with
+# "-${extension}-plugin.zip".
+function _extension_filename_matches() {
+  local filename="$1"
+  local extension="$2"
+  local base middle
+  base=$(basename "$filename")
+  middle="${base#geoserver-}"
+  middle="${middle%-${extension}-plugin.zip}"
+  [ -z "$middle" ] && return 1
+  case "$middle" in
+    *-[a-z_]*) return 1 ;;
+  esac
+  return 0
+}
+
 function download_extension() {
   URL=$1
   EXTENSION=$2
@@ -90,7 +115,7 @@ function download_extension() {
           # Parse HTML to extract href matching the extension plugin pattern
           LISTING_ONE=$(echo "${LISTING}" | tr '\n' ' ')
           FILE=$(echo "${LISTING_ONE}" | sed -n 's/.*href="\([^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip\)".*/\1/p' | head -n 1 || true)
-          
+
           # Basic sanity checks before using the discovered value
           if [ -n "${FILE}" ]; then
             # Security: reject absolute URLs or paths (only accept simple filenames)
@@ -99,7 +124,7 @@ function download_extension() {
               FILE=""
             fi
           fi
-          
+
           if [ -n "${FILE}" ]; then
             # Ensure we only have a bare filename
             FILE=$(basename "${FILE}")
@@ -109,7 +134,16 @@ function download_extension() {
                 FILE=""
               fi
             fi
-            
+
+            # Reject prefix collisions (GEOS-12131): the sed capture is greedy and
+            # could pick e.g. "geoserver-3.0-SNAPSHOT-geofence-wps-plugin.zip" when
+            # searching for extension "wps". _extension_filename_matches enforces
+            # that the version segment is a plausible version.
+            if [ -n "${FILE}" ] && ! _extension_filename_matches "${FILE}" "${EXTENSION}"; then
+              echo "Discovered candidate '${FILE}' collides with a different extension prefix; skipping."
+              FILE=""
+            fi
+
             if [ -n "${FILE}" ]; then
               echo "Found candidate file: ${FILE}"
               NEW_URL="${BASE_URL}/${FILE}"
@@ -184,9 +218,18 @@ for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' 
     echo "WARNING: Skipping invalid extension name: ${EXTENSION}" >&2
     continue
   fi
-  # Find downloaded plugin (handles both expected and discovered filenames)
-  ADDITIONAL_LIB=$(ls -1 "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-${EXTENSION}-plugin.zip 2>/dev/null | head -n 1 || true)
-  [ -e "$ADDITIONAL_LIB" ] || continue
+  # Find downloaded plugin (handles both expected and discovered filenames).
+  # Guards against prefix collisions (GEOS-12131): the glob geoserver-*-${EXT}-plugin.zip
+  # is greedy, so for EXT=wps it would also match geoserver-*-geofence-wps-plugin.zip
+  # and — depending on sort order — install the wrong archive.
+  ADDITIONAL_LIB=""
+  for candidate in "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-"${EXTENSION}"-plugin.zip; do
+    [ -e "$candidate" ] || continue
+    _extension_filename_matches "$candidate" "$EXTENSION" || continue
+    ADDITIONAL_LIB="$candidate"
+    break
+  done
+  [ -n "$ADDITIONAL_LIB" ] && [ -e "$ADDITIONAL_LIB" ] || continue
 
   if [[ $ADDITIONAL_LIB == *.zip ]]; then
     unzip -q -o -d "${GEOSERVER_LIB_DIR}" "${ADDITIONAL_LIB}" "*.jar"
