@@ -22,7 +22,7 @@ function build_geoserver_image() {
     local BRANCH=$5
 
     if [ -n "$VERSION" ] && [ -n "$BUILD" ] && [ -n "$BUILD_GDAL" ] && [ -n "$TAG" ]; then
-      
+
       if [[ "$VERSION" == "3"* ]]; then
         GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk21-temurin-noble
         BUILDER_BASE_IMAGE=eclipse-temurin:21-jdk-noble
@@ -34,32 +34,30 @@ function build_geoserver_image() {
         BUILDER_BASE_IMAGE=eclipse-temurin:17-jdk-noble
       fi
 
+      # Only nightly/snapshot builds pull WAR and plugins from build.geoserver.org.
+      # Stable releases skip these extra args but must still receive the base
+      # image args and --pull so that builder and runtime images stay in sync
+      # and the latest base images are always used.
+      EXTRA_ARGS=()
       if [ -n "$BRANCH" ]; then
-        # all needed vars are set
-
-        (set -x # echo docker build command
-        docker build \
-            --build-arg WAR_ZIP_FILE="geoserver-$BRANCH-latest-war.zip" \
-            --build-arg WAR_ZIP_URL="https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip" \
-            --build-arg STABLE_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/ext-latest" \
-            --build-arg COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/community-latest" \
-            --build-arg GS_VERSION="$VERSION" \
-            --build-arg GS_BUILD="$BUILD" \
-            --build-arg BUILD_GDAL="$BUILD_GDAL" \
-            --build-arg GEOSERVER_BASE_IMAGE="$GEOSERVER_BASE_IMAGE" \
-            --build-arg BUILDER_BASE_IMAGE="$BUILDER_BASE_IMAGE" \
-            --pull \
-            -t "$TAG" .)
-      elif [ -z "$BRANCH" ]; then
-        # BRANCH is not set
-
-        (set -x # echo docker build command
-        docker build \
-          --build-arg GS_VERSION=$VERSION \
-          --build-arg GS_BUILD=$BUILD \
-          --build-arg BUILD_GDAL=$BUILD_GDAL \
-          -t $TAG .)
+        EXTRA_ARGS+=(
+          --build-arg WAR_ZIP_FILE="geoserver-$BRANCH-latest-war.zip"
+          --build-arg WAR_ZIP_URL="https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
+          --build-arg STABLE_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/ext-latest"
+          --build-arg COMMUNITY_PLUGIN_URL="https://build.geoserver.org/geoserver/$BRANCH/community-latest"
+        )
       fi
+
+      (set -x # echo docker build command
+      docker build \
+          --build-arg GS_VERSION="$VERSION" \
+          --build-arg GS_BUILD="$BUILD" \
+          --build-arg BUILD_GDAL="$BUILD_GDAL" \
+          --build-arg GEOSERVER_BASE_IMAGE="$GEOSERVER_BASE_IMAGE" \
+          --build-arg BUILDER_BASE_IMAGE="$BUILDER_BASE_IMAGE" \
+          --pull \
+          "${EXTRA_ARGS[@]}" \
+          -t "$TAG" .)
 
     else
       echo "Missing required parameters"
@@ -138,7 +136,7 @@ if [[ $1 == *build* ]]; then
     echo "  nightly build from https://build.geoserver.org/geoserver/$BRANCH"
     echo "  downloading geoserver-$BRANCH-latest-war.zip"
     wget -c -q -P./geoserver/ \
-         "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip" 
+         "https://build.geoserver.org/geoserver/$BRANCH/geoserver-$BRANCH-latest-war.zip"
     echo
     build_geoserver_image $VERSION $BUILD "false" $TAG $BRANCH     # without gdal
     build_geoserver_image $VERSION $BUILD "true" $GDAL_TAG $BRANCH # with gdal
@@ -147,7 +145,7 @@ if [[ $1 == *build* ]]; then
     echo "  downloading geoserver-${VERSION}-war.zip"
     wget -c -q -P./geoserver/ \
          "https://downloads.sourceforge.net/project/geoserver/GeoServer/${VERSION}/geoserver-${VERSION}-war.zip"
-    echo    
+    echo
     build_geoserver_image $VERSION $BUILD "false" $TAG   # without gdal
     build_geoserver_image $VERSION $BUILD "true" $GDAL_TAG # with gdal
   fi
