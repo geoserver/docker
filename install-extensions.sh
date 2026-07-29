@@ -48,6 +48,7 @@ _RESOLVED_FILENAME_VERSION=""
 function _extension_filename_matches() {
   local filename="$1"
   local extension="$2"
+  [[ "$extension" =~ ^[a-z0-9_-]+$ ]] || return 1
   local base middle
   base=$(basename "$filename")
   middle="${base#geoserver-}"
