@@ -141,8 +141,23 @@ function download_extension() {
             # searching for extension "wps". _extension_filename_matches enforces
             # that the version segment is a plausible version.
             if [ -n "${FILE}" ] && ! _extension_filename_matches "${FILE}" "${EXTENSION}"; then
-              echo "Discovered candidate '${FILE}' collides with a different extension prefix; skipping."
+              echo "Discovered candidate '${FILE}' collides with a different extension prefix; searching for another match."
               FILE=""
+              while IFS= read -r candidate; do
+                [ -n "${candidate}" ] || continue
+                # Security: reject absolute URLs or paths (only accept simple filenames)
+                if echo "${candidate}" | grep -qE '://' || echo "${candidate}" | grep -q '/'; then
+                  continue
+                fi
+                candidate=$(basename "${candidate}")
+                # Validate filename matches expected pattern: geoserver-<version>-<extension>-plugin.zip
+                if ! echo "${candidate}" | grep -qE '^geoserver-[^-][^/]*-'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip$'; then
+                  continue
+                fi
+                _extension_filename_matches "${candidate}" "${EXTENSION}" || continue
+                FILE="${candidate}"
+                break
+              done < <(echo "${LISTING_ONE}" | grep -oE 'href="[^" ]*'"${EXTENSION_REGEX_ESCAPED}"'-plugin\.zip"' | sed 's/^href="//;s/"$//' || true)
             fi
 
             if [ -n "${FILE}" ]; then
