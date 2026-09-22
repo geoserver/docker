@@ -175,6 +175,7 @@
                prefix="localhost_access_log" suffix=".txt"
                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
           <Context antiResourceLocking="false" override="true" docBase="geoserver" privileged="true" path="/${WEBAPP_CONTEXT}">
+               <!-- POSTGRES_JNDI_RESOURCE_BEGIN (stripped by startup.sh when POSTGRES_JNDI_ENABLED != true) -->
                <Resource name="${POSTGRES_JNDI_RESOURCE_NAME}"
                          auth="Container"
                          type="javax.sql.DataSource"
@@ -193,6 +194,7 @@
                          validationQuery="SELECT 1"
                          rollbackOnReturn="true"
                />
+               <!-- POSTGRES_JNDI_RESOURCE_END -->
           </Context>
       </Host>
     </Engine>
