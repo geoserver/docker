@@ -119,6 +119,9 @@ else
     BRANCH="${MAJOR}.${MINOR}.x"
     TAG=$BASE:$VERSION
     GDAL_TAG=$TAG-$GDAL_SUFFIX
+    # final release: also move the series tag (e.g. 3.0-latest), as publish.yml does
+    SERIES_TAG=$BASE:$MAJOR.$MINOR-latest
+    SERIES_GDAL_TAG=$SERIES_TAG-$GDAL_SUFFIX
   fi
 fi
 
@@ -161,4 +164,12 @@ if [[ $1 == *"publish"* ]]; then
   docker push $TAG
   echo "docker push $GDAL_TAG"
   docker push $GDAL_TAG
+  if [ -n "$SERIES_TAG" ]; then
+    echo "docker push $SERIES_TAG"
+    docker tag $TAG $SERIES_TAG
+    docker push $SERIES_TAG
+    echo "docker push $SERIES_GDAL_TAG"
+    docker tag $GDAL_TAG $SERIES_GDAL_TAG
+    docker push $SERIES_GDAL_TAG
+  fi
 fi

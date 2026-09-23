@@ -49,3 +49,7 @@ The [release script](https://github.com/geoserver/docker/blob/master/build/relea
 ```shell
 docker pull docker.osgeo.org/geoserver:2.28.2-gdal
 ```
+
+### Series tags
+
+For final releases (no `-SNAPSHOT`, `-RC` or `-M` suffix) the release script additionally tags and pushes the series tag `<major>.<minor>-latest` (and `<major>.<minor>-latest-gdal`), so e.g. `3.0-latest` always points to the most recent 3.0.x release.
