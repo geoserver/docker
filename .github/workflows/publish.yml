@@ -102,11 +102,10 @@ jobs:
           BUILD="${{ inputs.build_number }}"
           JENKINS_JOB="${{ inputs.jenkins_job }}"
 
-          # If triggered by a push (test), allow a sensible default so this can be run without workflow_dispatch inputs
-          if [ -z "$VERSION" ] && [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+          if [ -z "$VERSION" ]; then
             VERSION="3.1-SNAPSHOT"
             BUILD=""
-            echo "No version input (push trigger). Falling back to VERSION=$VERSION"
+            echo "No version input (${GITHUB_EVENT_NAME} trigger). Falling back to VERSION=$VERSION"
           fi
           
           # Default jenkins_job if not provided
