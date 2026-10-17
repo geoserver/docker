@@ -61,9 +61,9 @@ env:
   # WARNING: Incorrect values will cause images to be tagged incorrectly,
   # use wrong base images, and download from incorrect plugin URLs.
   # ------------------------------------------------------------------
-  MAIN_VERSION: "3.0"
-  STABLE_VERSION: "2.28"
-  MAINTENANCE_VERSION: "2.27"
+  MAIN_VERSION: "3.1"
+  STABLE_VERSION: "3.0"
+  MAINTENANCE_VERSION: "2.28"
   # Primary registry: pushed to during build, receives OSGeo credentials
   PRIMARY_REGISTRY: "geoserver-docker.osgeo.org/geoserver"
   # Secondary registry: mirrored after build, receives personal account credentials, for docker scout analysis
