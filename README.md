@@ -112,6 +112,7 @@ The ``startup.sh`` script allows some customization on startup:
   * ``CORS_ALLOWED_HEADERS`` (default ``Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization``)
   * ``CORS_ALLOW_CREDENTIALS`` (default ``false``) **Setting this to ``true`` will only have the desired effect if ``CORS_ALLOWED_ORIGINS`` defines explicit origins (not ``*``)**
 * ``PROXY_BASE_URL`` to the base URL of the GeoServer web app if GeoServer is behind a proxy. Example: ``https://example.com/geoserver``.
+* ``GEOSERVER_TRUSTED_PROXIES`` comma separated list of reverse proxy addresses or CIDR blocks, so GeoServer uses the client address from ``X-Forwarded-For`` (GeoServer 3.0.2, 2.28.6, 2.27.7 and newer). The default only trusts loopback, which a proxy in Docker never uses. Example: ``172.18.0.0/16``, see ``docker network inspect`` for the subnet. See [Client address behind a reverse proxy](https://docs.geoserver.org/latest/en/user/production/misc.html#client-address-behind-a-reverse-proxy).
 
 The CORS variables customize tomcat's `web.xml` file. If you need more customization,
 you can provide your own customized `web.xml` file to tomcat by mounting it into the container
