@@ -95,12 +95,10 @@ jobs:
             exit 1
           fi
 
-          # The development series is not in the feed: it is the version of the main branch
-          # (a literal <version> in src/pom.xml, or the <revision> property once that is used).
-          fetch "src/pom.xml?ref=main" > "$RUNNER_TEMP/pom.xml"
-          MAIN=$(grep -m1 -oE '<(revision|version)>[0-9]+\.[0-9]+' "$RUNNER_TEMP/pom.xml" | grep -oE '[0-9]+\.[0-9]+$')
+          # The development series is the feed's "main" element
+          MAIN=$(jq -r '.main.series // empty | rtrimstr(".x")' "$FEED")
           if [ -z "$MAIN" ]; then
-            echo "ERROR: unable to read the version of the main branch" >&2
+            echo "ERROR: the version feed has no \"main\" element" >&2
             exit 1
           fi
 
@@ -255,11 +253,21 @@ jobs:
 
           # Never move a -latest tag backwards: rebuilding an older release (e.g. 2.27.6 when
           # 2.27.7 is out) must not take over x.y-latest, stable-latest or maintenance-latest.
+          #
+          # This job is triggered by the Jenkins release job as soon as the release is tagged, but the
+          # feed is only regenerated every 15 minutes. So the feed normally does not list the version
+          # being built yet: a version newer than the feed's newest is the newest, and only the series
+          # (stable, maintenance, main), which change a few times a year, are taken from the feed.
           if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             NEWEST=$(jq -r --arg s "${MAJOR}.${MINOR}.x" '.series[] | select(.series == $s) | .latest_version' "$FEED_FILE")
-            if [ -n "$NEWEST" ] && [ "$(printf '%s\n%s\n' "$NEWEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            HIGHEST=$(printf '%s\n%s\n' "${NEWEST:-0.0.0}" "$VERSION" | sort -V | tail -n 1)
+            if [ -z "$NEWEST" ]; then
+              echo "::notice::the version feed has no ${MAJOR}.${MINOR}.x series yet (the first release of a series, or the feed has not caught up)"
+            elif [ "$HIGHEST" != "$VERSION" ]; then
               echo "::warning::$VERSION is older than $NEWEST, the newest release of its series: the -latest tags are not moved"
               ADDITIONAL_TAGS=""
+            elif [ "$NEWEST" != "$VERSION" ]; then
+              echo "::notice::$VERSION is newer than $NEWEST, the latest in the version feed: the feed has not caught up with this release yet, which is expected"
             fi
           fi
 
