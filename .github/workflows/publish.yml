@@ -17,16 +17,18 @@ on:
         required: false
         type: string
         default: 'geoserver-release-jdk17'
+      dry_run:
+        description: 'Work out the series, tags and WAR URL and stop, without building or pushing anything.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches:
       - ci/publish-test
 
-  schedule:
-    - cron: '0 3 * * *'
-
 concurrency:
-  # Works for both scheduled + manual runs
-  group: publish-${{ github.event.inputs.version || '3.1-SNAPSHOT' }}
+  # One run per version; a newer run of the same version replaces the older one
+  group: publish-${{ github.event.inputs.version || 'ci-publish-test' }}
   cancel-in-progress: true
 
 permissions:
@@ -36,38 +38,10 @@ permissions:
   attestations: write
 
 env:
-  # ------------------------------------------------------------------
-  # GeoServer Version Series Configuration
-  # 
-  # These variables define the currently supported GeoServer release series.
-  # They MUST be updated when a new major or minor series is released (every 6 months).
-  #
-  # MAIN_VERSION: Current development series (main branch, experimental)
-  # STABLE_VERSION: Current stable release series (recommended for production)
-  # MAINTENANCE_VERSION: Previous stable series (receives critical fixes only)
-  #
-  # These values determine:
-  # - Docker image tags (e.g., "nightly", "stable-latest", "maintenance-latest")
-  # - Base Tomcat/JDK images for each series
-  # - Download URLs for WAR files and plugins
-  # - Git branch mappings for nightly builds
-  #
-  # When a new series is released (e.g., 3.1 becomes main):
-  # 1. Update MAIN_VERSION to the new series (e.g., "3.1")
-  # 2. Update STABLE_VERSION to the previous main (e.g., "3.0")
-  # 3. Update MAINTENANCE_VERSION to the previous stable (e.g., "2.28")
-  # 4. Update base image selection logic if JDK requirements change (line 89)
-  #
-  # WARNING: Incorrect values will cause images to be tagged incorrectly,
-  # use wrong base images, and download from incorrect plugin URLs.
-  # ------------------------------------------------------------------
-  MAIN_VERSION: "3.1"
-  STABLE_VERSION: "3.0"
-  MAINTENANCE_VERSION: "2.28"
-  # Primary registry: pushed to during build, receives OSGeo credentials
+  # The release series (main, stable, maintenance) are not configured here: the prepare job
+  # works them out from the GeoServer version feed (the updates-checker-v1 branch of geoserver/geoserver),
+  # so a new series needs no change to this file.
   PRIMARY_REGISTRY: "geoserver-docker.osgeo.org/geoserver"
-  # Secondary registry: mirrored after build, receives personal account credentials, for docker scout analysis
-  SECONDARY_REGISTRY: "petersmythe/geoserver-test"
 
 jobs:
   # ============================================================
@@ -91,8 +65,51 @@ jobs:
       community_plugin_url: ${{ steps.parse.outputs.community_plugin_url }}
       primary_tag: ${{ steps.parse.outputs.primary_tag }}
       additional_tags: ${{ steps.parse.outputs.additional_tags }}
-      
+      dry_run: ${{ inputs.dry_run || 'false' }}
+
     steps:
+      - name: Determine release series from the version feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FEED="$RUNNER_TEMP/versions.json"
+          # Read through the API rather than raw.githubusercontent.com, which caches for minutes
+          fetch() {
+            for attempt in 1 2 3; do
+              gh api -H "Accept: application/vnd.github.raw" "repos/geoserver/geoserver/contents/$1" && return 0
+              sleep 5
+            done
+            return 1
+          }
+          fetch "versions.json?ref=updates-checker-v1" > "$FEED"
+          jq -e '.schema_version == 1 and (.series | length > 0)' "$FEED" > /dev/null \
+            || { echo "ERROR: the version feed is not usable" >&2; exit 1; }
+
+          # Documentation and images use a single stable and a single maintenance series,
+          # while the feed may list several maintenance series: take the highest.
+          STABLE=$(jq -r '[.series[] | select(.phase == "stable") | .series | rtrimstr(".x")] | if length == 1 then .[0] else empty end' "$FEED")
+          MAINTENANCE=$(jq -r '[.series[] | select(.phase == "maintenance") | .series | rtrimstr(".x")] | sort_by(split(".") | map(tonumber)) | last // empty' "$FEED")
+          if [ -z "$STABLE" ]; then
+            echo "ERROR: the version feed does not list exactly one stable series" >&2
+            exit 1
+          fi
+
+          # The development series is the feed's "main" element
+          MAIN=$(jq -r '.main.series // empty | rtrimstr(".x")' "$FEED")
+          if [ -z "$MAIN" ]; then
+            echo "ERROR: the version feed has no \"main\" element" >&2
+            exit 1
+          fi
+
+          echo "Series: main=$MAIN stable=$STABLE maintenance=${MAINTENANCE:-none}"
+          {
+            echo "MAIN_VERSION=$MAIN"
+            echo "STABLE_VERSION=$STABLE"
+            echo "MAINTENANCE_VERSION=$MAINTENANCE"
+            echo "FEED_FILE=$FEED"
+          } >> "$GITHUB_ENV"
+
       - name: Parse Version and Determine Build Parameters
         id: parse
         run: |
@@ -103,7 +120,7 @@ jobs:
           JENKINS_JOB="${{ inputs.jenkins_job }}"
 
           if [ -z "$VERSION" ]; then
-            VERSION="3.1-SNAPSHOT"
+            VERSION="${MAIN_VERSION}-SNAPSHOT"
             BUILD=""
             echo "No version input (${GITHUB_EVENT_NAME} trigger). Falling back to VERSION=$VERSION"
           fi
@@ -225,21 +242,53 @@ jobs:
           if [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="${MAJOR}.${MINOR}-latest"
           fi
-          
+
           # Add semantic tags for stable/maintenance releases only
           # (main releases get x.y-latest but no semantic tag since they're experimental)
           if [[ "$VERSION" == "${STABLE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-latest"
-          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
+          elif [[ -n "$MAINTENANCE_VERSION" && "$VERSION" == "${MAINTENANCE_VERSION}."* ]] && [[ "$IS_NIGHTLY" == "false" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-latest"
           fi
-          
+
+          # Promotion: the first final release of the development series (3.1.0 while 3.0 is stable)
+          # makes that series the stable one. The feed cannot say so yet, because it is regenerated
+          # only after the release, so the job applies the rule itself, and only ever forwards.
+          # maintenance-latest is NOT moved: whether the previous stable series becomes the
+          # maintenance series is a decision for the release manager, who retags it by hand.
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "${MAJOR}.${MINOR}" == "$MAIN_VERSION" ]] \
+              && [ -z "$(jq -r --arg s "${MAJOR}.${MINOR}.x" '.series[] | select(.series == $s) | .series' "$FEED_FILE")" ] \
+              && [ "$(printf '%s\n%s\n' "$STABLE_VERSION" "${MAJOR}.${MINOR}" | sort -V | tail -n 1)" == "${MAJOR}.${MINOR}" ]; then
+            ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-latest"
+            echo "::notice::${MAJOR}.${MINOR} becomes the stable series with this release (stable-latest moves). maintenance-latest is not changed: retag it by hand if ${STABLE_VERSION} is now the maintenance series"
+          fi
+
+          # Never move a -latest tag backwards: rebuilding an older release (e.g. 2.27.6 when
+          # 2.27.7 is out) must not take over x.y-latest, stable-latest or maintenance-latest.
+          #
+          # This job is triggered by the Jenkins release job as soon as the release is tagged, but the
+          # feed is only regenerated every 15 minutes. So the feed normally does not list the version
+          # being built yet: a version newer than the feed's newest is the newest, and only the series
+          # (stable, maintenance, main), which change a few times a year, are taken from the feed.
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            NEWEST=$(jq -r --arg s "${MAJOR}.${MINOR}.x" '.series[] | select(.series == $s) | .latest_version' "$FEED_FILE")
+            HIGHEST=$(printf '%s\n%s\n' "${NEWEST:-0.0.0}" "$VERSION" | sort -V | tail -n 1)
+            if [ -z "$NEWEST" ]; then
+              echo "::notice::the version feed has no ${MAJOR}.${MINOR}.x series yet (the first release of a series, or the feed has not caught up)"
+            elif [ "$HIGHEST" != "$VERSION" ]; then
+              echo "::warning::$VERSION is older than $NEWEST, the newest release of its series: the -latest tags are not moved"
+              ADDITIONAL_TAGS=""
+            elif [ "$NEWEST" != "$VERSION" ]; then
+              echo "::notice::$VERSION is newer than $NEWEST, the latest in the version feed: the feed has not caught up with this release yet, which is expected"
+            fi
+          fi
+
           # Add nightly tags for snapshot builds
           if [[ "$VERSION" == "${MAIN_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,nightly"
           elif [[ "$VERSION" == "${STABLE_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,stable-nightly"
-          elif [[ "$VERSION" == "${MAINTENANCE_VERSION}"*"-SNAPSHOT" ]]; then
+          elif [[ -n "$MAINTENANCE_VERSION" && "$VERSION" == "${MAINTENANCE_VERSION}"*"-SNAPSHOT" ]]; then
             ADDITIONAL_TAGS="$ADDITIONAL_TAGS,maintenance-nightly"
           fi
           
@@ -277,6 +326,7 @@ jobs:
     name: Build ${{ matrix.platform }} ${{ matrix.gdal && 'with GDAL' || 'without GDAL' }}
     runs-on: ${{ matrix.runner }}
     needs: prepare
+    if: needs.prepare.outputs.dry_run != 'true'
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -520,69 +570,3 @@ jobs:
           docker pull ${{ env.PRIMARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}-gdal
           ```
           EOF
-
-  # ============================================================
-  # JOB 4: Publish to Secondary Registry
-  # ============================================================
-  publish-secondary:
-    name: Mirror Images to Secondary Registry
-    if: false
-    runs-on: ubuntu-latest
-    needs: 
-      - prepare
-      - merge
-    timeout-minutes: 15
-    
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      
-      - name: Login to Secondary Registry (Docker Hub)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Copy multi-arch manifests to secondary registry
-        run: |
-          # Copy multi-arch manifest from primary to secondary registry
-          docker buildx imagetools create \
-            -t ${{ env.SECONDARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }} \
-            ${{ env.PRIMARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}
-          
-          # Apply additional tags if present
-          ADDITIONAL_TAGS="${{ needs.prepare.outputs.additional_tags }}"
-          if [ -n "$ADDITIONAL_TAGS" ]; then
-            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
-            for tag in "${TAG_ARRAY[@]}"; do
-              docker buildx imagetools create \
-                -t ${{ env.SECONDARY_REGISTRY }}:${tag} \
-                ${{ env.PRIMARY_REGISTRY }}:${tag}
-            done
-          fi
-          
-          # Copy multi-arch manifest for the GDAL variant
-          docker buildx imagetools create \
-            -t ${{ env.SECONDARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}-gdal \
-            ${{ env.PRIMARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}-gdal
-              
-          if [ -n "$ADDITIONAL_TAGS" ]; then
-            IFS=',' read -ra TAG_ARRAY <<< "$ADDITIONAL_TAGS"
-            for tag in "${TAG_ARRAY[@]}"; do
-              docker buildx imagetools create \
-                -t ${{ env.SECONDARY_REGISTRY }}:${tag}-gdal \
-                ${{ env.PRIMARY_REGISTRY }}:${tag}-gdal
-            done
-          fi
-          
-          echo "Successfully copied multi-arch manifests to ${{ env.SECONDARY_REGISTRY }}."
-          echo "Verify at: https://hub.docker.com/r/${{ env.SECONDARY_REGISTRY }}/tags"
-          
-          # Inspect to confirm multi-arch
-          echo ""
-          echo "Inspecting primary manifest:"
-          docker buildx imagetools inspect ${{ env.SECONDARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}
-          
-          echo ""
-          echo "Inspecting primary manifest (with GDAL):"
-          docker buildx imagetools inspect ${{ env.SECONDARY_REGISTRY }}:${{ needs.prepare.outputs.primary_tag }}-gdal
