@@ -33,7 +33,7 @@ services:
       retries: 3
       timeout: 20s
   postgis:
-    image: postgis/postgis:18-3.6-alpine
+    image: docker.io/postgis/postgis:18-3.6-alpine
     ports:
       - "5555:5432"
     environment:

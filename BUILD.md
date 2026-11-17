@@ -103,7 +103,7 @@ docker build --no-cache-filter download,install \
   --build-arg STABLE_PLUGIN_URL=https://build.geoserver.org/geoserver/main/ext-latest/ \
   --build-arg COMMUNITY_PLUGIN_URL=https://build.geoserver.org/geoserver/main/community-latest/ \
   --build-arg GS_VERSION=3.0-SNAPSHOT \
-  --build-arg GEOSERVER_BASE_IMAGE=tomcat:11.0-jdk17-temurin-noble \
+  --build-arg GEOSERVER_BASE_IMAGE=docker.io/tomcat:11.0-jdk17-temurin-noble \
   -t docker.osgeo.org/geoserver:3.0.x .
 ```
 
