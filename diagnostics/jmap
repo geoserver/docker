@@ -1,0 +1,18 @@
+#!/bin/bash
+# jmap replacement for the JRE, see jcmd.
+# Usage: jmap -dump:[live,]format=b,file=<file> <pid>
+#        jmap -histo[:live] <pid>
+case "$1" in
+  -dump:*file=*)
+    OPTIONS=${1%%file=*}
+    FILE=${1##*file=}
+    FILE=$(realpath -m -- "${FILE%%,*}")
+    if [[ "$OPTIONS" == *live* ]]; then
+      exec jcmd "$2" GC.heap_dump "$FILE"
+    fi
+    exec jcmd "$2" GC.heap_dump -all "$FILE" ;;
+  -histo:live) exec jcmd "$2" GC.class_histogram ;;
+  -histo) exec jcmd "$2" GC.class_histogram -all ;;
+esac
+echo "Usage: jmap -dump:[live,]format=b,file=<file> <pid> | jmap -histo[:live] <pid>" >&2
+exit 2

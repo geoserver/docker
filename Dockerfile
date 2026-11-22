@@ -1,12 +1,16 @@
 ARG BUILDER_BASE_IMAGE=eclipse-temurin:21.0.12_8-jdk-noble@sha256:4d271cd5e0624598cf563342f47281b09cb364bc13acbbd7251f49f83470018d
 
-ARG GEOSERVER_BASE_IMAGE=tomcat:11.0.27-jdk21-temurin-noble@sha256:6e0d99d18e38a23a95574a67bd7849d46844b649c9b5238d91a3d0a3bf5f489a
+ARG GEOSERVER_BASE_IMAGE=tomcat:11.0.27-jre21-temurin-noble@sha256:9c21bb3c159e5f65580cb58a147db5d0d8c01826ac9ccb7b4d6e1b8a68362781
 
 ARG GS_VERSION=3.0.0
 ARG BUILD_GDAL=false
 ARG PROJ_VERSION=9.8.0
 ARG GDAL_VERSION=3.12.2
 ARG INSTALL_PREFIX=/usr/local
+ARG PYTHON_BASE_IMAGE=python:3.13-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
+ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
+ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
+ARG WAR_ZIP_FILE=geoserver-${GS_VERSION}-war.zip
 
 # This is a multi stage build.
 
@@ -147,6 +151,25 @@ RUN if test "${BUILD_GDAL}" = "true"; then \
         && for i in /build_gdal_version_changing/usr/bin/*; do ${GCC_ARCH}-linux-gnu-strip -s $i 2>/dev/null || /bin/true; done \
     fi
 
+# The geoserver_builder stage unpacks the WAR and packs all stable extensions
+# into /build/extensions, removing native libraries for other platforms.
+# install-extensions.sh installs the enabled ones at startup and deletes the rest.
+FROM $PYTHON_BASE_IMAGE AS geoserver_builder
+
+ARG TARGETARCH
+ARG WAR_PATH=./geoserver/
+ARG STABLE_PLUGIN_URL
+ARG WAR_ZIP_URL
+ARG WAR_ZIP_FILE
+
+COPY $WAR_PATH /tmp/war/
+COPY build/pack-extensions.py /usr/local/bin/
+RUN set -eux \
+    && WAR="/tmp/war/${WAR_ZIP_FILE}" \
+    && if [ ! -f "$WAR" ]; then WAR="$WAR_ZIP_URL"; fi \
+    && python -I /usr/local/bin/pack-extensions.py "$WAR" "$STABLE_PLUGIN_URL" "$TARGETARCH" /build \
+    && rm -rf /tmp/war
+
 #############################
 #############################
 ### final GeoServer image ###
@@ -158,20 +181,20 @@ LABEL vendor="osgeo.org"
 # Build arguments
 ARG ADDITIONAL_FONTS_PATH=./additional_fonts/
 ARG ADDITIONAL_LIBS_PATH=./additional_libs/
-ARG WAR_PATH=./geoserver/
 ARG BUILD_GDAL
 ARG COMMUNITY_PLUGIN_URL=''
 ARG GS_VERSION
 ARG GS_BUILD=release
 ARG GS_DATA_PATH=./geoserver_data/
 ARG INSTALL_PREFIX
-ARG STABLE_PLUGIN_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/extensions
-ARG WAR_ZIP_URL=https://downloads.sourceforge.net/project/geoserver/GeoServer/${GS_VERSION}/geoserver-${GS_VERSION}-war.zip
-ARG WAR_ZIP_FILE=geoserver-${GS_VERSION}-war.zip
+ARG STABLE_PLUGIN_URL
+ARG WAR_ZIP_URL
+ARG WAR_ZIP_FILE
 
 # Environment variables
 ENV ADDITIONAL_FONTS_DIR=/opt/additional_fonts/
 ENV ADDITIONAL_LIBS_DIR=/opt/additional_libs/
+ENV BUNDLED_EXTENSIONS_DIR=/opt/extensions
 ENV CATALINA_HOME=$CATALINA_HOME
 ENV COMMUNITY_EXTENSIONS=''
 ENV COMMUNITY_PLUGIN_URL=$COMMUNITY_PLUGIN_URL
@@ -246,6 +269,8 @@ RUN set -eux \
     && apt-get install -y --no-install-recommends \
     # Basic dependencies
     openssl curl unzip zip locales gettext \
+    # jattach runs the jcmd, jstack, jmap and jinfo scripts in /usr/local/bin
+    jattach \
     && if test "${BUILD_GDAL}" = "true"; then \
         # PROJ dependencies
         apt-get install -y --no-install-recommends libsqlite3-0 libtiff6 libcurl4 ca-certificates \
@@ -279,25 +304,13 @@ RUN if test "${BUILD_GDAL}" = "true"; then \
         echo "source /usr/share/bash-completion/bash_completion" >> /root/.bashrc; \
     fi
 
-# Copy geoserver.zip if staged by release.sh
-COPY $WAR_PATH /tmp/
-RUN set -ux \
-    && mv /tmp/$WAR_ZIP_FILE /tmp/geoserver.zip 2>/dev/null || true \
-    && ls /tmp/geoserver.zip || true
-
-# Download geoserver
+# Install the WAR and the bundled extensions packed by geoserver_builder
+COPY --from=geoserver_builder /build/geoserver $CATALINA_HOME/webapps/geoserver
 RUN set -eux \
-    && echo "Downloading GeoServer ${GS_VERSION} ${GS_BUILD}" \
-    && if [ -f "/tmp/geoserver.zip" ]; then echo "Using provided /tmp/geoserver.zip"; else wget -q -O /tmp/geoserver.zip $WAR_ZIP_URL; fi \
-    && unzip geoserver.zip geoserver.war -d /tmp/ \
-    && unzip -q /tmp/geoserver.war -d /tmp/geoserver \
-    && rm /tmp/geoserver.war \
-    && rm geoserver.zip \
-    && echo "Installing GeoServer $GS_VERSION $GS_BUILD" \
-    && mv /tmp/geoserver $CATALINA_HOME/webapps/geoserver \
     && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/marlin-*.jar $CATALINA_HOME/lib/marlin.jar \
     && mv $CATALINA_HOME/webapps/geoserver/WEB-INF/lib/postgresql-*.jar $CATALINA_HOME/lib/ \
     && mkdir -p $GEOSERVER_DATA_DIR
+COPY --from=geoserver_builder /build/extensions $BUNDLED_EXTENSIONS_DIR
 
 # Copy data and additional libs / fonts
 COPY $GS_DATA_PATH $GEOSERVER_DATA_DIR
@@ -319,6 +332,7 @@ RUN cd $CATALINA_HOME/lib \
 
 # copy scripts
 COPY *.sh /opt/
+COPY diagnostics/ /usr/local/bin/
 
 # CIS Docker benchmark: Remove setuid and setgid permissions in the images to prevent privilege escalation attacks within containers.
 RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true

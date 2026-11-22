@@ -102,10 +102,15 @@ The environment variable `ROOT_WEBAPP_REDIRECT` can be set to `true` to issue a 
 
 ## How to download and install additional extensions on startup?
 
+The image contains all stable extensions. List the ones you need in ``STABLE_EXTENSIONS``: they are
+installed on the first start, and the others are removed from the container. The removal needs the
+default entrypoint; with ``--user`` the unused extensions stay, use ``RUN_UNPRIVILEGED`` instead.
+To use your own build of a stable extension, put its plugin zip in ``ADDITIONAL_LIBS_DIR``.
+
 The ``startup.sh`` script allows some customization on startup:
 
-* ``INSTALL_EXTENSIONS`` to ``true`` to download and install extensions
-* ``STABLE_EXTENSIONS`` list of extensions to download and install
+* ``STABLE_EXTENSIONS`` list of extensions to install
+* ``INSTALL_EXTENSIONS`` to ``true`` to download and install ``COMMUNITY_EXTENSIONS``, and stable extensions not contained in the image
 * ``CORS_ENABLED`` to ``true`` to enable CORS support. The following environment variables can be used to customize the CORS configuration.
   * ``CORS_ALLOWED_ORIGINS`` (default ``*``)
   * ``CORS_ALLOWED_METHODS`` (default ``GET,POST,PUT,DELETE,HEAD,OPTIONS``)
@@ -122,7 +127,7 @@ Example installing wps and ysld extensions:
 
 ```shell
 docker run -it -p 80:8080 \
-  --env INSTALL_EXTENSIONS=true --env STABLE_EXTENSIONS="wps,ysld" \
+  --env STABLE_EXTENSIONS="wps,ysld" \
   docker.osgeo.org/geoserver:2.28.2
 ```
 
@@ -303,3 +308,21 @@ To watch ``geoserver.log`` of a running container:
 ```shell
 docker exec -it {CONTAINER_ID} tail -f /opt/geoserver_data/logs/geoserver.log
 ```
+
+### How to take a thread dump, a heap dump or other JVM diagnostics?
+
+Use ``jstack``, ``jmap``, ``jinfo`` and ``jcmd`` with ``docker exec``. GeoServer is process 1; with
+``docker run --init`` it is not, and ``jcmd -l`` shows its process id:
+
+```shell
+docker exec {CONTAINER_ID} jstack 1 > threads.txt
+docker exec {CONTAINER_ID} jmap -dump:live,format=b,file=/tmp/heap.hprof 1
+docker cp {CONTAINER_ID}:/tmp/heap.hprof .
+docker exec {CONTAINER_ID} rm /tmp/heap.hprof
+docker exec {CONTAINER_ID} jcmd 1 GC.class_histogram
+```
+
+A heap dump can be as large as ``-Xmx`` and is written inside the container: remove it once copied out.
+
+Supported options: ``jstack [-l]``, ``jmap -dump:[live,]format=b,file=<file>``, ``jmap -histo[:live]``,
+``jinfo [-flags | -sysprops]``, ``jcmd -l`` and ``jcmd <pid> <command>``. ``jcmd 1 help`` lists the commands.

@@ -1,0 +1,7 @@
+#!/bin/bash
+# jstack replacement for the JRE, see jcmd.
+# Usage: jstack [-l] <pid>
+if [ "$1" = "-l" ]; then
+  exec jcmd "$2" Thread.print -l
+fi
+exec jcmd "$1" Thread.print
