@@ -156,6 +156,7 @@ if [ "$INSTALL_EXTENSIONS" = "true" ]; then
   for EXTENSION in $(echo "${STABLE_EXTENSIONS}" | tr ',' ' '); do
     EXTENSION=$(echo "${EXTENSION}" | xargs)
     [ -z "$EXTENSION" ] && continue
+    [ -f "${BUNDLED_EXTENSIONS_DIR}/manifests/${EXTENSION}.txt" ] && continue
     URL="${BASE_STABLE_URL}/geoserver-${GEOSERVER_VERSION}-${EXTENSION}-plugin.zip"
     download_extension "${URL}" "${EXTENSION}"
   done
@@ -184,8 +185,24 @@ for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' 
     echo "WARNING: Skipping invalid extension name: ${EXTENSION}" >&2
     continue
   fi
-  # Find downloaded plugin (handles both expected and discovered filenames)
+  # A plugin zip supplied by the user wins over the bundled copy
   ADDITIONAL_LIB=$(ls -1 "${ADDITIONAL_LIBS_DIR%/}"/geoserver-*-${EXTENSION}-plugin.zip 2>/dev/null | head -n 1 || true)
+  MANIFEST="${BUNDLED_EXTENSIONS_DIR}/manifests/${EXTENSION}.txt"
+  if [ ! -e "$ADDITIONAL_LIB" ] && [ -f "$MANIFEST" ]; then
+    # The jars are gone after the first successful start; the extension is then already in WEB-INF/lib
+    [ -d "${BUNDLED_EXTENSIONS_DIR}/jars" ] || continue
+    FAILED=0
+    while read -r HASH JAR; do
+      cp "${BUNDLED_EXTENSIONS_DIR}/jars/${HASH}.jar" "${GEOSERVER_LIB_DIR}/${JAR}" || FAILED=1
+    done < "$MANIFEST"
+    if [ "$FAILED" = 0 ]; then
+      echo "Installed bundled extension ${EXTENSION}"
+    else
+      echo "ERROR: could not install all jars of bundled extension ${EXTENSION}" >&2
+      BUNDLED_FAILED=1
+    fi
+    continue
+  fi
   [ -e "$ADDITIONAL_LIB" ] || continue
 
   if [[ $ADDITIONAL_LIB == *.zip ]]; then
@@ -198,4 +215,12 @@ for EXTENSION in $(echo "${STABLE_EXTENSIONS},${COMMUNITY_EXTENSIONS}" | tr ',' 
     echo "Skipping ${ADDITIONAL_LIB}: unknown file extension."
   fi
 done
+# Remove the jars of the extensions that were not enabled, so they cannot be used inside the container.
+# The manifests stay, so a restart of the same container does not download the extensions again.
+# After a failed copy the jars stay, so the next start tries again.
+if [ -n "${BUNDLED_FAILED:-}" ]; then
+  echo "ERROR: keeping ${BUNDLED_EXTENSIONS_DIR}/jars until all bundled extensions install" >&2
+else
+  rm -rf "${BUNDLED_EXTENSIONS_DIR}/jars" || echo "WARNING: could not remove ${BUNDLED_EXTENSIONS_DIR}/jars" >&2
+fi
 echo "Finished installation of extensions"

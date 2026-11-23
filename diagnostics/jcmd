@@ -1,0 +1,15 @@
+#!/bin/bash
+# jcmd replacement for the JRE, which has no attach tools: sends the command through jattach.
+# Usage: jcmd <pid> <command> [arguments], or jcmd [-l] to list the Java processes
+set -o pipefail
+if [ $# -eq 0 ] || [ "$1" = "-l" ]; then
+  exec pgrep -a java
+fi
+if ! [[ "$1" =~ ^[0-9]+$ ]] || [ $# -lt 2 ]; then
+  echo "Usage: jcmd <pid> <command> [arguments] | jcmd -l" >&2
+  exit 2
+fi
+PID=$1
+shift
+# Drop the two status lines jattach prints on success, so the output matches the JDK jcmd
+jattach "$PID" jcmd "$*" | sed -e '1{/^Connected to remote JVM$/d}' -e '2{/^JVM response code = 0$/d}'

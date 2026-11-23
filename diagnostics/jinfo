@@ -1,0 +1,8 @@
+#!/bin/bash
+# jinfo replacement for the JRE, see jcmd.
+# Usage: jinfo [-flags | -sysprops] <pid>
+case "$1" in
+  -flags) exec jcmd "$2" VM.flags ;;
+  -sysprops) exec jcmd "$2" VM.system_properties ;;
+esac
+jcmd "$1" VM.flags && exec jcmd "$1" VM.system_properties
